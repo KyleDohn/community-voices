@@ -42,6 +42,10 @@ describe('ingestion into Postgres', () => {
     });
   });
 
+  it('finds no run for an id that is not a uuid', async () => {
+    expect(await repo.getRun('nope')).toBeUndefined();
+  });
+
   it('adds no duplicates when the same window is ingested again', async () => {
     const service = serviceWith(createFakeForumSource(forum).source);
     for (let i = 0; i < 2; i++) {

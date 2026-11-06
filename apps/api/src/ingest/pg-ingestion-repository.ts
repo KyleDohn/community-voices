@@ -19,6 +19,8 @@ const toRun = (row: RunRow): IngestionRun => ({
   error: row.error,
 });
 
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 /** `YYYY-MM-DD` in UTC; node-pg would read a Date for a `date` column in local time. */
 const isoDate = (d: Date) => d.toISOString().slice(0, 10);
 
@@ -38,6 +40,7 @@ export const createPgIngestionRepository = (db: Database): IngestionRepository =
   },
 
   getRun: async (id) => {
+    if (!UUID.test(id)) return undefined;
     const [row] = await db.select().from(ingestionRuns).where(eq(ingestionRuns.id, id));
     return row && toRun(row);
   },

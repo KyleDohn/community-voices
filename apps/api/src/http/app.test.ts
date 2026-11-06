@@ -1,9 +1,12 @@
 import { ErrorResponse, HealthResponse } from '@cv/contracts';
 import { describe, expect, it } from 'vitest';
+import { fakeIngestionJobs } from '../ingest/testing/fake-ingestion-jobs';
 import { createApp } from './app';
 
 const getHealth = async (probeDatabase: () => Promise<boolean>) => {
-  const res = await createApp({ probeDatabase }).request('/api/v1/health');
+  const res = await createApp({ probeDatabase, ingestions: fakeIngestionJobs() }).request(
+    '/api/v1/health',
+  );
   return { status: res.status, body: HealthResponse.parse(await res.json()) };
 };
 
@@ -31,7 +34,10 @@ describe('GET /api/v1/health', () => {
 
 describe('unknown API routes', () => {
   it('return a JSON 404 instead of falling through to the web app', async () => {
-    const res = await createApp({ probeDatabase: async () => true }).request('/api/v1/nope');
+    const res = await createApp({
+      probeDatabase: async () => true,
+      ingestions: fakeIngestionJobs(),
+    }).request('/api/v1/nope');
     expect(res.status).toBe(404);
     expect(ErrorResponse.parse(await res.json()).error).toBe('not_found');
   });
