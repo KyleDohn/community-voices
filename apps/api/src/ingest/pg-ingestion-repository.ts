@@ -1,4 +1,4 @@
-import { and, count, eq, gte, sql } from 'drizzle-orm';
+import { and, asc, count, eq, gte, sql } from 'drizzle-orm';
 import type { Database } from '../db/client';
 import { chunks, ingestionRuns, posts, topics } from '../db/schema';
 import type { IngestionRepository, IngestionRun } from './ingestion-run';
@@ -89,6 +89,11 @@ export const createPgIngestionRepository = (db: Database): IngestionRepository =
           .where(and(eq(chunks.postId, post.id), gte(chunks.chunkIndex, kept)));
       }
     }),
+
+  exportCorpus: async () => ({
+    topics: await db.select().from(topics).orderBy(asc(topics.id)),
+    posts: await db.select().from(posts).orderBy(asc(posts.id)),
+  }),
 
   corpusCounts: async () => {
     const [[t], [p], [c]] = await Promise.all([

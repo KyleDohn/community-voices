@@ -39,6 +39,10 @@ export const createMemoryIngestionRepository = () => {
       for (const post of topicPosts) posts.set(post.id, post);
       for (const chunk of topicChunks) chunks.set(`${chunk.postId}:${chunk.chunkIndex}`, chunk);
     },
+    exportCorpus: async () => ({
+      topics: [...topics.values()].sort((a, b) => a.id - b.id),
+      posts: [...posts.values()].sort((a, b) => a.id - b.id),
+    }),
     corpusCounts: async () => ({ topics: topics.size, posts: posts.size, chunks: chunks.size }),
   };
   return { repo, topics, posts, chunks };

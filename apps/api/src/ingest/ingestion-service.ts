@@ -1,4 +1,4 @@
-import { type ChunkOptions, chunkPost } from './chunk';
+import { type ChunkOptions, chunkTopic } from './chunk';
 import { type ForumSource, RequestCapReached, type TimeWindow } from './forum-source';
 import type {
   IngestionProgress,
@@ -6,7 +6,6 @@ import type {
   IngestionRun,
   IngestionStatus,
 } from './ingestion-run';
-import { weekOf } from './week';
 
 export interface IngestionServiceDeps {
   repo: IngestionRepository;
@@ -46,12 +45,7 @@ export const createIngestionService = ({ repo, sourceFor, chunkOptions }: Ingest
         if (progress.tokensUsed >= run.maxTokens) return finish('capped');
 
         const { topic, posts } = await source.fetchTopic(id, run.window);
-        const chunks = posts.flatMap((post) =>
-          chunkPost(post, topic, chunkOptions).map((c) => ({
-            ...c,
-            weekStart: weekOf(post.createdAt),
-          })),
-        );
+        const chunks = chunkTopic(topic, posts, chunkOptions);
         if (posts.length > 0) await repo.saveTopic(topic, posts, chunks);
         done.add(id);
         await save({

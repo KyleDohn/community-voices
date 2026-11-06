@@ -1,4 +1,5 @@
 import type { ForumPost, ForumTopic } from './forum-source';
+import { weekOf } from './week';
 
 export interface ChunkOptions {
   /** ~300 English words ≈ 400 tokens, under bge-small's 512-token input limit with the prefix. */
@@ -47,3 +48,9 @@ export const chunkPost = (
     text: body ? `${prefix}\n\n${body}` : prefix,
   }));
 };
+
+/** Chunks for every post of a topic, each tagged with the week its post was written in. */
+export const chunkTopic = (topic: ForumTopic, posts: ForumPost[], options: ChunkOptions) =>
+  posts.flatMap((post) =>
+    chunkPost(post, topic, options).map((c) => ({ ...c, weekStart: weekOf(post.createdAt) })),
+  );

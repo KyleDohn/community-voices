@@ -1,0 +1,62 @@
+import { readFile } from 'node:fs/promises';
+import { z } from 'zod';
+import { type ChunkOptions, chunkTopic } from '../ingest/chunk';
+import type { ForumPost, TimeWindow } from '../ingest/forum-source';
+import type { IngestionRepository } from '../ingest/ingestion-run';
+
+const isoDate = z.iso.datetime().transform((s) => new Date(s));
+
+const SeedFileSchema = z.object({
+  source: z.string(),
+  license: z.string(),
+  attribution: z.string(),
+  window: z.object({ start: isoDate, end: isoDate }),
+  exportedAt: isoDate,
+  topics: z.array(
+    z.object({ id: z.number(), title: z.string(), category: z.string(), url: z.string(), createdAt: isoDate }),
+  ),
+  posts: z.array(
+    z.object({
+      id: z.number(),
+      topicId: z.number(),
+      postNumber: z.number(),
+      username: z.string(),
+      raw: z.string(),
+      createdAt: isoDate,
+      url: z.string(),
+    }),
+  ),
+});
+
+export interface SeedMeta {
+  baseUrl: string;
+  license: string;
+  window: TimeWindow;
+}
+
+/** The stored corpus as a committable file. Raw posts only: chunks are rebuilt on load. */
+export const exportSeed = async (repo: IngestionRepository, { baseUrl, license, window }: SeedMeta) => ({
+  source: baseUrl,
+  license,
+  attribution: `Posts by the ${new URL(baseUrl).host} community; each post's author is its username.`,
+  window,
+  exportedAt: new Date(),
+  ...(await repo.exportCorpus()),
+});
+
+export const loadSeed = async (data: unknown, repo: IngestionRepository, chunkOptions: ChunkOptions) => {
+  const parsed = SeedFileSchema.safeParse(data);
+  if (!parsed.success) throw new Error(`Invalid seed file: ${z.prettifyError(parsed.error)}`);
+  const postsByTopic = Map.groupBy(parsed.data.posts, (p: ForumPost) => p.topicId);
+  for (const topic of parsed.data.topics) {
+    const posts = postsByTopic.get(topic.id) ?? [];
+    if (posts.length > 0) await repo.saveTopic(topic, posts, chunkTopic(topic, posts, chunkOptions));
+  }
+};
+
+/** Boot-time fallback: a fresh database gets the committed seed, so the demo works offline. */
+export const seedIfEmpty = async (repo: IngestionRepository, file: string, chunkOptions: ChunkOptions) => {
+  if ((await repo.corpusCounts()).posts > 0) return 'skipped' as const;
+  await loadSeed(JSON.parse(await readFile(file, 'utf8')), repo, chunkOptions);
+  return 'loaded' as const;
+};

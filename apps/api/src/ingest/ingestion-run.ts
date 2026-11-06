@@ -36,6 +36,8 @@ export interface IngestionRepository {
   /** Idempotent upsert of a topic, its posts and their chunks. */
   saveTopic(topic: ForumTopic, posts: ForumPost[], chunks: ChunkRecord[]): Promise<void>;
   corpusCounts(): Promise<CorpusCounts>;
+  /** Every stored topic and post, ordered by id. */
+  exportCorpus(): Promise<{ topics: ForumTopic[]; posts: ForumPost[] }>;
 }
 
 export interface CorpusCounts {
