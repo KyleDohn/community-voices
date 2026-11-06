@@ -17,9 +17,17 @@ is written with RAG and one without, and both are scored side by side.
 - **Source:** the public Discourse JSON API, with no auth. Default limit is 200 requests/min per IP. A
   week is about 1.2k posts, about 25 requests and about 146k tokens.
 - **Generic ingester:** the ingester takes any Discourse base URL. pixls is the configured default.
-- **Ingestion path:** list topics with `/latest.json`, which pages by bumped date, then fetch each active
-  topic with `/t/{id}.json` and its post stream. We don't use `/posts.json`, because it returns fewer posts
-  than the site reports (see the research open questions).
+- **Ingestion path:** list topics with `/latest.json?order=activity`, which pages by bumped date, then fetch
+  each active topic with `/t/{id}.json` and its post stream. We don't use `/posts.json`, because it returns
+  fewer posts than the site reports (see the research open questions). Verified against pixls on 2026-11-06:
+  - Pinned topics sort first whatever their activity, so the date cutoff skips them instead of stopping.
+  - `/t/{id}.json` gives cooked HTML only. `?include_raw=true` adds the `raw` markdown, which we store.
+  - It inlines the first 20 posts. `post_stream.stream` lists every post ID, and the rest come from
+    `/t/{id}/posts.json?post_ids[]=…&include_raw=true`.
+  - Stream IDs rise with `created_at`, so we fetch the stream from its tail and stop at the first batch
+    older than the window. A long, old megathread costs one or two requests, not dozens.
+  - Only `post_type` 1 (regular) is kept. 2–4 are moderator actions, small actions and whispers.
+  - Category names (subcategories included) come from `/site.json`.
 - **History:** four weeks. The **target week** is the latest complete Monday-to-Sunday week in UTC. It is
   what the document summarizes. The **three prior weeks** supply the trend evidence for predictions.
 - **License:** posts are CC BY-NC-SA 4.0. The committed seed carries attribution and the license notice.

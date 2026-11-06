@@ -11,7 +11,7 @@ Status: ⬜ not started · 🟨 in progress · ✅ done
 | #   | Phase                                                                                                                                                                                                                                                                                      | Demo at the end                                                                               | Est.  | Status |
 | --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------- | ----- | ------ |
 | 0   | **Scaffold and guardrails.** pnpm workspace, `apps/api` (Hono), `apps/web` (Vite/React/Tailwind), `packages/contracts`, docker compose with pgvector, Drizzle migrations, `GET /health`. Husky pre-commit (Prettier, lint, typecheck, unit tests), GitHub Actions CI, project `CLAUDE.md`. | `docker compose up` → web shell shows API health is green. A commit runs the hooks.           | 1 h   | ✅     |
-| 1   | **Ingest.** `ForumSource` + Discourse client (fixture-tested), week window, chunking, idempotent upsert with cursor and caps, `pnpm ingest`, `POST/GET /ingestions`, seed export and load-on-empty.                                                                                        | `pnpm ingest` fills posts for four weeks. The seed file is committed and a fresh DB loads it. | 1.5 h | ⬜     |
+| 1   | **Ingest.** `ForumSource` + Discourse client (fixture-tested), week window, chunking, idempotent upsert with cursor and caps, `pnpm ingest`, `POST/GET /ingestions`, seed export and load-on-empty.                                                                                        | `pnpm ingest` fills posts for four weeks. The seed file is committed and a fresh DB loads it. | 1.5 h | 🟨     |
 | 2   | **Embed and store.** `Embedder` + bge-small built into the image, embed on boot, chunk repository with cosine search, `GET /weeks`.                                                                                                                                                        | `pnpm search "export crash"` returns relevant posts from a week.                              | 1 h   | ⬜     |
 | 3   | **Retrieve and log.** Facet config, MMR, merge, trend lookup, `retrievals` logging.                                                                                                                                                                                                        | `pnpm retrieve --week 2026-11-02` prints ~40 diverse posts by facet.                          | 1 h   | ⬜     |
 | 4   | **Generate.** `LlmClient` (Anthropic), document schema, prompts, structured output, repair retry, cost accounting. Report view.                                                                                                                                                            | The Report view shows a cited RAG document for the week.                                      | 1.5 h | ⬜     |
@@ -33,9 +33,8 @@ Status: ⬜ not started · 🟨 in progress · ✅ done
 5. **Seed export/import.** An integration round-trip test (export, then load into an empty DB, then
    compare), plus load-on-empty at boot.
 
-Verify before writing the client: does `/t/{id}.json` give a post's raw text, or only cooked HTML (and is
-`/raw/{topic_id}` or `include_raw` needed)? Large topics return only the first ~20 posts plus
-`post_stream.stream` IDs, so check whether the rest must come from `/t/{id}/posts.json?post_ids[]=`.
+Resolved 2026-11-06 by curling pixls: raw text needs `include_raw=true`, and long topics page through
+`/t/{id}/posts.json?post_ids[]=`. Details are in DESIGN, "Community and data source".
 
 ## Extras, ranked by demo value per hour
 
