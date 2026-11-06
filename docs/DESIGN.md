@@ -45,11 +45,11 @@ packages/contracts (zod DTOs, shared by api and web)
 
 ### Boundaries (interfaces with fakes in tests)
 
-| Interface | Real implementation | Test fake |
-|---|---|---|
-| `ForumSource` | Discourse HTTP client | Recorded fixture JSON |
-| `Embedder` | transformers.js bge-small-en-v1.5 (384-d, q8) | Deterministic hash-to-vector |
-| `LlmClient` | Anthropic Messages API | Scripted responses |
+| Interface     | Real implementation                           | Test fake                    |
+| ------------- | --------------------------------------------- | ---------------------------- |
+| `ForumSource` | Discourse HTTP client                         | Recorded fixture JSON        |
+| `Embedder`    | transformers.js bge-small-en-v1.5 (384-d, q8) | Deterministic hash-to-vector |
+| `LlmClient`   | Anthropic Messages API                        | Scripted responses           |
 
 Model IDs and limits live in config, not in code.
 
@@ -139,17 +139,17 @@ Model IDs and limits live in config, not in code.
 
 ## REST API (`/api/v1`, DTOs in `packages/contracts`)
 
-| Method | Path | Purpose |
-|---|---|---|
-| GET | `/health` | Liveness, DB reachable, embedder loaded |
-| GET | `/weeks` | Weeks available, with post counts |
-| POST | `/ingestions` | Start ingestion → `202 { id }` |
-| GET | `/ingestions/:id` | Ingestion status and counts |
-| POST | `/ab-runs` | Start an A/B run for a week → `202 { id }` |
-| GET | `/ab-runs` | List runs |
-| GET | `/ab-runs/:id` | Status, both documents, checks, judge results, cost |
-| GET | `/stats/retrievals?limit=` | Most-retrieved chunks |
-| GET | `/embeddings/map?runId=` | 2D points, optionally marked with a run's retrievals |
+| Method | Path                       | Purpose                                              |
+| ------ | -------------------------- | ---------------------------------------------------- |
+| GET    | `/health`                  | Liveness, DB reachable, embedder loaded              |
+| GET    | `/weeks`                   | Weeks available, with post counts                    |
+| POST   | `/ingestions`              | Start ingestion → `202 { id }`                       |
+| GET    | `/ingestions/:id`          | Ingestion status and counts                          |
+| POST   | `/ab-runs`                 | Start an A/B run for a week → `202 { id }`           |
+| GET    | `/ab-runs`                 | List runs                                            |
+| GET    | `/ab-runs/:id`             | Status, both documents, checks, judge results, cost  |
+| GET    | `/stats/retrievals?limit=` | Most-retrieved chunks                                |
+| GET    | `/embeddings/map?runId=`   | 2D points, optionally marked with a run's retrievals |
 
 Long-running work runs in-process. Status lives in Postgres and the client polls it.
 

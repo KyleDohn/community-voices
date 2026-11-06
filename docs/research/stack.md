@@ -17,20 +17,21 @@
 - **Distance operators:** `<->` L2, `<#>` negative inner product, `<=>` cosine, `<+>` L1, `<~>` Hamming (bit), `<%>` Jaccard (bit). [README](https://github.com/pgvector/pgvector)
 - **Dimension limits:**
 
-  | Type | Max stored | Max indexed (HNSW / IVFFlat) |
-  |---|---|---|
-  | `vector` | 16,000 | 2,000 |
-  | `halfvec` | 16,000 | 4,000 |
-  | `bit` | n/a | 64,000 |
-  | `sparsevec` | 16,000 non-zero | 1,000 non-zero (HNSW) |
+  | Type        | Max stored      | Max indexed (HNSW / IVFFlat) |
+  | ----------- | --------------- | ---------------------------- |
+  | `vector`    | 16,000          | 2,000                        |
+  | `halfvec`   | 16,000          | 4,000                        |
+  | `bit`       | n/a             | 64,000                       |
+  | `sparsevec` | 16,000 non-zero | 1,000 non-zero (HNSW)        |
 
   Source: [README](https://github.com/pgvector/pgvector). Consequence: 3072-dim models (OpenAI `-3-large`, Gemini default) need `halfvec`, or reduced dimensions, before you can index them.
+
 - **HNSW vs IVFFlat** [README](https://github.com/pgvector/pgvector):
   - HNSW has the better speed/recall tradeoff, but builds more slowly and uses more memory. It has no training step, so you can build it on an empty table.
   - IVFFlat builds faster and uses less memory, but you must build it after loading data.
   - "By default, pgvector performs exact nearest neighbor search, which provides perfect recall."
   - **At this data size:** a few thousand to roughly 40k chunks fits an exact sequential scan in milliseconds **[unverified: no benchmark in docs]**. An index is optional. If you add one, HNSW is the safer choice because it can be created in the migration before any data exists.
-  - With approximate indexes, filtering is applied *after* the index scan. 0.8.0+ offers `hnsw.iterative_scan` for filtered queries, which matters if you filter by week or source. [README](https://github.com/pgvector/pgvector)
+  - With approximate indexes, filtering is applied _after_ the index scan. 0.8.0+ offers `hnsw.iterative_scan` for filtered queries, which matters if you filter by week or source. [README](https://github.com/pgvector/pgvector)
 
 ## 2. Node/TS access to pgvector
 
@@ -70,15 +71,15 @@
 
 **Anthropic has no embeddings API.** "Anthropic does not offer its own embedding model. One embeddings provider with a wide variety of models and capabilities is Voyage AI by MongoDB." [Claude docs: Embeddings](https://platform.claude.com/docs/en/build-with-claude/embeddings)
 
-| Provider / model | $ / 1M tokens | Default dims | Reducible? | Max input | Source |
-|---|---|---|---|---|---|
-| OpenAI `text-embedding-3-small` | $0.02 | 1536 | yes, `dimensions` param | 8,192 | [pricing](https://developers.openai.com/api/docs/pricing), [guide](https://developers.openai.com/api/docs/guides/embeddings) |
-| OpenAI `text-embedding-3-large` | $0.13 | 3072 | yes | 8,192 | same |
-| Voyage `voyage-4-large` | $0.12 | 1024 | 256/512/2048 | 32,000 | [Claude docs](https://platform.claude.com/docs/en/build-with-claude/embeddings), [MongoDB billing](https://www.mongodb.com/docs/voyageai/management/billing/) |
-| Voyage `voyage-4` | $0.06 | 1024 | 256/512/2048 | 32,000 | same |
-| Voyage `voyage-4-lite` | $0.02 | 1024 | 256/512/2048 | 32,000 | same |
-| Gemini `gemini-embedding-2` | $0.20 (text) | 3072 | 128–3072 (MRL) | 8,192 | [pricing](https://aistudio.google.com/docs/pricing), [embeddings](https://aistudio.google.com/docs/embeddings) |
-| Gemini `gemini-embedding-001` | $0.15 | 3072 | 128–3072 | 2,048 | same |
+| Provider / model                | $ / 1M tokens | Default dims | Reducible?              | Max input | Source                                                                                                                                                        |
+| ------------------------------- | ------------- | ------------ | ----------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| OpenAI `text-embedding-3-small` | $0.02         | 1536         | yes, `dimensions` param | 8,192     | [pricing](https://developers.openai.com/api/docs/pricing), [guide](https://developers.openai.com/api/docs/guides/embeddings)                                  |
+| OpenAI `text-embedding-3-large` | $0.13         | 3072         | yes                     | 8,192     | same                                                                                                                                                          |
+| Voyage `voyage-4-large`         | $0.12         | 1024         | 256/512/2048            | 32,000    | [Claude docs](https://platform.claude.com/docs/en/build-with-claude/embeddings), [MongoDB billing](https://www.mongodb.com/docs/voyageai/management/billing/) |
+| Voyage `voyage-4`               | $0.06         | 1024         | 256/512/2048            | 32,000    | same                                                                                                                                                          |
+| Voyage `voyage-4-lite`          | $0.02         | 1024         | 256/512/2048            | 32,000    | same                                                                                                                                                          |
+| Gemini `gemini-embedding-2`     | $0.20 (text)  | 3072         | 128–3072 (MRL)          | 8,192     | [pricing](https://aistudio.google.com/docs/pricing), [embeddings](https://aistudio.google.com/docs/embeddings)                                                |
+| Gemini `gemini-embedding-001`   | $0.15         | 3072         | 128–3072                | 2,048     | same                                                                                                                                                          |
 
 - **OpenAI:** the pricing page lists no embedding model newer than `text-embedding-3-*`.
 - **Voyage:**
@@ -89,30 +90,32 @@
 - **Gemini:** both embedding models are "Free of charge" on the free tier. `gemini-embedding-2` takes no `task_type`; you use text prefixes instead. [pricing](https://aistudio.google.com/docs/pricing), [embeddings](https://aistudio.google.com/docs/embeddings)
 
 **Local, no API key: transformers.js (`@huggingface/transformers` 4.3.2, 2026-10-27).**
+
 - Officially runs server-side in Node (ESM or CJS, Node 20+). Models are cached on first download (`env.cacheDir`), and you can force offline use with `env.localModelPath` plus `env.allowRemoteModels = false`. [Node tutorial](https://huggingface.co/docs/transformers.js/tutorials/node)
 - dtypes: `fp32`, `fp16`, `q8` (the WASM default) and `q4`. [docs](https://huggingface.co/docs/transformers.js/index)
 
-| Model | Dims | Max seq | Params | ONNX q8 size | Measured CPU throughput* |
-|---|---|---|---|---|---|
-| `Xenova/all-MiniLM-L6-v2` | 384 | 256 word pieces (truncates) | 22.7M | 23 MB | ~276 texts/s |
-| `Xenova/bge-small-en-v1.5` | 384 | 512 | 33.4M | n/c | ~155 texts/s |
-| `nomic-ai/nomic-embed-text-v1.5` | 768 (MRL to 512/256/128/64) | 8192 | ~0.1B | n/c | ~44 texts/s |
+| Model                            | Dims                        | Max seq                     | Params | ONNX q8 size | Measured CPU throughput* |
+| -------------------------------- | --------------------------- | --------------------------- | ------ | ------------ | ------------------------ |
+| `Xenova/all-MiniLM-L6-v2`        | 384                         | 256 word pieces (truncates) | 22.7M  | 23 MB        | ~276 texts/s             |
+| `Xenova/bge-small-en-v1.5`       | 384                         | 512                         | 33.4M  | n/c          | ~155 texts/s             |
+| `nomic-ai/nomic-embed-text-v1.5` | 768 (MRL to 512/256/128/64) | 8192                        | ~0.1B  | n/c          | ~44 texts/s              |
 
 Sources: [MiniLM card](https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2), [ONNX files](https://huggingface.co/Xenova/all-MiniLM-L6-v2/tree/main/onnx), [bge-small card](https://huggingface.co/BAAI/bge-small-en-v1.5) (MTEB avg 62.17, query prefix "Represent this sentence for searching relevant passages:"), [nomic card](https://huggingface.co/nomic-ai/nomic-embed-text-v1.5) (needs `search_document:` / `search_query:` prefixes; MTEB 62.28 at 768 dims).
 
 \*None of the model cards state throughput. These are **my own measurements** (2026-11-06, M1 Pro, Node 24.7, native, not in Docker): `q8`, batches of 32, about 90-word texts (roughly 110 tokens). Scaled to the corpus:
 
-| Model | 0.5M tokens | 5M tokens |
-|---|---|---|
-| MiniLM | ~17 s | ~3 min |
-| bge-small | ~30 s | ~5 min |
-| nomic | ~2 min | ~17 min |
+| Model     | 0.5M tokens | 5M tokens |
+| --------- | ----------- | --------- |
+| MiniLM    | ~17 s       | ~3 min    |
+| bge-small | ~30 s       | ~5 min    |
+| nomic     | ~2 min      | ~17 min   |
 
 Docker on macOS and x86 reviewer machines may differ. gte-small was not checked.
 
 **Ollama:** the embedding catalog includes `nomic-embed-text` (96.2M pulls), `mxbai-embed-large` (335m), `all-minilm` (22m/33m), `bge-m3` (567m), `embeddinggemma` (300m), `embeddinggemma-2`, `qwen3-embedding` (0.6b/4b/8b) and `snowflake-arctic-embed`. [ollama.com/search?c=embedding](https://ollama.com/search?c=embedding) It means an extra container plus a model pull at startup, and the npm `ollama` client is 0.6.4. It is heavier than in-process transformers.js and gains nothing at this scale.
 
 **"One API key" options, plainly:**
+
 1. **Claude for generation, local embeddings** (transformers.js in the app container). The only key is `ANTHROPIC_API_KEY`.
 2. **OpenAI only:** `text-embedding-3-small` plus a GPT model. One `OPENAI_API_KEY`.
 3. **Gemini only:** `gemini-embedding-*` plus Gemini Flash. One key, with a free tier.
@@ -122,13 +125,13 @@ Docker on macOS and x86 reviewer machines may differ. gte-small was not checked.
 
 **Anthropic** ([pricing](https://platform.claude.com/docs/en/about-claude/pricing), [models overview](https://platform.claude.com/docs/en/about-claude/models/overview)). Prices are per 1M tokens. All current models have a 1M context and 128K max output.
 
-| Model (API ID) | Input | Output | 5m cache write | 1h cache write | Cache hit |
-|---|---|---|---|---|---|
-| Fable 5.1 `claude-fable-5-1` | $10 | $50 | $12.50 | $20 | $0.25 |
-| Opus 5.5 `claude-opus-5-5` | $4 | $20 | $5 | $8 | $0.20 |
-| Sonnet 5.5 `claude-sonnet-5-5` | $2 | $10 | $2.50 | $4 | $0.10 |
-| Haiku 5.5 `claude-haiku-5-5`, prompt ≤100k | $0.10 | $0.50 | $0.125 | $0.20 | $0.01 |
-| Haiku 5.5, prompt >100k | $0.50 | $2.50 | $0.625 | $1 | $0.05 |
+| Model (API ID)                             | Input | Output | 5m cache write | 1h cache write | Cache hit |
+| ------------------------------------------ | ----- | ------ | -------------- | -------------- | --------- |
+| Fable 5.1 `claude-fable-5-1`               | $10   | $50    | $12.50         | $20            | $0.25     |
+| Opus 5.5 `claude-opus-5-5`                 | $4    | $20    | $5             | $8             | $0.20     |
+| Sonnet 5.5 `claude-sonnet-5-5`             | $2    | $10    | $2.50          | $4             | $0.10     |
+| Haiku 5.5 `claude-haiku-5-5`, prompt ≤100k | $0.10 | $0.50  | $0.125         | $0.20          | $0.01     |
+| Haiku 5.5, prompt >100k                    | $0.50 | $2.50  | $0.625         | $1             | $0.05     |
 
 - **Cache multipliers:** 5m write is 1.25x base input, 1h write is 2x, read is 0.1x. Opus 5.5 and Sonnet 5.5 reads are 0.05x.
 - **Minimum cacheable prompt:** 512 tokens on current models. [prompt caching](https://platform.claude.com/docs/en/build-with-claude/prompt-caching)
@@ -139,27 +142,28 @@ Docker on macOS and x86 reviewer machines may differ. gte-small was not checked.
 
 **OpenAI** ([pricing](https://developers.openai.com/api/docs/pricing), [models](https://developers.openai.com/api/docs/models)). Prices are per 1M tokens.
 
-| Model | Input | Cached input | Output | Input >272K | Output >272K |
-|---|---|---|---|---|---|
-| `gpt-6-astra` (flagship) | $10 | $1.00 | $50 | $20 | $75 |
-| `gpt-6.1-sol` | $2 | $0.10 | $10 | $4 | $15 |
-| `gpt-6.1-terra` | $1 | $0.05 | $5 | $2 | $7.50 |
-| `gpt-6-luna` (small, "cost-sensitive, high-volume") | $0.10 | $0.01 | $0.50 | $0.20 | $0.75 |
+| Model                                               | Input | Cached input | Output | Input >272K | Output >272K |
+| --------------------------------------------------- | ----- | ------------ | ------ | ----------- | ------------ |
+| `gpt-6-astra` (flagship)                            | $10   | $1.00        | $50    | $20         | $75          |
+| `gpt-6.1-sol`                                       | $2    | $0.10        | $10    | $4          | $15          |
+| `gpt-6.1-terra`                                     | $1    | $0.05        | $5     | $2          | $7.50        |
+| `gpt-6-luna` (small, "cost-sensitive, high-volume") | $0.10 | $0.01        | $0.50  | $0.20       | $0.75        |
 
 - Context is 1.05M with 128K max output for Sol, Terra and Luna. The models page did not state Astra's context **[unverified]**.
 
 **Google Gemini** ([pricing](https://aistudio.google.com/docs/pricing), [models](https://aistudio.google.com/docs/models)). Prices are per 1M tokens, Standard tier.
 
-| Model | Input | Output | Free tier | Context |
-|---|---|---|---|---|
-| `gemini-4-argon` (flagship) | $2 to Nov 30 2026, **$4 from Dec 1** | $10, then **$20** | none | 1M |
-| `gemini-3.1-pro-preview` | $2 (≤200k), $4 (>200k) | $12 / $18 | none | n/c |
-| `gemini-3.8-flash` | $0.75 to Dec 31 2026, **$1.50 from Jan 1** | $3.75, then **$7.50** | yes | not stated |
-| `gemini-3.5-flash-lite` | $0.30 | $2.50 | yes | not stated |
+| Model                       | Input                                      | Output                | Free tier | Context    |
+| --------------------------- | ------------------------------------------ | --------------------- | --------- | ---------- |
+| `gemini-4-argon` (flagship) | $2 to Nov 30 2026, **$4 from Dec 1**       | $10, then **$20**     | none      | 1M         |
+| `gemini-3.1-pro-preview`    | $2 (≤200k), $4 (>200k)                     | $12 / $18             | none      | n/c        |
+| `gemini-3.8-flash`          | $0.75 to Dec 31 2026, **$1.50 from Jan 1** | $3.75, then **$7.50** | yes       | not stated |
+| `gemini-3.5-flash-lite`     | $0.30                                      | $2.50                 | yes       | not stated |
 
 - Argon's max output is listed as "65K / 1M" without explanation.
 
 **Can the no-RAG baseline put the whole week in context?**
+
 - Only at the low end. Every current frontier context window is about 1M tokens, so a 5M-token week cannot fit anywhere. Even 0.5M becomes about 0.65M on Claude's tokenizer.
 - That means "no-RAG" has to be one of:
   - **(a) zero-context:** the model gets only the prompt and its prior knowledge;
@@ -178,11 +182,10 @@ Docker on macOS and x86 reviewer machines may differ. gte-small was not checked.
 - **My own measurement** (M1 Pro, Node 24.7, synthetic clustered data, 3,000 points, default params):
 
   | Dims | umap-js 1.4.0 | ml-pca 4.1.1 (full fit) |
-  |---|---|---|
-  | 384 | 4.2 s | 2.3 s |
-  | 1024 | 5.5 s | 16.8 s |
-  | 1536 | 7.1 s | 40.9 s |
-
+  | ---- | ------------- | ----------------------- |
+  | 384  | 4.2 s         | 2.3 s                   |
+  | 1024 | 5.5 s         | 16.8 s                  |
+  | 1536 | 7.1 s         | 40.9 s                  |
   - Server-side UMAP of a few thousand vectors runs in seconds. Do it once after ingest and store the x/y coordinates in Postgres.
   - `ml-pca` gets slow at high dimensions. Also, when PCA only seeds or replaces the projection, a 384-dim local model keeps the cost low.
 
@@ -209,6 +212,7 @@ Docker on macOS and x86 reviewer machines may differ. gte-small was not checked.
 **Run =** embed the week + 1 RAG document + 1 no-RAG document + 1 judge pass (two calls, order swapped).
 
 **Token assumptions:**
+
 - RAG generation: 40 chunks × ~400 tokens = 16k, plus ~2k instructions = **18k in, 3k out**.
 - Zero-context baseline: **2k in, 3k out**.
 - Stuffed baseline (0.5M-token week only): **0.5M in** (0.65M on Claude), 3k out.
@@ -218,40 +222,40 @@ Docker on macOS and x86 reviewer machines may differ. gte-small was not checked.
 
 ### Stack A: Claude Sonnet 5.5 + local bge-small (key: Anthropic)
 
-| Step | Arithmetic | Cost |
-|---|---|---|
-| Embed 0.5–5M | local | $0 |
-| RAG | 0.018×$2 + 0.003×$10 | $0.066 |
-| Zero baseline | 0.002×$2 + 0.003×$10 | $0.034 |
-| Judge | 0.05×$2 + 0.003×$10 | $0.130 |
-| **Total (zero baseline)** | | **≈ $0.23** |
+| Step                             | Arithmetic                  | Cost        |
+| -------------------------------- | --------------------------- | ----------- |
+| Embed 0.5–5M                     | local                       | $0          |
+| RAG                              | 0.018×$2 + 0.003×$10        | $0.066      |
+| Zero baseline                    | 0.002×$2 + 0.003×$10        | $0.034      |
+| Judge                            | 0.05×$2 + 0.003×$10         | $0.130      |
+| **Total (zero baseline)**        |                             | **≈ $0.23** |
 | Stuffed baseline instead (0.65M) | 0.65×$2 + 0.003×$10 = $1.33 | **≈ $1.53** |
 
 Haiku 5.5 as the generator (RAG $0.0033, zero baseline $0.0017) with Sonnet 5.5 as the judge ($0.13) comes to **≈ $0.14**. Haiku alone for everything is about $0.01. A stuffed baseline on Haiku costs 0.65×$0.50 + 0.003×$2.50 ≈ $0.33.
 
 ### Stack B: OpenAI `text-embedding-3-small` + `gpt-6.1-sol` (key: OpenAI)
 
-| Step | Arithmetic | Cost |
-|---|---|---|
-| Embed | 0.5×$0.02 to 5×$0.02 | $0.01–$0.10 |
-| RAG | 0.018×$2 + 0.003×$10 | $0.066 |
-| Zero baseline | 0.002×$2 + 0.003×$10 | $0.034 |
-| Judge | 0.05×$2 + 0.003×$10 | $0.130 |
-| **Total (zero baseline)** | | **≈ $0.24–$0.33** |
-| Stuffed baseline instead (0.5M, >272K tier) | 0.5×$4 + 0.003×$15 = $2.05 | **≈ $2.25** |
+| Step                                        | Arithmetic                 | Cost              |
+| ------------------------------------------- | -------------------------- | ----------------- |
+| Embed                                       | 0.5×$0.02 to 5×$0.02       | $0.01–$0.10       |
+| RAG                                         | 0.018×$2 + 0.003×$10       | $0.066            |
+| Zero baseline                               | 0.002×$2 + 0.003×$10       | $0.034            |
+| Judge                                       | 0.05×$2 + 0.003×$10        | $0.130            |
+| **Total (zero baseline)**                   |                            | **≈ $0.24–$0.33** |
+| Stuffed baseline instead (0.5M, >272K tier) | 0.5×$4 + 0.003×$15 = $2.05 | **≈ $2.25**       |
 
 With `gpt-6.1-terra` the costs are half of these. With `gpt-6-luna` they are about 1/20.
 
 ### Stack C: Gemini `gemini-embedding-001` + `gemini-3.8-flash` (key: Gemini; prices valid through 2026-12-31)
 
-| Step | Arithmetic | Cost |
-|---|---|---|
-| Embed | 0.5×$0.15 to 5×$0.15 | $0.075–$0.75 |
-| RAG | 0.018×$0.75 + 0.003×$3.75 | $0.025 |
-| Zero baseline | 0.002×$0.75 + 0.003×$3.75 | $0.013 |
-| Judge | 0.05×$0.75 + 0.003×$3.75 | $0.049 |
-| **Total (zero baseline)** | | **≈ $0.16–$0.84** |
-| Stuffed baseline instead (0.5M) | 0.5×$0.75 + 0.011 = $0.39 | **≈ $0.53** |
+| Step                            | Arithmetic                | Cost              |
+| ------------------------------- | ------------------------- | ----------------- |
+| Embed                           | 0.5×$0.15 to 5×$0.15      | $0.075–$0.75      |
+| RAG                             | 0.018×$0.75 + 0.003×$3.75 | $0.025            |
+| Zero baseline                   | 0.002×$0.75 + 0.003×$3.75 | $0.013            |
+| Judge                           | 0.05×$0.75 + 0.003×$3.75  | $0.049            |
+| **Total (zero baseline)**       |                           | **≈ $0.16–$0.84** |
+| Stuffed baseline instead (0.5M) | 0.5×$0.75 + 0.011 = $0.39 | **≈ $0.53**       |
 
 - These figures roughly double after Jan 1 2027.
 - They could be $0 on the free tier, but free-tier rate limits and data-use terms were **not checked**.
@@ -264,14 +268,14 @@ With `gpt-6.1-terra` the costs are half of these. With `gpt-6-luna` they are abo
 
 **Pick:**
 
-| Layer | Choice |
-|---|---|
-| Database | `pgvector/pgvector:0.8.7-pg18` |
-| ORM | Drizzle ORM 0.45.x (native `vector` + `cosineDistance`; HNSW optional) |
+| Layer      | Choice                                                                                                                    |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------- |
+| Database   | `pgvector/pgvector:0.8.7-pg18`                                                                                            |
+| ORM        | Drizzle ORM 0.45.x (native `vector` + `cosineDistance`; HNSW optional)                                                    |
 | Embeddings | transformers.js 4.3.2 with `Xenova/bge-small-en-v1.5` (384-dim, q8) in the app container, weights baked in at image build |
-| Generator | Claude Sonnet 5.5 (`claude-sonnet-5-5`); Haiku 5.5 as a "cheap mode" toggle |
-| Judge | A different Claude tier from the generator, order-swapped pairwise plus rubric |
-| Projection | umap-js server-side after ingest, x/y stored in Postgres |
+| Generator  | Claude Sonnet 5.5 (`claude-sonnet-5-5`); Haiku 5.5 as a "cheap mode" toggle                                               |
+| Judge      | A different Claude tier from the generator, order-swapped pairwise plus rubric                                            |
+| Projection | umap-js server-side after ingest, x/y stored in Postgres                                                                  |
 
 - **Key:** `.env` needs only `ANTHROPIC_API_KEY`.
 - **Cost:** ≈ $0.14–$0.23 per run.
@@ -282,6 +286,7 @@ With `gpt-6.1-terra` the costs are half of these. With `gpt-6-luna` they are abo
   - A pluggable `EMBEDDINGS_PROVIDER=voyage` can be offered as an opt-in second key.
 
 **Runner-up:** OpenAI only (`text-embedding-3-small` at 1536 dims, which fits `vector` indexing under 2,000, plus `gpt-6.1-terra` or `-sol`).
+
 - One key, stronger hosted embeddings, no local model download, ≈ $0.15–$0.33 per run.
 - It gives up Claude as the generator, and corpus embedding is paid per ingest.
 

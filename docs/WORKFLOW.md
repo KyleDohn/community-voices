@@ -28,6 +28,6 @@ This file records how the project was built with Claude Code. It is meant to be 
 
 ## Time log
 
-| Step | Approx. time |
-|---|---|
-| Research + planning | 1 h |
+| Step                | Approx. time |
+| ------------------- | ------------ |
+| Research + planning | 1 h          |
