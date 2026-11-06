@@ -41,6 +41,10 @@ This file records how the project was built with Claude Code. It is meant to be 
 - Phase 1: the first "rerun adds no duplicates" integration test passed even with the upsert removed. The
   second run failed on a duplicate key, so the row counts never changed. The test now also asserts that
   the rerun succeeds, and a no-upsert mutant fails it.
+- Phase 1: the Discourse schema assumed every post has `raw`. The first live four-week ingest failed after
+  5 topics: a post the community had flagged and hidden comes back without `raw`. The fixtures had no
+  hidden post, so the tests couldn't catch it. Hidden posts are now dropped, with a test. Schema errors
+  now name the URL instead of dumping zod issues, and the run was resumed from its cursor.
 
 ## Time log
 

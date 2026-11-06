@@ -29,7 +29,9 @@ export const PostSchema = z.object({
   /** 1 = regular; 2–4 are moderator actions, small actions and whispers. */
   post_type: z.number(),
   username: z.string(),
-  raw: z.string(),
+  /** Absent on posts the community flagged and hid. */
+  raw: z.string().optional(),
+  hidden: z.boolean().default(false),
   created_at: z.iso.datetime(),
 });
 

@@ -116,6 +116,28 @@ describe('DiscourseSource.fetchTopic', () => {
     expect(posts.map((p) => p.postNumber)).toEqual([1]);
   });
 
+  it('drops posts the community flagged and hid, which come without raw text', async () => {
+    const { default: short } = await import('./__fixtures__/topic-62066.json');
+    const [original] = short.post_stream.posts;
+    // JSON drops the undefined key, so this arrives without `raw`, like a real hidden post.
+    const hidden = { ...original!, id: 2, post_number: 2, hidden: true, raw: undefined };
+    const withHidden = {
+      ...short,
+      post_stream: { posts: [original, hidden], stream: [original!.id, 2] },
+    };
+    const { source } = setup({ overrides: { '/t/62066.json': withHidden } });
+
+    const { posts } = await source.fetchTopic(62066, novemberWeek);
+
+    expect(posts.map((p) => p.postNumber)).toEqual([1]);
+  });
+
+  it('names the URL when a response does not match the expected shape', async () => {
+    const { source } = setup({ overrides: { '/t/62066.json': { id: 62066 } } });
+
+    await expect(source.fetchTopic(62066, novemberWeek)).rejects.toThrow(/\/t\/62066\.json/);
+  });
+
   it('loads category names once per source', async () => {
     const { source, requests } = setup();
 

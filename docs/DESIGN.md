@@ -27,6 +27,7 @@ is written with RAG and one without, and both are scored side by side.
   - Stream IDs rise with `created_at`, so we fetch the stream from its tail and stop at the first batch
     older than the window. A long, old megathread costs one or two requests, not dozens.
   - Only `post_type` 1 (regular) is kept. 2–4 are moderator actions, small actions and whispers.
+  - Posts the community flagged and hid are dropped. Discourse sends them without `raw`.
   - Category names (subcategories included) come from `/site.json`.
 - **History:** four weeks. The **target week** is the latest complete Monday-to-Sunday week in UTC. It is
   what the document summarizes. The **three prior weeks** supply the trend evidence for predictions.

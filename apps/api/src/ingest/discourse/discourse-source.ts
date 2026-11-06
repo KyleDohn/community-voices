@@ -1,4 +1,4 @@
-import type { z } from 'zod';
+import { z } from 'zod';
 import {
   type ForumPost,
   type ForumSource,
@@ -29,6 +29,10 @@ const REGULAR_POST = 1;
 /** Discourse inlines and pages posts in chunks of 20. */
 const POST_BATCH = 20;
 
+/** Regular, visible posts only: hidden ones were flagged by the community and carry no raw text. */
+const isStorable = (p: DiscoursePost): p is DiscoursePost & { raw: string } =>
+  p.post_type === REGULAR_POST && !p.hidden && p.raw !== undefined;
+
 const realSleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
 export const createDiscourseSource = ({
@@ -48,7 +52,13 @@ export const createDiscourseSource = ({
     requestCount++;
     const res = await fetch(new URL(path, baseUrl), { headers: { 'User-Agent': userAgent } });
     if (!res.ok) throw new Error(`Discourse ${res.status} for ${path}`);
-    return schema.parse(await res.json());
+    const parsed = schema.safeParse(await res.json());
+    if (!parsed.success) {
+      throw new Error(
+        `Unexpected Discourse response for ${path}: ${z.prettifyError(parsed.error)}`,
+      );
+    }
+    return parsed.data;
   };
 
   const loadCategoryNames = async () => {
@@ -110,7 +120,7 @@ export const createDiscourseSource = ({
       createdAt: new Date(raw.created_at),
     };
     const posts: ForumPost[] = [...inline, ...tail]
-      .filter((p) => p.post_type === REGULAR_POST)
+      .filter(isStorable)
       .map((p) => ({
         id: p.id,
         topicId: id,
