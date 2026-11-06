@@ -32,6 +32,12 @@ This file records how the project was built with Claude Code. It is meant to be 
 - The first server wiring let unknown `/api/v1/*` paths fall through to the SPA's `index.html` with a 200.
   This was caught by curling the running container, not by a test. A failing test came first, then the
   fix: a JSON 404 catch-all.
+- Phase 1: my first plan was to skip pinned topics entirely when listing `/latest.json`. The fixture
+  showed a pinned topic bumped that same day, which could hold in-window posts. The rule became "filter
+  pinned topics by date, but never stop the listing on one", and a test pins it down.
+- Phase 1: request pacing and the request cap went into the first Discourse slice before any test
+  covered them. The tests came one slice later. To prove they weren't vacuous, each guard line was
+  deleted once and exactly one test failed each time.
 
 ## Time log
 
