@@ -89,7 +89,12 @@ Model IDs and limits live in config, not in code.
 
 - One post is one chunk, with `"<topic title> [<category>]"` added in front.
 - Posts over about 400 tokens are split with a small overlap.
-- Posts under about 15 words are dropped unless they are the first post of a topic.
+- Posts under about 15 words are dropped unless they are the first post of a topic. An image-only opening
+  post becomes a chunk of just its title, so the topic can still be found.
+- `[quote]` blocks and image embeds are stripped before counting and embedding. A quote repeats another
+  post, so keeping it would let a one-line reply pass the word floor and duplicate that post in search.
+- Limits are in words, not tokens: 300 words (about 400 tokens) per chunk with a 40-word overlap. The
+  chunker needs no tokenizer that way, and it stays under bge-small's 512-token input limit.
 
 ## Embeddings
 
