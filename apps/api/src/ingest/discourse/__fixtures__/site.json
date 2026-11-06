@@ -1,0 +1,185 @@
+{
+  "categories": [
+    {
+      "id": 1,
+      "name": "Uncategorized"
+    },
+    {
+      "id": 3,
+      "name": "Meta"
+    },
+    {
+      "id": 5,
+      "name": "PIXLS.US"
+    },
+    {
+      "id": 6,
+      "name": "Help!",
+      "parent_category_id": 3
+    },
+    {
+      "id": 7,
+      "name": "Processing"
+    },
+    {
+      "id": 8,
+      "name": "Capturing"
+    },
+    {
+      "id": 9,
+      "name": "Software"
+    },
+    {
+      "id": 10,
+      "name": "G'MIC",
+      "parent_category_id": 9
+    },
+    {
+      "id": 11,
+      "name": "Showcase"
+    },
+    {
+      "id": 12,
+      "name": "Critique"
+    },
+    {
+      "id": 14,
+      "name": "RawTherapee",
+      "parent_category_id": 9
+    },
+    {
+      "id": 15,
+      "name": "Luminance HDR",
+      "parent_category_id": 9
+    },
+    {
+      "id": 16,
+      "name": "Filmulator",
+      "parent_category_id": 9
+    },
+    {
+      "id": 18,
+      "name": "Lounge"
+    },
+    {
+      "id": 19,
+      "name": "darktable",
+      "parent_category_id": 9
+    },
+    {
+      "id": 17,
+      "name": "PhotoFlow",
+      "parent_category_id": 9
+    },
+    {
+      "id": 20,
+      "name": "Hardware"
+    },
+    {
+      "id": 21,
+      "name": "HDRMerge",
+      "parent_category_id": 9
+    },
+    {
+      "id": 22,
+      "name": "Hugin",
+      "parent_category_id": 9
+    },
+    {
+      "id": 23,
+      "name": "Rapid Photo Downloader",
+      "parent_category_id": 9
+    },
+    {
+      "id": 24,
+      "name": "GIMP",
+      "parent_category_id": 9
+    },
+    {
+      "id": 25,
+      "name": "Digital Painting"
+    },
+    {
+      "id": 26,
+      "name": "digiKam",
+      "parent_category_id": 9
+    },
+    {
+      "id": 27,
+      "name": "Natron",
+      "parent_category_id": 9
+    },
+    {
+      "id": 29,
+      "name": "gPhoto",
+      "parent_category_id": 9
+    },
+    {
+      "id": 30,
+      "name": "Play Raw",
+      "parent_category_id": 7
+    },
+    {
+      "id": 32,
+      "name": "photoflare",
+      "parent_category_id": 9
+    },
+    {
+      "id": 33,
+      "name": "Little Backup Box",
+      "parent_category_id": 20
+    },
+    {
+      "id": 34,
+      "name": "Siril",
+      "parent_category_id": 9
+    },
+    {
+      "id": 35,
+      "name": "Legal and Policy"
+    },
+    {
+      "id": 36,
+      "name": "ART",
+      "parent_category_id": 9
+    },
+    {
+      "id": 37,
+      "name": "Libre Arts"
+    },
+    {
+      "id": 38,
+      "name": "exiv",
+      "parent_category_id": 9
+    },
+    {
+      "id": 39,
+      "name": "PhotoPrism",
+      "parent_category_id": 9
+    },
+    {
+      "id": 40,
+      "name": "Lightzone",
+      "parent_category_id": 9
+    },
+    {
+      "id": 41,
+      "name": "vkdt",
+      "parent_category_id": 9
+    },
+    {
+      "id": 42,
+      "name": "xpano",
+      "parent_category_id": 9
+    },
+    {
+      "id": 43,
+      "name": "spektrafilm",
+      "parent_category_id": 9
+    },
+    {
+      "id": 44,
+      "name": "Travel and Trip Planning"
+    }
+  ]
+}

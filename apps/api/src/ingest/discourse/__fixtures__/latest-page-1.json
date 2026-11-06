@@ -1,0 +1,187 @@
+{
+  "topic_list": {
+    "more_topics_url": "/latest?no_definitions=true&order=activity&page=2",
+    "topics": [
+      {
+        "id": 61661,
+        "title": "RapidReady: Open-source RAW ingest and culling companion for RapidRAW",
+        "bumped_at": "2026-11-06T12:01:33.988Z",
+        "pinned": false
+      },
+      {
+        "id": 55673,
+        "title": "Darktable documentation",
+        "bumped_at": "2026-11-06T11:56:47.129Z",
+        "pinned": false
+      },
+      {
+        "id": 62021,
+        "title": "Rawtherapee - Gimp flatpak",
+        "bumped_at": "2026-11-06T11:08:20.121Z",
+        "pinned": false
+      },
+      {
+        "id": 59675,
+        "title": "[Merged] Masking panel revamp and new masking possibilities",
+        "bumped_at": "2026-11-06T10:19:40.290Z",
+        "pinned": false
+      },
+      {
+        "id": 60211,
+        "title": "[Input needed] testing mask migration to potential new mask model (Flexi)",
+        "bumped_at": "2026-11-06T08:51:50.421Z",
+        "pinned": false
+      },
+      {
+        "id": 59768,
+        "title": "[Merged] New module Contrast and Texture",
+        "bumped_at": "2026-11-06T08:37:26.030Z",
+        "pinned": false
+      },
+      {
+        "id": 59544,
+        "title": "New command 'arrange', a better version of 'montage'",
+        "bumped_at": "2026-11-06T07:49:27.860Z",
+        "pinned": false
+      },
+      {
+        "id": 59447,
+        "title": "The Dyeworks - GPU accelerated windows port of Spektrafilm!",
+        "bumped_at": "2026-11-06T05:39:05.391Z",
+        "pinned": false
+      },
+      {
+        "id": 61848,
+        "title": "Vignetting / Lenshading correction seems to be overcompensating in RawTherapee",
+        "bumped_at": "2026-11-06T02:35:51.953Z",
+        "pinned": false
+      },
+      {
+        "id": 61791,
+        "title": "Color.io alternative that I do after its shutdown",
+        "bumped_at": "2026-11-05T23:11:59.540Z",
+        "pinned": false
+      },
+      {
+        "id": 61839,
+        "title": "Protect the highlights!",
+        "bumped_at": "2026-11-05T22:34:52.897Z",
+        "pinned": false
+      },
+      {
+        "id": 61857,
+        "title": "KelvinCal – Wayland-native display calibration & DDC/CI hardware optimizer (KDE Plasma 6)",
+        "bumped_at": "2026-11-05T20:58:57.797Z",
+        "pinned": false
+      },
+      {
+        "id": 61828,
+        "title": "Eery foggy scene",
+        "bumped_at": "2026-11-05T20:40:15.622Z",
+        "pinned": false
+      },
+      {
+        "id": 61919,
+        "title": "Correcting geometry",
+        "bumped_at": "2026-11-05T19:08:21.280Z",
+        "pinned": false
+      },
+      {
+        "id": 61946,
+        "title": "GIMP won't launch on Windows 10",
+        "bumped_at": "2026-11-05T18:28:04.968Z",
+        "pinned": false
+      },
+      {
+        "id": 61815,
+        "title": "Quick start: HDR photos in darktable with HLG and JPEG XL, plus xl-view (a cross-platform HDR viewer)",
+        "bumped_at": "2026-11-05T16:49:54.373Z",
+        "pinned": false
+      },
+      {
+        "id": 61986,
+        "title": "Output sharpening/resize module?",
+        "bumped_at": "2026-11-05T14:23:47.821Z",
+        "pinned": false
+      },
+      {
+        "id": 58744,
+        "title": "Spektrafilm darktable module implementation discussion",
+        "bumped_at": "2026-11-05T09:16:30.741Z",
+        "pinned": false
+      },
+      {
+        "id": 61485,
+        "title": "Negs — Native and GPU accelerated Spektrafilm on MacOS, Windows and Linux",
+        "bumped_at": "2026-11-05T04:46:22.164Z",
+        "pinned": false
+      },
+      {
+        "id": 61979,
+        "title": "\"Group by filename\" thumbnail stacking order?",
+        "bumped_at": "2026-11-05T03:29:45.661Z",
+        "pinned": false
+      },
+      {
+        "id": 61912,
+        "title": "Single autumn tree",
+        "bumped_at": "2026-11-05T00:15:44.289Z",
+        "pinned": false
+      },
+      {
+        "id": 56242,
+        "title": "The cameras, systems, lenses and GAS thread",
+        "bumped_at": "2026-11-04T23:53:24.064Z",
+        "pinned": false
+      },
+      {
+        "id": 43538,
+        "title": "How to fix many dust and scratch spots on film-scanned images at once with GIMP",
+        "bumped_at": "2026-11-04T23:25:54.322Z",
+        "pinned": false
+      },
+      {
+        "id": 61978,
+        "title": "‘I put a smoke bomb in a road cone and stuck it on my head’: Delton Barrett’s...",
+        "bumped_at": "2026-11-04T23:25:44.057Z",
+        "pinned": false
+      },
+      {
+        "id": 61929,
+        "title": "Translation woes",
+        "bumped_at": "2026-11-04T22:15:38.317Z",
+        "pinned": false
+      },
+      {
+        "id": 61853,
+        "title": "Portrait (of a cat)",
+        "bumped_at": "2026-11-04T21:34:56.658Z",
+        "pinned": false
+      },
+      {
+        "id": 61928,
+        "title": "A blindfolded challenge",
+        "bumped_at": "2026-11-04T19:30:29.617Z",
+        "pinned": false
+      },
+      {
+        "id": 47990,
+        "title": "Shortcut for collapsing active module",
+        "bumped_at": "2026-11-04T18:14:58.247Z",
+        "pinned": false
+      },
+      {
+        "id": 61959,
+        "title": "Redirection of Siril log not working",
+        "bumped_at": "2026-11-04T16:35:26.868Z",
+        "pinned": false
+      },
+      {
+        "id": 61939,
+        "title": "Display vs Scene referred module order",
+        "bumped_at": "2026-11-04T16:32:43.459Z",
+        "pinned": false
+      }
+    ]
+  }
+}

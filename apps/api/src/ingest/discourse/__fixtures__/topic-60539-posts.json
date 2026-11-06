@@ -1,0 +1,267 @@
+{
+  "post_stream": {
+    "posts": [
+      {
+        "id": 458050,
+        "topic_id": 60539,
+        "post_number": 21,
+        "post_type": 1,
+        "username": "bminney",
+        "raw": "I couldn't see an appimage anywhere? Has it been taken down?",
+        "created_at": "2026-09-29T16:17:49.625Z"
+      },
+      {
+        "id": 458088,
+        "topic_id": 60539,
+        "post_number": 22,
+        "post_type": 1,
+        "username": "bazdesh",
+        "raw": "https://github.com/DhaliwalX/fotufilm-engine/releases/tag/v1.10-beta.2",
+        "created_at": "2026-09-29T20:00:11.384Z"
+      },
+      {
+        "id": 458092,
+        "topic_id": 60539,
+        "post_number": 23,
+        "post_type": 1,
+        "username": "DhaliwalX",
+        "raw": "> **bminney:** I couldn't see an appimage anywhere? Has it been taken down?\n\nIt's still up, but it's attached to a pre-release, so the \"Latest\" release page doesn't show it. It's an alpha: it uses CUDA for nvidia GPUs with fallback to Vulkan for AMD/Intel GPUs. Since, runpod only hosts NVIDIA GPUs, I've only tested it on NVIDIA so far, so reports from AMD or Intel machines would help a lot.\n\n> **bazdesh** One thing though, I had issues running it, had an error with the packaged libjpeg, had to run with\n```\nLD_PRELOAD=/usr/lib/libjpeg.so.8 ./Fotufilm-Linux-x86_64.AppImage\n```\n\nIf you can share the actual error, it could really help me in debugging the issue. The appimage bundles libjpeg. A version mismatch is my best guess.",
+        "created_at": "2026-09-29T20:49:15.939Z"
+      },
+      {
+        "id": 458096,
+        "topic_id": 60539,
+        "post_number": 24,
+        "post_type": 1,
+        "username": "DhaliwalX",
+        "raw": "Both projects are following the same physical chain (spectral exposure, development, printing), so a lot of the controls end up looking alike. The implementations are quite different though (Swift and Halide on the GPU, versus Python), so merging the code isn't really practical. Sharing datasheet traces is, and I'd still like to do that.\n\n*Still working on full comparison. Will post soon.*\n\nI will fix the lens correction profiles.",
+        "created_at": "2026-09-29T20:56:34.221Z"
+      },
+      {
+        "id": 458139,
+        "topic_id": 60539,
+        "post_number": 25,
+        "post_type": 1,
+        "username": "bazdesh",
+        "raw": "```\n/tmp/.mount_FotufiABGGlo/usr/lib/fotufilm/fotufilm: symbol lookup error: /usr/lib/libtiff.so.6: undefined symbol: jpeg12_write_raw_data, version LIBJPEG_8.0\n```\nHappens on both of my systems (Cachyos), runs fine if I do the libjpeg preload. This also happened to me when I tried to turn an edited darktable into an appimage, always had to manually copy libjpeg.so.6 and libtiff.so.8, otherwise it complained - and it only worked on the one system, never on the other one, unless I preloaded the two files, but it doesnt happen if I run the \"vanilla\" nigthly.",
+        "created_at": "2026-09-30T06:42:14.029Z"
+      },
+      {
+        "id": 458143,
+        "topic_id": 60539,
+        "post_number": 26,
+        "post_type": 1,
+        "username": "bulevardi",
+        "raw": "Right here the AppImage works fine right away, (just set the permissions to allow execution. \n\nIn the browser I get always errors: \"unsupported output color space\", while the appimage works without errors.\nOnly, there's 6 films missing in the appimage (the Lomochromes, Harman Phoenix,... )",
+        "created_at": "2026-09-30T07:32:28.042Z"
+      },
+      {
+        "id": 458184,
+        "topic_id": 60539,
+        "post_number": 27,
+        "post_type": 1,
+        "username": "DhaliwalX",
+        "raw": "[quote=\"bazdesh, post:25, topic:60539\"]\n/usr/lib/libtiff.so.6: undefined symbol: jpeg12_write_raw_data, version LIBJPEG_8.0\n[/quote]\n\nThanks, that pinned it down. The AppImage carried Ubuntu's libjpeg-turbo 2.1 but used your system's libtiff, and Arch builds libtiff against libjpeg-turbo 3, which added the 12-bit jpeg12_* functions. The image now carries libjpeg-turbo 3 instead. I reproduced your error on Arch with the old image and checked the new one starts there and on Ubuntu 24.04. It's in the 1.11 beta, so you shouldn't need the LD_PRELOAD any more:\nhttps://github.com/DhaliwalX/fotufilm-engine/releases/tag/v1.11-beta",
+        "created_at": "2026-09-30T14:28:30.207Z"
+      },
+      {
+        "id": 458185,
+        "topic_id": 60539,
+        "post_number": 28,
+        "post_type": 1,
+        "username": "DhaliwalX",
+        "raw": "[quote=\"bulevardi, post:26, topic:60539\"]\nOnly, there’s 6 films missing in the appimage (the Lomochromes, Harman Phoenix,… )\n[/quote]\n\nThe previous AppImage was built just before those profiles were published. The 1.11 beta has all 46, including Aerochrome 1443, Infrared Color, the three LomoChromes and Phoenix 200.\n\n[quote=\"bulevardi, post:26, topic:60539\"]\nIn the browser I get always errors: “unsupported output color space”\n[/quote]\n\nI was able to reproduce on firefox: its canvas image data doesn't report a colour space, and the editor rejected the missing value instead of treating it as sRGB. The fix is merged and will be live on the web demo with its next update.",
+        "created_at": "2026-09-30T14:29:03.334Z"
+      },
+      {
+        "id": 459200,
+        "topic_id": 60539,
+        "post_number": 29,
+        "post_type": 1,
+        "username": "oude",
+        "raw": "Hi @DhaliwalX, and thanks for sharing Fotufilm!\n\nI've been trying different film stocks, including Kodak Portra 400 and Gold 200, and to my eye the output often looks a little muted, almost as if there's a slight grey veil over the image.\n\nI'd like a slightly clearer, cleaner look with better tonal separation, while preserving each stock's character. What would you recommend adjusting first: the output medium or conversion mode, exposure, paper grade, or something in the input preparation?\n\nIs this impression related to the default rendering, and do you have a recommended starting point for achieving this kind of look?",
+        "created_at": "2026-10-07T12:14:33.127Z"
+      },
+      {
+        "id": 459328,
+        "topic_id": 60539,
+        "post_number": 30,
+        "post_type": 1,
+        "username": "DhaliwalX",
+        "raw": "Hey @oude , thanks for trying it!\n\nI am suspecting that this is most likely coming from the defaults. In the desktop app, the negative-to-postive conversion in the Output tab opens on Auto Levels by default, which simulates the lab scanner behaviour. This lifts the shadows and flattens contrast.\n\nSwitch it to Graded Print and set Scan Exposure yourself; This is most film character preserving output. Paper Grade basically adjusts the contrast. If you are using the browser app, then these films open on Ektacolor Edge paper, whose black reads as dark grey on screen. Try Digital Reference there with Graded print, or you can pull Shadows Level down a little.\n\nOtherwise if this still does not fix it, could you share a frame and your settings so I can take a look?\n\nI have been also investigating this issue lately more often. So with updates this will hopefully get resolved for the defaults as well.",
+        "created_at": "2026-10-07T17:48:59.540Z"
+      },
+      {
+        "id": 460151,
+        "topic_id": 60539,
+        "post_number": 31,
+        "post_type": 1,
+        "username": "Vnz",
+        "raw": "@DhaliwalX \n\nFotufilm build on Fedora 44, with nvidia RTX card. \n\nThe app is really fast and responsive, with a great UI.\n\nLove it for now :slight_smile: \n\nPS : Fedora build needed some workarounds, I'll send you a PM",
+        "created_at": "2026-10-11T11:46:04.750Z"
+      },
+      {
+        "id": 460890,
+        "topic_id": 60539,
+        "post_number": 32,
+        "post_type": 1,
+        "username": "DhaliwalX",
+        "raw": "Thanks @Vnz for the report. It's fixed on the latest main.\n\nI also have an update on Fotufilm vs spektrafilm. I got a real roll of Gold 200 and shot a few scenes on both film and digital (a Sony A7C II for the digital frames and for scanning the film).\n\nMethodology:\n1. The film and digital frames are aligned as closely as possible. I had no tripod, so there is slight misalignment.\n2. I scanned the film with a SmallRig RM120, whose channels sit at roughly blue ≈455 nm, green ≈522 nm and red ≈625 nm (±5 nm). These are estimates, derived from the A7C II's [spectral response data](https://github.com/AcademySoftwareFoundation/rawtoaces-data/blob/main/data/camera/Sony_ILCE-7CM2_380_780_5.json).\n3. Both simulations were stopped at the negative to keep the comparison as fair as possible.\n4. All negatives, real and simulated, were then printed through Fotufilm's Digital Reference output on Graded Print, with identical settings.\n\nFrame 1 (spektrafilm, Fotufilm, real):\n[grid]\n![frame13-spektrafilm|690x455](upload://A2AXGxlCGjl9Jo9iWBGLUQ1Fl9g.jpeg)\n![frame13-fotufilm|690x455](upload://xZ5tAFubZUqJ9Qe5KJUyhgU2jGk.jpeg)\n![frame13-real|690x455](upload://1QBDr7B0rShFlahUJnbwPB8yCs9.jpeg)\n[/grid]\n\nThe real film is warmer in the shadows, and neither simulation matches it. Fotufilm is closer to the real Gold 200 than spektrafilm here.\n\nFrame 2:\n[grid]\n![frame17-spektrafilm|542x1000](upload://ditrRdK99hzJlO0QF78LYQJgxRB.jpeg)\n![frame17-fotufilm|542x1000](upload://w01K00eeaiUy3ibQMZeHP6G8Zsa.jpeg)\n![frame17-real|542x1000](upload://s6PflYijUavPYKx6Argu3pAlnVz.jpeg)\n[/grid]\n\nBoth simulations miss the greens: the real film turns them olive. The yellows are very close across all three, with Fotufilm closest to the film.\n\nFrame 3:\n[grid]\n![frame18-spektrafilm|652x1000](upload://h1bjrjyx4mRIaM863HFIGvDM2Lx.jpeg)\n![frame18-fotufilm|652x1000](upload://bupUE6QSAYOwbWfrUMS8ftQ805q.jpeg)\n![frame18-real|652x1000](upload://4iy4XntNpmxLFrxjMkXlhBPKHDj.jpeg)\n[/grid]\n\nHere spektrafilm is closer to the film in the sky but misses the flower colour completely. Fotufilm turns the sky cyan but matches the flower.\n\nI also tried running Fotufilm's Gold 200 profile inside spektrafilm:\n[grid]\n![frame18-spkff|652x1000](upload://caHGlDQhiJOwUvVqUSpKTIk4DHz.jpeg)\n![frame17-spkff|542x1000](upload://dAiJUeyl9cVNDUskvWdGoYJkicO.jpeg)\n![frame13-spkff|690x455](upload://n7WhwzEfItaIFpcCdd4z9nTP2xu.jpeg)\n[/grid]\n\nWith that profile, spektrafilm still oversaturates the colours. With its DIR couplers turned off, spektrafilm matches Fotufilm's colours and moves closer to the film, so spektrafilm's default couplers seem a bit too strong.\n\n[grid]\n![frame18-spkffnc|652x1000](upload://sArkIchP1ruqu7rTA09MZ4taRht.jpeg)\n![frame17-spkffnc|542x1000](upload://1AVTnNdVvHywcz7ImDuhcfmbL7A.jpeg)\n![frame13-spkffnc|690x455](upload://mFo3EnxQu5xVHArmBqDEaT3II9v.jpeg)\n[/grid]\n\n\nReference images:\n- https://github.com/DhaliwalX/gold200-dataset/releases/download/v1.0/gold200-dataset-2026-10-14.zip",
+        "created_at": "2026-10-14T23:05:12.880Z"
+      },
+      {
+        "id": 460932,
+        "topic_id": 60539,
+        "post_number": 33,
+        "post_type": 1,
+        "username": "Vnz",
+        "raw": "[quote=\"DhaliwalX, post:32, topic:60539\"]\nIt’s fixed on the latest main.\n[/quote]\n\nI confirm latest main builds ok now :+1:",
+        "created_at": "2026-10-15T08:01:58.699Z"
+      },
+      {
+        "id": 460935,
+        "topic_id": 60539,
+        "post_number": 34,
+        "post_type": 1,
+        "username": "bazdesh",
+        "raw": "Interesting! One thing to consider, perhaps for a future test, is skin tones, we all know how hard they are to get right and how important they are for the film stocks.\n\nEDIT: Did some quick slider sliding, built this one with the frame13 - Dakrtable 5.7.0+, spektrafilm, negadoctor, Rec2020 input profile, no masks. \nNot 100%, and I am on a laptop with a shitty screen, but this is definitely closer to your film scan - the two other frames are the same style with me lazily setting the input exposure differently. \nI am not sure if I could get this closer without going for masks - the main issue would be getting the two topmost pinkish steps on the slide correctly saturated without blowing out the rest of the colors; anyway, this shows the power of having spektrafilm included in the darktable pipeline, and also the power of negadoctor - I really enjoy working with this combo. \nAlso, you are right about the DIR couplers, I use them less and less, this one has essentially only 0.35 of the interlayer kind.\n\n![frame13-UPS02715|690x459](upload://bPXdvbfRlMQDTLFso89EGFBNgxP.jpeg)\n[frame13-UPS02715.ARW.xmp|attachment](upload://wacWGhGkeK5OSe31SiwLmhAXJT7.xmp) (10.6 KB)\n\n![frame17-UPS02735|666x1000](upload://nd8GN7mCXZYJ3wUWiZHAemQPMAi.jpeg)\n[frame17-UPS02735.ARW.xmp|attachment](upload://gc6no0yrHrTIOpWp74mccjIaKxu.xmp) (14.4 KB)\n\n![frame18-UPS02736|666x1000](upload://gqZAJveiD49hAVvcupQ1Se0IGVP.jpeg)\n[frame18-UPS02736.ARW.xmp|attachment](upload://4UP57JmXRdrBzYsCBj30BQv64hs.xmp) (14.0 KB)\n\nAlso here is the test darktable style, should be \"universal\", you need the nightly darktable.\n[xxx test gold.dtstyle|attachment](upload://wg9NSgeqz8Ayp8CabzNmN3KqR1w.dtstyle) (6.2 KB)\nHere is the pipeline - if the module order doesnt load correctly.\n![image|528x418](upload://6Jo5gTsuwISGBPfStDyiK7V6FtC.png)",
+        "created_at": "2026-10-15T08:35:48.477Z"
+      },
+      {
+        "id": 460984,
+        "topic_id": 60539,
+        "post_number": 35,
+        "post_type": 1,
+        "username": "CarVac",
+        "raw": "Were these shot with the same lens (adapted on the Sony)?\n\nLenses impart a surprising amount of color bias in images due to coating selection and contrast differences.",
+        "created_at": "2026-10-15T13:39:56.573Z"
+      },
+      {
+        "id": 461002,
+        "topic_id": 60539,
+        "post_number": 36,
+        "post_type": 1,
+        "username": "DhaliwalX",
+        "raw": "Mostly I was enjoying the film photography so I could not capture proper test photographs so I only have few shots. I might have pictures on skin tones. For that I am waiting on more rolls to be developed (eta Monday).\n\nA colorcheckr with full exposure curve might even be a better suited test.",
+        "created_at": "2026-10-15T15:41:57.864Z"
+      },
+      {
+        "id": 461003,
+        "topic_id": 60539,
+        "post_number": 37,
+        "post_type": 1,
+        "username": "DhaliwalX",
+        "raw": "You are right here. I think in this case lens had major impact on the colors. This was the most basic canon kit zoom lens. I will get an ef to sony e-mount adapter and a colorcheckr chart and then run a few shots on exposure range to verify the simulations.",
+        "created_at": "2026-10-15T15:44:23.495Z"
+      },
+      {
+        "id": 463991,
+        "topic_id": 60539,
+        "post_number": 38,
+        "post_type": 1,
+        "username": "telemann",
+        "raw": "This is amazing! I've played around with the demo version (because I'm on Linux) and the results are awesome. I'd really love a Linux version and I'd gladly help testing. (I use CachyOS which is based on Arch Linux.)",
+        "created_at": "2026-10-31T18:02:53.251Z"
+      },
+      {
+        "id": 464003,
+        "topic_id": 60539,
+        "post_number": 39,
+        "post_type": 1,
+        "username": "isomorphic",
+        "raw": "I just found this and tried the web version. This is so cool! Thank you for your work!",
+        "created_at": "2026-10-31T19:17:24.804Z"
+      },
+      {
+        "id": 464042,
+        "topic_id": 60539,
+        "post_number": 40,
+        "post_type": 1,
+        "username": "bazdesh",
+        "raw": "There is an appimage available, it works great on cachy!\nhttps://github.com/DhaliwalX/fotufilm-engine/releases/tag/v1.14.1",
+        "created_at": "2026-10-31T23:01:23.142Z"
+      },
+      {
+        "id": 464093,
+        "topic_id": 60539,
+        "post_number": 41,
+        "post_type": 1,
+        "username": "telemann",
+        "raw": "I have downloaded and installed the flatpack (using Shelly), but I get this error when opening Fotufilm: `The engine could not start. Invalid argument(s): Failed to load dynamic library '/tmp/.mount_FotufikoOKiB/usr/fotufilm/lib(libfotufilm.so': libllmThread-3_1.so.30': cannot open shared object file: No such file or directory`",
+        "created_at": "2026-11-01T10:03:19.354Z"
+      },
+      {
+        "id": 464095,
+        "topic_id": 60539,
+        "post_number": 42,
+        "post_type": 1,
+        "username": "bazdesh",
+        "raw": "Ha, okay, the newer 1.14 appimage files also fail with the same error on my system, there must be something missing then - I misled you a bit because I used an older version that ran without issues, havent launched fotufilm in some time. Tested the 1.12 and 1.13 appimage releases and they work fine.",
+        "created_at": "2026-11-01T10:13:29.418Z"
+      },
+      {
+        "id": 464356,
+        "topic_id": 60539,
+        "post_number": 43,
+        "post_type": 1,
+        "username": "DhaliwalX",
+        "raw": "Hey, sorry I was on vacation for a while. Let me check this issue. Thanks for reporting.",
+        "created_at": "2026-11-02T17:07:49.962Z"
+      },
+      {
+        "id": 464367,
+        "topic_id": 60539,
+        "post_number": 44,
+        "post_type": 1,
+        "username": "DhaliwalX",
+        "raw": "I just posted the hotfix release. Please let me know if this works.",
+        "created_at": "2026-11-02T18:05:24.717Z"
+      },
+      {
+        "id": 464371,
+        "topic_id": 60539,
+        "post_number": 45,
+        "post_type": 1,
+        "username": "bazdesh",
+        "raw": "Indeed, it runs now, thanks!",
+        "created_at": "2026-11-02T18:17:04.622Z"
+      },
+      {
+        "id": 464600,
+        "topic_id": 60539,
+        "post_number": 46,
+        "post_type": 1,
+        "username": "tiban",
+        "raw": "hello! please consider making a version that can run on macOS 15 :) intel apple machines still work!",
+        "created_at": "2026-11-03T19:42:18.764Z"
+      },
+      {
+        "id": 464603,
+        "topic_id": 60539,
+        "post_number": 47,
+        "post_type": 1,
+        "username": "Cristian",
+        "raw": "And since we're on the topic, how about a Windows version? :slightly_smiling_face:",
+        "created_at": "2026-11-03T19:48:45.369Z"
+      },
+      {
+        "id": 465251,
+        "topic_id": 60539,
+        "post_number": 48,
+        "post_type": 1,
+        "username": "DhaliwalX",
+        "raw": "Unfortunately I don't have windows machine so I won't be able to properly support it without external help. I would love to add windows support. Infact the entire UI (flutter), engine (swift / C++ / Halide) has been coded with the cross-platform in mind. So it should not be much hard to add a windows version.",
+        "created_at": "2026-11-06T14:39:14.795Z"
+      },
+      {
+        "id": 465367,
+        "topic_id": 60539,
+        "post_number": 49,
+        "post_type": 1,
+        "username": "darkmarlin213",
+        "raw": "Interesting take on fotufilm and open-source. For anyone here who also likes late-night social hangout and dating communities without paywalls, check out [thread-notes-hub.pages.dev/r/discuss_pixls_us](https://thread-notes-hub.pages.dev/r/discuss_pixls_us).",
+        "created_at": "2026-11-06T23:42:05.300Z"
+      }
+    ]
+  }
+}

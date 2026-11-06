@@ -1,0 +1,198 @@
+{
+  "id": 60539,
+  "title": "Fotufilm: an open-source film simulation engine",
+  "slug": "fotufilm-an-open-source-film-simulation-engine",
+  "category_id": 9,
+  "created_at": "2026-09-11T17:03:51.064Z",
+  "post_stream": {
+    "posts": [
+      {
+        "id": 454530,
+        "topic_id": 60539,
+        "post_number": 1,
+        "post_type": 1,
+        "username": "DhaliwalX",
+        "raw": "Hi everyone. Over the past few months I've been developing Fotufilm, an open-source film simulation engine for photos and videos. It grew out of a personal curiosity and a hobby. Rather than approximating the \"film look\" through creative 3D LUTs or subjective colour grading, I was trying to see how much of a film's true response can we recreate purely from manufacturer datasheets and physical sensitometry?\n\nThe engine currently models 40 film stocks which spans colour negative, b&w, slide, motion-picture and instant film. You can explore it directly in the browser editor here [demo](https://fotufilm.com/demo) (uses WebGPU, WASM), or run it via the Mac app, and plugins for Davinci Resolve and Final Cut Pro.\n\nSource: https://github.com/DhaliwalX/fotufilm-engine.\n\n## How the simulation works\n\nAt its core, Fotufilm follows the physical path of light through emulsion exposure, chemical development, and optical printing:\n\n1. **Spectral estimation**: Input images (ideally scene-linear HDR or OpenEXR) are converted into estimated continuous spectral radiance. Because three RGB channels cannot uniquely reconstruct a full continuous spectrum, this initial step is inherently an approximation, but it allows the film's published spectral sensitivity curves to calculate how each emulsion layer actually responds to scene light. High-dynamic-range inputs are especially important here, as clipped highlight values in 8-bit JPEGs lose the overexposure information that drives natural shoulder roll-off and halation.\n2. **Emulsion density and layer interactions**: The calculated exposures pass through the film's characteristic curves (D-log H) to determine developed dye density. The model accounts for chemical adjacency effects and inter-layer interactions where development in one layer inhibits or enhances neighbouring dyes.\n3. **Physical halation and grain**: Light spreading within the film base causes characteristic highlight blooms (halation), while film grain is synthesized from simulated clump structures. Both grain appearance and halation spread are physically coupled to the selected film format (from Super 8 up to large-format sheet film).\n4. **Print media and scanning**: The developed negative density then exposes a simulated print medium, such as Kodak Ektacolor Edge, Endura, or Fuji Crystal Archive paper, or passes through a simulated lab scanner or light box. The choice of paper dramatically shapes the final image, as each print stock carries its own spectral sensitivities, dye absorption spectra, and contrast curves.\n\n\n## Exploring the profiles\n\nThe examples below were rendered from scene-linear EXRs in the OpenEXR sample collection on their github using standard profile defaults (unless noted). For reference, panels marked **Collection preview** show the collection's own tone-mapped JPEGs, which use an entirely separate display rendering.\n\n### Film stocks and color character\n\nDifferent emulsions reveal distinct personalities across the same scene:\n\n![Collection preview, Gold 200, Portra 400 and Velvia 50 |690x313](upload://qsySdwKBcadfRyEEjFYtYR5GEuC.jpeg)\n\n###### *MtTamWest, GoldenGate, and Kapaa across multiple stocks. The Vision3 250D example is printed onto Kodak Vision 2383 motion-picture release print stock.*\n\n### Physical effects: halation and format-dependent grain\n\nHalation occurs when intense light penetrates the emulsion and reflects off the backing layer:\n![halation-pair|690x234](upload://8H9S8YgG3lFUiPz248gk8o77xBY.jpeg)\n###### *CineStill 800T halation off and on*\n\nBecause film grain consists of physical silver halide crystals and dye clouds, enlarging a smaller negative magnifies the texture:\n\n![grain-gauges|690x193](upload://aPXeKHdGZLqCMunOQgOPcMcdW8R.jpeg)\n\n\n\n## Calibration and physical compromises\n\n## A comparison with spektrafilm\n\nI first began building Fotufilm in isolation as a personal experiement to see if I can derive back the original light data from the image/sensor and then model the film chemistry on the basis of datasheets. I discovered spektrafilm only very recently while opening up to publicise my project.\n\nDiscovering spektrafilm and the active discussions around it on PIXLS.US was exciting, as it showed a shared community passion for physical, measurement-based simulation rather than empirical LUT fitting. Naturally, I was curious how the two engines' outputs compare when fed identical scene-linear inputs.\n\n### ColorChecker response\nTo test color behavior, I ran an sRGB color patch target through both engines using Kodak Gold 200 printed on Kodak Ektacolor Edge. For spektrafilm, I generated a 129-cube LUT using its native tooling (spektrafilm profiles are CC BY-SA 4.0, by Andrea Volpato). For Fotufilm, stochastic and optical effects (grain, halation, flare, and local tone mapping) were disabled to isolate the base color transform.\n\nAcross the 512 patches, Fotufilm rendered slightly lighter overall, with an average lightness difference of 3.73 L* and a mean colour difference of ΔE₀₀ 6.55.\n\nSamples below\n![comparison-mttamwest-gold200-edge|690x260](upload://1zVmjIe7Ntr9lkLIBUNSe8Q7r50.jpeg)\n\n\n\n## Looking forward & call for scans\n\nSeveral areas remain open for improvement, notably refining print illuminant spectra and resolving discrepancies in published ETERNA-CP dye and neutral curves.\n\nIf you have access to controlled film scans with documented film stock, exposure, development chemistry, and scanning conditions, or if you spot behavior that conflicts with published sensitometry, I would love to hear from you. Technical feedback, edge-case testing, and discussion are very welcome!\n\n## Technical details\n\n* **Core engine**: Written in Swift with image-processing pipelines implemented in Halide with the help of Claude/Codex.\n* **Platform**: MacOS, Web (there is a partly written linux port for the engine using vulkan and cuda). But it should be fairly straightforward as Swift and halide both work well with cross-platform code.\n* **Licensing**: Code is licensed under Apache-2.0. Film profiles are licensed under CC BY-SA 4.0 (this applies solely to profile definitions, not your rendered photographs or videos).\n* **My background & disclosures**: I am a software engineer at Google who has worked on image processing pipelines for the Pixel Camera, this project is not affliated with them. I did this mostly in my free time.\n\n> The figures in this post were generated using rendering code from Fotufilm `93eb85b` . \nComparison figures use engine commit `03e53c0` and spektrafilm 0.3.4 at `3bb2c2d`  Sample images are copyright Industrial Light & Magic and contributors, used under the OpenEXR [BSD licence](https://github.com/AcademySoftwareFoundation/openexr-images/blob/e38ffb0790f62f05a6f083a6fa4cac150b3b7452/LICENSE).",
+        "created_at": "2026-09-11T17:03:51.120Z"
+      },
+      {
+        "id": 454671,
+        "topic_id": 60539,
+        "post_number": 2,
+        "post_type": 1,
+        "username": "ggc",
+        "raw": "Do you plan to release an appimage for linux x64? Tya.",
+        "created_at": "2026-09-12T11:24:34.863Z"
+      },
+      {
+        "id": 454734,
+        "topic_id": 60539,
+        "post_number": 3,
+        "post_type": 1,
+        "username": "Doug-Phoenix",
+        "raw": "Hi @DhaliwalX \n\nWelcome to pixels! Your project looks awesome.\n\nI’m just a user, not a dev. And I use Linux, fyi.\n\nIf your goal is a standalone app, then I would think you may be heading in a good general direction. The original spektrafilm is experimental and is written in python, so it’s a bit slow. But wow, the results are great!\n\nSpektrafilm has some momentum with the community here, with the base code adapted for an OFX plug-in for Resolve (fantastic), a rust port I think, integration into the vkdt editor (also wonderful), and a module for darktable is under development and test. There is probably other work I’ve omitted.\n\nMy very limited non-expert experience is that there are advantages in having a mature image/video pipeline that feeds into the film emulation. For me, it is easier and more flexible to process images this way, even though perhaps the overall approach deviates from the concept of “pure film emulation.” I would guess, as you suggest, that mapping rgb to full-spectrum input is a part of the challenge.\n\nMy selfish perspective as a general user would be to find that efforts like yours somehow gets merged into some of these efforts. Perhaps starting with the upstream python app and also to a compiled stand alone app too.\n\nIn any case, I wish you well, whatever direction you go. 🙂",
+        "created_at": "2026-09-12T17:29:28.708Z"
+      },
+      {
+        "id": 454799,
+        "topic_id": 60539,
+        "post_number": 4,
+        "post_type": 1,
+        "username": "DhaliwalX",
+        "raw": "[quote=\"ggc, post:2, topic:60539, full:true\"]\nDo you plan to release an appimage for linux x64? Tya.\n[/quote]\n\nI'd love to offer a Linux AppImage eventually, but the linux port still needs work, so I don't have a release timeline yet. Moreover, I don't have a Linux machine on hand. All my Linux testing so far has been through experiments on RunPod, where I tried both CUDA and Vulkan. Halide makes porting the processing code across platforms much easier, but there's still work to do on the standalone app and packaging. Help with Linux testing would be very welcome!!",
+        "created_at": "2026-09-12T23:50:18.480Z"
+      },
+      {
+        "id": 454800,
+        "topic_id": 60539,
+        "post_number": 5,
+        "post_type": 1,
+        "username": "DhaliwalX",
+        "raw": "Thanks for the thoughtful feedback!\n\nI only discovered spektrafilm fairly recently, and I'm still learning about the work around it. This started as a personal experiment, so finding a community interested in the same problems has been exciting.\n\nI also think there's value in having independent approaches to the same problem. Fotufilm gives me room to explore those ideas around film simulation. I'd love to share findings and collaborate with the other projects, while continuing to explore what this approach can offer.",
+        "created_at": "2026-09-13T00:06:32.168Z"
+      },
+      {
+        "id": 455487,
+        "topic_id": 60539,
+        "post_number": 6,
+        "post_type": 1,
+        "username": "bazdesh",
+        "raw": "Ive done some experimenting with the browser version, since I am on linux too, and I have to say - I like the looks, the grain has got some special luma mojo that I cant get in spektrafilm, whats more accurate though...?\nOf course, now comes the question, what does Claude mean by \"free\" in \"Gold 200 is in the free tier, so this holds on every build. Packs without it keep the previous first-on-the-wall fallback\"\n\nEdit - managed to get the grain \"mojo\" quite close by using the native `grain` module in darktable, in addition to spektrafilms grain. Set to lighten/darken mode (depends on where in the chain you put it) to generate the extra light luma bits. Do not judge the colors haha, wasnt comparing those now. The only thing is that this tool ends at \"20 ISO\", which is still a bit too coarse, but one more trick under the belt. Gotta wait for the new implementation, haha @piratenpanda \n\n![image|690x381](upload://hPF7bExrZYWg88EJrsBNBAhWU77.jpeg)\n \n.\n\nFor comparison - pure spektrafilm on the left, plus the extra luma grain on the right\n![image|690x477](upload://fCcRwlBGwQ4P4A1BXT1QyIwDUD0.jpeg)",
+        "created_at": "2026-09-16T18:39:26.305Z"
+      },
+      {
+        "id": 455592,
+        "topic_id": 60539,
+        "post_number": 7,
+        "post_type": 1,
+        "username": "RawConvert",
+        "raw": "[quote=\"bazdesh, post:6, topic:60539\"]\npure spektrafilm on the left, plus the extra luma grain on the right\n[/quote]\n\nBut you've lost loads of detail in the flower bud!  Do you think grain is so good that it's worth \"spoiling\" the image?  Grain was an undesired but necessary by-product as film evolved.  Companies tried to minimise it and I imagine they'd have got rid of it completely had it been feasible and practical to do that.",
+        "created_at": "2026-09-17T13:07:51.826Z"
+      },
+      {
+        "id": 455595,
+        "topic_id": 60539,
+        "post_number": 8,
+        "post_type": 1,
+        "username": "bazdesh",
+        "raw": "Not really my point, or goal. Theres plenty of detail in a 50mpx file, I think I should add even more :smile: \n\nThe companies minimized it - by doing large format, or going digital. Grain is an inherent physical part of film, always will be, and no \"film sim\" is gonna be accurate without it.",
+        "created_at": "2026-09-17T13:14:38.617Z"
+      },
+      {
+        "id": 455596,
+        "topic_id": 60539,
+        "post_number": 9,
+        "post_type": 1,
+        "username": "hatsnp",
+        "raw": "[quote=\"RawConvert, post:7, topic:60539\"]\nDo you think grain is so good that it’s worth “spoiling” the image?\n[/quote]\n\nPerhaps detail is overrated? When has lack of detail caused detriment to popular or even historical photographs?",
+        "created_at": "2026-09-17T13:19:19.211Z"
+      },
+      {
+        "id": 455601,
+        "topic_id": 60539,
+        "post_number": 10,
+        "post_type": 1,
+        "username": "RawConvert",
+        "raw": "I suppose in the example above it depends on how much of the photo the bud was.  If tiny, then yes it might not matter.\n\nHere's a famous portrait of Stravinsky.  He's only a small part of the image but if his face had lacked detail, I doubt it would have become a well known photo.\n\nhttps://www.gettyimages.co.uk/detail/news-photo/russian-composer-igor-stravinsky-at-a-piano-new-york-city-news-photo/53466601",
+        "created_at": "2026-09-17T13:30:24.685Z"
+      },
+      {
+        "id": 455602,
+        "topic_id": 60539,
+        "post_number": 11,
+        "post_type": 1,
+        "username": "bazdesh",
+        "raw": "Original image with the bud - https://www.dpreview.com/sample-galleries/canon-eos-r8-ii-sample-gallery/674051\nThere is 0 necessary detail lost.\n\n(edit - heres a crop, @RawConvert)\n![image|690x550](upload://kd7cS3UFjzHHxpFl0t8lElvclet.jpeg)\n\nand a zoomed out one\n![image|519x602](upload://fmdPE3oHmonw94aXUX4u9roIJ6w.jpeg)",
+        "created_at": "2026-09-17T13:31:16.462Z"
+      },
+      {
+        "id": 455606,
+        "topic_id": 60539,
+        "post_number": 12,
+        "post_type": 1,
+        "username": "RawConvert",
+        "raw": "Yes but that's a dpreview image and has little noise in it.  I was talking about loss of detail in your grain-added version.",
+        "created_at": "2026-09-17T13:42:04.839Z"
+      },
+      {
+        "id": 455700,
+        "topic_id": 60539,
+        "post_number": 13,
+        "post_type": 1,
+        "username": "bazdesh",
+        "raw": "Youre definitely not going to like this :smiley: \nI have gone down a path of no return, the \"luma mojo\" I spoke about earlier has consumed me. \n![image|690x432](upload://eQhiSoh9rXEAffrekNDboPdzLTx.jpeg)\n(a 100% crop)",
+        "created_at": "2026-09-17T22:25:23.543Z"
+      },
+      {
+        "id": 455811,
+        "topic_id": 60539,
+        "post_number": 14,
+        "post_type": 1,
+        "username": "hatsnp",
+        "raw": "@DhaliwalX are the datasheets you used public? AFAIK spektrafilm is also looking for this data to add more films: https://discuss.pixls.us/t/2026-q2-data-sheets-digitization-campaign/58032\n\nWould be cool to sort of unite both projects efforts when it comes to data gathering, even if the underlying algos/projects are different.",
+        "created_at": "2026-09-18T12:13:52.749Z"
+      },
+      {
+        "id": 455908,
+        "topic_id": 60539,
+        "post_number": 15,
+        "post_type": 1,
+        "username": "mikae1",
+        "raw": "Stoked to see someone else is working on the same challenge from a different angle! \n\nIf you're interested in data-sheets, @DhaliwalX, I collected quite a few from the original sources here \n\nhttps://discuss.pixls.us/t/spectral-film-simulations-from-scratch/48209/548",
+        "created_at": "2026-09-18T19:49:20.279Z"
+      },
+      {
+        "id": 456411,
+        "topic_id": 60539,
+        "post_number": 16,
+        "post_type": 1,
+        "username": "DhaliwalX",
+        "raw": "[quote=\"bazdesh, post:6, topic:60539, full:true\"]\nIve done some experimenting with the browser version, since I am on linux too, and I have to say - I like the looks, the grain has got some special luma mojo that I cant get in spektrafilm, whats more accurate though...?\nOf course, now comes the question, what does Claude mean by \"free\" in \"Gold 200 is in the free tier, so this holds on every build. Packs without it keep the previous first-on-the-wall fallback\"\n\nEdit - managed to get the grain \"mojo\" quite close by using the native `grain` module in darktable, in addition to spektrafilms grain. Set to lighten/darken mode (depends on where in the chain you put it) to generate the extra light luma bits. Do not judge the colors haha, wasnt comparing those now. The only thing is that this tool ends at \"20 ISO\", which is still a bit too coarse, but one more trick under the belt. Gotta wait for the new implementation, haha @piratenpanda \n\n![image|690x381](upload://hPF7bExrZYWg88EJrsBNBAhWU77.jpeg)\n \n.\n\nFor comparison - pure spektrafilm on the left, plus the extra luma grain on the right\n![image|690x477](upload://fCcRwlBGwQ4P4A1BXT1QyIwDUD0.jpeg)\n[/quote]\n\nThanks for trying it on Web and sharing the experiments! Glad you’re enjoying the grain 🙂\n\nOn which is more accurate, I wouldn’t claim that Fotufilm’s is more accurate just from these comparisons. The default model varies density before the final print/viewing conversion, with grain scale tied to the selected film format. It’s still an approximation, and establishing accuracy would need controlled comparisons with real film.\n\nOn the “free tier” comment: that’s a leftover from when I was developing Fotufilm privately and was still undecided about whether and how to monetise it. I should have cleaned up that wording. Infact iOS app is still paid. I’d like to make that free too. The AI subscriptions I use for development add up, and I’ve also been gathering film cameras for experiments. Film, processing and scanning will bring their own costs. Fortunately, I have a job, so these expenses have been manageable so far! I’m still figuring out the longer-term balance.",
+        "created_at": "2026-09-21T10:58:43.268Z"
+      },
+      {
+        "id": 456497,
+        "topic_id": 60539,
+        "post_number": 17,
+        "post_type": 1,
+        "username": "DhaliwalX",
+        "raw": "[quote=\"hatsnp, post:14, topic:60539\"]\n2026 Q2 data-sheets digitization campaign\n[/quote]\n\nYes, all of them. Every profile is traced from the technical datasheets available publicly.\n\n[quote=\"hatsnp, post:14, topic:60539\"] Would be cool to sort of unite both projects efforts when it comes to data gathering, even if the underlying algos/projects are different. [/quote]\n\nAgreed, both are using digitised curves on a 5nm grid, so they can be compared with or reused. I have not published the tracing scripts because they are ugly and lot of \"claude-speak\". I will try to clean them up and make them public. I also use publicly available pictures to run some models and measure the grain intensity\n\n\n@mikae1 thanks for the list. I will check if I have anything to contribute and will add it that list.\n\n\nI will also run a full spektrafilm / fotufilm comparison once I get time and publish the results here.",
+        "created_at": "2026-09-21T16:38:57.006Z"
+      },
+      {
+        "id": 457811,
+        "topic_id": 60539,
+        "post_number": 18,
+        "post_type": 1,
+        "username": "bulevardi",
+        "raw": "I'm new to this forum, however, just stumbled upon this thread as I was looking for film emulation scripts to use in Gimp, only found G'Mic stuff...\n\nHaven't tried Fotufilm yet, will do so when I'm home on my linux computer..\nPretty excited about this. Is it already available on Linux?  Or not yet?\n\nI'm curious if it has an option to save presets or settings and paste it to a series of photos to export? Some other features I'd love on it:\nWould nice to have it as a way to open it inside Gimp or Rawtherapee aswel.\nWould be cool to have the choice for other alternative and experimental arty film types such as Lomography Turquoise, Purple, ... Harman Switch Azure. Cinestill, etc...\nPerhaps an option for InfraRed film simulation, would be awesome!",
+        "created_at": "2026-09-28T10:30:44.161Z"
+      },
+      {
+        "id": 457815,
+        "topic_id": 60539,
+        "post_number": 19,
+        "post_type": 1,
+        "username": "ho4",
+        "raw": "Looks quite interesting. I like the selection of film stocks and papers, and especially the \"digital reference\" and \"lab scan\", which I wish were available in spektrafilm. \nThe selection of filters is also quite good, and just the other day I was wondering if it were possible to emulate a B&W filter (red/orange/green/etc) with darktable+spektrafilm somehow, but I just couldn't wrap my head around it mathematically to leverage other modules.\n\nI know the result as well as the underlying math is different but from the user perspective I feel these two projects could be merged and the math side of things could be just a toggle? Like what we have with colour profiles and whatnot. Because other than the math it feels almost like a spektrafilm fork, the feature parity is high. Once again, this is from my perspective\n\nFYI, it wouldn't detect the lens on my Ricoh GR III (fixed lens camera so probably the EXIF for the lens has some specifics?) and wouldn't offer a correction for it",
+        "created_at": "2026-09-28T10:58:42.507Z"
+      },
+      {
+        "id": 457987,
+        "topic_id": 60539,
+        "post_number": 20,
+        "post_type": 1,
+        "username": "bazdesh",
+        "raw": "I see you posted a linux appimage, nice! The speed increase, comparing to the browser version, is cool.\nOne thing though, I had issues running it, had an error with the packaged libjpeg, had to run with\n\n```\nLD_PRELOAD=/usr/lib/libjpeg.so.8 ./Fotufilm-Linux-x86_64.AppImage\n```\n\nAlso noticed the IR films are missing?",
+        "created_at": "2026-09-29T11:23:46.350Z"
+      }
+    ],
+    "stream": [
+      454530, 454671, 454734, 454799, 454800, 455487, 455592, 455595, 455596, 455601, 455602,
+      455606, 455700, 455811, 455908, 456411, 456497, 457811, 457815, 457987, 458050, 458088,
+      458092, 458096, 458139, 458143, 458184, 458185, 459200, 459328, 460151, 460890, 460932,
+      460935, 460984, 461002, 461003, 463991, 464003, 464042, 464093, 464095, 464356, 464367,
+      464371, 464600, 464603, 465251, 465367
+    ]
+  }
+}
