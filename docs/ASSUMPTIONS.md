@@ -1,0 +1,22 @@
+# Assumptions
+
+These are calls we made where the brief was ambiguous. Each one says what we assumed, why, and what would
+change it. Challenge any of them.
+
+| # | Assumption | Why | Revisit if |
+|---|---|---|---|
+| 1 | The community is **discuss.pixls.us**, through a generic Discourse ingester. | No credentials, CC BY-NC-SA license that allows a seed, about 1.2k posts/week. Reddit is closed, Discord bans AI use, and HN's terms are unclear ([research](research/data-sources.md)). | The reviewers want a better-known community. Point the ingester at another Discourse forum after checking its `/tos`. |
+| 2 | **"Without RAG" means no community data at all**: only the name, a description and the dates. | This is the literal reading of the brief. It isolates what retrieval adds. | The comparison looks unfair. Stretch variant C, with the whole week in context, answers "RAG vs long context". |
+| 3 | **"The past week"** is the latest complete Monday-to-Sunday week in UTC. | Fixed windows make runs comparable and testable. A rolling window would shift on every run. | Reviewers want whatever is newest. Add a rolling option. |
+| 4 | We ingest **four weeks**: one target week plus three for trends. | Predictions need a trend signal, and the corpus has to be bigger than one prompt for RAG to be doing real work. | Volume or cost becomes a problem. |
+| 5 | Embeddings are **local (bge-small, 384 dimensions)**, not hosted. | Anthropic has no embeddings API, and the brief wants one key. The quality gap doesn't matter much for topic-level retrieval. | Retrieval is visibly poor. Swap the `Embedder` for Voyage or OpenAI, which means a second key. |
+| 6 | **Exact vector search with no ANN index.** | About 6k rows. An exact scan takes milliseconds and has perfect recall. | The corpus grows past about 100k chunks. Add HNSW. |
+| 7 | **Opus 5.5 judges Sonnet 5.5's output**, from the same model family. | Keeps one key. Blinding, order-swapping and deterministic checks reduce the bias. | Self-preference bias is a concern. Use a judge from another provider. |
+| 8 | Long-running work runs **in-process with polling**, with no job queue. | It's a local demo. Status is stored in Postgres. | Runs need to survive restarts, or several workers are needed. Use BullMQ or a pg-boss queue. |
+| 9 | **The API has no auth.** | It's a local single-user demo. | It gets deployed anywhere shared. |
+| 10 | **English-only** posts. | pixls is mostly English, and bge-small-en is an English model. | A multilingual community. Use a multilingual embedder. |
+| 11 | We commit **raw posts, not embeddings**, as the seed, and embed on first boot. | Keeps the repo small and shows the pipeline running. | First boot inside Docker is too slow. Commit the embeddings too. |
+| 12 | We commit **one labeled sample A/B run**. | The demo shows a full result even with no key or a bad one. | Never presented as live output. |
+| 13 | The API image is **Debian-slim, not Alpine**. | onnxruntime-node needs glibc. | — |
+| 14 | Discourse requests are **polite**: a descriptive User-Agent, pacing well under 200 requests/min, and respect for robots.txt. | It's a small community forum, and we're guests. | — |
+| 15 | Build time is about **8 hours, with a cut line**. | TE suggests a couple of hours, but tests, CI and docs are part of the bar. Time spent is noted in `WORKFLOW.md`. | — |
