@@ -1,0 +1,51 @@
+services:
+  db:
+    image: pgvector/pgvector:0.8.7-pg18
+    environment:
+      POSTGRES_USER: cv
+      POSTGRES_PASSWORD: cv
+      POSTGRES_DB: community_voices
+    ports:
+      - '5433:5432'
+    volumes:
+      # Postgres 18 images keep data under /var/lib/postgresql/<major>/, so mount the parent.
+      - db-data:/var/lib/postgresql
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U cv -d community_voices']
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  app:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      DATABASE_URL: postgres://cv:cv@db:5432/community_voices
+    ports:
+      - '3000:3000'
+
+  # Throwaway database for `pnpm test:integration`; data lives in tmpfs.
+  db-test:
+    profiles: [test]
+    image: pgvector/pgvector:0.8.7-pg18
+    environment:
+      POSTGRES_USER: cv
+      POSTGRES_PASSWORD: cv
+      POSTGRES_DB: community_voices_test
+    ports:
+      - '5434:5432'
+    tmpfs:
+      - /var/lib/postgresql
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U cv -d community_voices_test']
+      interval: 1s
+      timeout: 3s
+      retries: 30
+
+volumes:
+  db-data:
