@@ -17,6 +17,26 @@ Status: ⬜ not started · 🟨 in progress · ✅ done
 | 4   | **Generate.** `LlmClient` (Anthropic), document schema, prompts, structured output, repair retry, cost accounting. Report view.                                                                                                                                                            | The Report view shows a cited RAG document for the week.                                      | 1.5 h | ⬜     |
 | 5   | **A/B compare.** No-RAG variant, citation checks, rubric and pairwise judge with order swap, `POST/GET /ab-runs` (202 + polling), A/B view, committed sample run.                                                                                                                          | "Run new A/B" → both documents side by side with scores and cost.                             | 1.5 h | ⬜     |
 
+### Phase 1: agreed test interfaces
+
+1. **Week window.** `targetWeek(now)` and `priorWeeks(target, 3)` give the last complete Mon–Sun UTC week
+   and the three before it. Unit tests cover the boundaries: Sunday 23:59, Monday 00:00, and a year
+   boundary.
+2. **`ForumSource` / `DiscourseSource`.** List topics active since a date by paging `/latest.json`, then fetch
+   each topic's posts. Unit tests use recorded pixls fixture JSON and a fake `fetch`, and cover paging, the
+   date cutoff, pacing and the request cap.
+3. **Post → chunks.** A pure function that adds the title and category in front, splits posts over ~400
+   tokens with overlap, and drops posts under ~15 words unless they are the topic's first post. Unit tests.
+4. **Ingestion service** (`ForumSource` in, repository out). Unit tests with a fake source check that the
+   caps stop a run. Integration tests on real Postgres check that rerunning adds no duplicates and that a
+   run resumes from its cursor.
+5. **Seed export/import.** An integration round-trip test (export, then load into an empty DB, then
+   compare), plus load-on-empty at boot.
+
+Verify before writing the client: does `/t/{id}.json` give a post's raw text, or only cooked HTML (and is
+`/raw/{topic_id}` or `include_raw` needed)? Large topics return only the first ~20 posts plus
+`post_stream.stream` IDs, so check whether the rest must come from `/t/{id}/posts.json?post_ids[]=`.
+
 ## Extras, ranked by demo value per hour
 
 | Rank | Phase                                                                                                                                 | Est.   | Status |
