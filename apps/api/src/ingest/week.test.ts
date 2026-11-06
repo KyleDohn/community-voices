@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { priorWeeks, targetWeek } from './week';
+import { priorWeeks, targetWeek, weekOf } from './week';
 
 const utc = (iso: string) => new Date(iso);
 const week = (start: string, end: string) => ({ start: utc(start), end: utc(end) });
@@ -32,5 +32,12 @@ describe('priorWeeks', () => {
       week('2025-12-15T00:00:00Z', '2025-12-22T00:00:00Z'),
       week('2025-12-22T00:00:00Z', '2025-12-29T00:00:00Z'),
     ]);
+  });
+});
+
+describe('weekOf', () => {
+  it('maps a timestamp to the Monday 00:00 UTC that starts its week', () => {
+    expect(weekOf(utc('2026-11-08T23:59:59.999Z'))).toEqual(utc('2026-11-02T00:00:00Z'));
+    expect(weekOf(utc('2026-11-09T00:00:00Z'))).toEqual(utc('2026-11-09T00:00:00Z'));
   });
 });
