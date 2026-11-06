@@ -16,7 +16,9 @@ This file records how the project was built with Claude Code. It is meant to be 
      [`PLAN.md`](PLAN.md).
    - The developer asked for plain explanations of embeddings and retrieval during the interview. These
      were folded into `DESIGN.md` so every choice can be defended.
-3. **Build** (`tdd` skill, phase by phase per `PLAN.md`). Not started.
+3. **Build** (`tdd` skill, phase by phase per `PLAN.md`).
+   - Phase 0 (scaffold): `setup-pre-commit` for Husky and lint-staged, and `writing-for-agents` for the
+     project `CLAUDE.md`. The health route and config loader were built test-first.
 
 ## Where the AI was wrong or needed correcting
 
@@ -25,9 +27,15 @@ This file records how the project was built with Claude Code. It is meant to be 
   claims are labeled unverified, not presented as fact.
 - The stack research left "what does no-RAG mean?" open as a product decision instead of guessing. That
   was the right call, and it became assumption #2.
+- `typescript@latest` is now 7.0, but typescript-eslint supports <6.1. This was caught by checking peer
+  deps before installing, and TypeScript was pinned to 6.0.3.
+- The first server wiring let unknown `/api/v1/*` paths fall through to the SPA's `index.html` with a 200.
+  This was caught by curling the running container, not by a test. A failing test came first, then the
+  fix: a JSON 404 catch-all.
 
 ## Time log
 
 | Step                | Approx. time |
 | ------------------- | ------------ |
 | Research + planning | 1 h          |
+| Phase 0 scaffold    | 0.5 h        |
