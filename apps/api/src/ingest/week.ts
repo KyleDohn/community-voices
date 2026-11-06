@@ -27,3 +27,10 @@ export const priorWeeks = (target: Week, count: number): Week[] =>
   Array.from({ length: count }, (_, i) =>
     weekStartingAt(target.start.getTime() - (count - i) * WEEK_MS),
   );
+
+/** Everything one ingestion fetches: the history weeks plus the target week. */
+export const ingestionWindow = (now: Date, historyWeeks: number): Week => {
+  const target = targetWeek(now);
+  const [oldest] = priorWeeks(target, historyWeeks);
+  return { start: (oldest ?? target).start, end: target.end };
+};

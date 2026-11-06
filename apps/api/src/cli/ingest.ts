@@ -1,0 +1,51 @@
+/**
+ * `pnpm ingest` fetches four weeks of the configured Discourse forum into Postgres.
+ * `pnpm ingest --resume <run-id>` continues a capped or failed run from its cursor.
+ */
+import { parseArgs } from 'node:util';
+import { loadConfig } from '../config';
+import { connect, runMigrations } from '../db/client';
+import type { ForumSource } from '../ingest/forum-source';
+import { ingestionWindow } from '../ingest/week';
+import { createIngestion } from '../ingest/wiring';
+
+const { values } = parseArgs({ options: { resume: { type: 'string' } } });
+const config = loadConfig(process.env);
+const { pool, db } = connect(config.databaseUrl);
+await runMigrations(db);
+
+let total = 0;
+let fetched = 0;
+const withProgress = (source: ForumSource): ForumSource => ({
+  listActiveTopics: async (since) => {
+    const topics = await source.listActiveTopics(since);
+    total = topics.length;
+    console.log(`${total} topics active since ${since.toISOString().slice(0, 10)}`);
+    return topics;
+  },
+  fetchTopic: async (id, window) => {
+    const result = await source.fetchTopic(id, window);
+    fetched++;
+    if (fetched % 25 === 0) console.log(`  fetched ${fetched} topics (${total} listed)`);
+    return result;
+  },
+});
+
+const service = createIngestion(config.ingest, db, withProgress);
+const runId =
+  values.resume ??
+  (
+    await service.start({
+      window: ingestionWindow(new Date(), config.ingest.historyWeeks),
+      maxRequests: config.ingest.maxRequests,
+      maxTokens: config.ingest.maxTokens,
+    })
+  ).id;
+
+console.log(`Ingestion run ${runId} from ${config.ingest.discourseBaseUrl}`);
+const run = await service.ingest(runId);
+const { status, topicsStored, postsStored, chunksStored, tokensUsed, error } = run;
+console.log({ status, topicsStored, postsStored, chunksStored, tokensUsed, error });
+if (status === 'capped') console.log(`Resume with: pnpm ingest --resume ${runId}`);
+await pool.end();
+process.exitCode = status === 'failed' ? 1 : 0;
