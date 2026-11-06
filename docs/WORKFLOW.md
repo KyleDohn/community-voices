@@ -38,6 +38,9 @@ This file records how the project was built with Claude Code. It is meant to be 
 - Phase 1: request pacing and the request cap went into the first Discourse slice before any test
   covered them. The tests came one slice later. To prove they weren't vacuous, each guard line was
   deleted once and exactly one test failed each time.
+- Phase 1: the first "rerun adds no duplicates" integration test passed even with the upsert removed. The
+  second run failed on a duplicate key, so the row counts never changed. The test now also asserts that
+  the rerun succeeds, and a no-upsert mutant fails it.
 
 ## Time log
 

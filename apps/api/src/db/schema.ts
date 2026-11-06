@@ -1,2 +1,85 @@
 // Tables arrive with the phases that need them (see docs/DESIGN.md "Data model").
-export {};
+import { sql } from 'drizzle-orm';
+import {
+  date,
+  index,
+  integer,
+  jsonb,
+  pgTable,
+  serial,
+  text,
+  timestamp,
+  unique,
+  uuid,
+  vector,
+} from 'drizzle-orm/pg-core';
+
+const timestamptz = (name: string) => timestamp(name, { withTimezone: true, mode: 'date' });
+
+export const topics = pgTable('topics', {
+  /** Discourse topic id. */
+  id: integer('id').primaryKey(),
+  title: text('title').notNull(),
+  category: text('category').notNull(),
+  url: text('url').notNull(),
+  createdAt: timestamptz('created_at').notNull(),
+});
+
+export const posts = pgTable(
+  'posts',
+  {
+    /** Discourse post id, the upsert key. */
+    id: integer('id').primaryKey(),
+    topicId: integer('topic_id')
+      .notNull()
+      .references(() => topics.id),
+    postNumber: integer('post_number').notNull(),
+    username: text('username').notNull(),
+    raw: text('raw').notNull(),
+    createdAt: timestamptz('created_at').notNull(),
+    url: text('url').notNull(),
+  },
+  (t) => [index('posts_topic_id_idx').on(t.topicId)],
+);
+
+export const chunks = pgTable(
+  'chunks',
+  {
+    id: serial('id').primaryKey(),
+    postId: integer('post_id')
+      .notNull()
+      .references(() => posts.id, { onDelete: 'cascade' }),
+    chunkIndex: integer('chunk_index').notNull(),
+    text: text('text').notNull(),
+    /** Null until phase 2 embeds it, or after the text changed. */
+    embedding: vector('embedding', { dimensions: 384 }),
+    embeddingModel: text('embedding_model'),
+    weekStart: date('week_start', { mode: 'string' }).notNull(),
+  },
+  (t) => [
+    unique('chunks_post_chunk_uq').on(t.postId, t.chunkIndex),
+    index('chunks_week_idx').on(t.weekStart),
+  ],
+);
+
+export const ingestionRuns = pgTable('ingestion_runs', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  status: text('status', {
+    enum: ['queued', 'running', 'succeeded', 'capped', 'failed'],
+  }).notNull(),
+  windowStart: timestamptz('window_start').notNull(),
+  windowEnd: timestamptz('window_end').notNull(),
+  maxRequests: integer('max_requests').notNull(),
+  maxTokens: integer('max_tokens').notNull(),
+  doneTopicIds: jsonb('done_topic_ids')
+    .$type<number[]>()
+    .notNull()
+    .default(sql`'[]'::jsonb`),
+  topicsStored: integer('topics_stored').notNull().default(0),
+  postsStored: integer('posts_stored').notNull().default(0),
+  chunksStored: integer('chunks_stored').notNull().default(0),
+  tokensUsed: integer('tokens_used').notNull().default(0),
+  error: text('error'),
+  createdAt: timestamptz('created_at').notNull().defaultNow(),
+  updatedAt: timestamptz('updated_at').notNull().defaultNow(),
+});

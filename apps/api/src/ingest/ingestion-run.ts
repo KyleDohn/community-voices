@@ -35,4 +35,11 @@ export interface IngestionRepository {
   updateRun(id: string, progress: Partial<IngestionProgress>): Promise<void>;
   /** Idempotent upsert of a topic, its posts and their chunks. */
   saveTopic(topic: ForumTopic, posts: ForumPost[], chunks: ChunkRecord[]): Promise<void>;
+  corpusCounts(): Promise<CorpusCounts>;
+}
+
+export interface CorpusCounts {
+  topics: number;
+  posts: number;
+  chunks: number;
 }
