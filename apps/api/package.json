@@ -13,6 +13,7 @@
   "dependencies": {
     "@cv/contracts": "workspace:*",
     "@hono/node-server": "2.1.6",
+    "@huggingface/transformers": "4.3.2",
     "drizzle-orm": "0.45.4",
     "hono": "4.13.16",
     "pg": "8.23.1",

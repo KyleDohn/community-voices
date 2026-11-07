@@ -17,6 +17,14 @@ describe('loadConfig', () => {
         historyWeeks: 3,
         chunk: { maxWords: 300, overlapWords: 40, minWords: 15 },
       },
+      embedding: {
+        model: 'Xenova/bge-small-en-v1.5',
+        dtype: 'q8',
+        batchSize: 32,
+        queryPrefix: 'Represent this sentence for searching relevant passages: ',
+        cacheDir: undefined,
+        allowRemoteModels: true,
+      },
     });
   });
 
@@ -29,6 +37,10 @@ describe('loadConfig', () => {
       DISCOURSE_BASE_URL: 'https://forum.example.org',
       INGEST_MAX_REQUESTS: '20',
       INGEST_MAX_TOKENS: '5000',
+      EMBEDDING_MODEL: 'Xenova/other',
+      EMBEDDING_BATCH_SIZE: '8',
+      EMBEDDING_CACHE_DIR: '/models',
+      EMBEDDING_ALLOW_REMOTE: 'false',
     });
     expect(config).toMatchObject({
       port: 8080,
@@ -36,6 +48,12 @@ describe('loadConfig', () => {
       anthropicApiKey: 'sk-test',
       webDistDir: '/app/web',
       ingest: { discourseBaseUrl: 'https://forum.example.org', maxRequests: 20, maxTokens: 5000 },
+      embedding: {
+        model: 'Xenova/other',
+        batchSize: 8,
+        cacheDir: '/models',
+        allowRemoteModels: false,
+      },
     });
   });
 
