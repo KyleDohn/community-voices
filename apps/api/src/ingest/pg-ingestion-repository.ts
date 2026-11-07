@@ -1,4 +1,4 @@
-import { asc, count, eq, sql } from 'drizzle-orm';
+import { asc, count, eq, inArray, sql } from 'drizzle-orm';
 import type { Database } from '../db/client';
 import { chunks, ingestionRuns, posts, topics } from '../db/schema';
 import type { IngestionRepository, IngestionRun, SavedTopic } from './ingestion-run';
@@ -93,6 +93,15 @@ export const createPgIngestionRepository = (db: Database): IngestionRepository =
       .update(ingestionRuns)
       .set({ ...progress, updatedAt: new Date() })
       .where(eq(ingestionRuns.id, id));
+  },
+
+  failInterruptedRuns: async () => {
+    const rows = await db
+      .update(ingestionRuns)
+      .set({ status: 'failed', error: 'Interrupted by a restart', updatedAt: new Date() })
+      .where(inArray(ingestionRuns.status, ['queued', 'running']))
+      .returning({ id: ingestionRuns.id });
+    return rows.length;
   },
 
   saveTopic: (topic, topicPosts, topicChunks) =>

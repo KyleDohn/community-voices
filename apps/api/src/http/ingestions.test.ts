@@ -45,3 +45,20 @@ describe('GET /api/v1/ingestions/:id', () => {
     expect(ErrorResponse.parse(await res.json()).error).toBe('not_found');
   });
 });
+
+describe('unexpected errors', () => {
+  it('answer 500 with an ErrorResponse body', async () => {
+    const ingestions = {
+      ...fakeIngestionJobs(),
+      trigger: async () => {
+        throw new Error('database is down');
+      },
+    };
+    const app = createApp({ probeDatabase: async () => true, ingestions });
+
+    const res = await app.request('/api/v1/ingestions', { method: 'POST' });
+
+    expect(res.status).toBe(500);
+    expect(ErrorResponse.parse(await res.json()).error).toBe('internal');
+  });
+});

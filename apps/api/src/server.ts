@@ -14,15 +14,19 @@ const config = loadConfig(process.env);
 const { db } = connect(config.databaseUrl);
 await runMigrations(db);
 
+const ingestionRepo = createPgIngestionRepository(db);
+const interrupted = await ingestionRepo.failInterruptedRuns();
+if (interrupted > 0) console.log(`Marked ${interrupted} interrupted ingestion run(s) as failed`);
+
 const seedFile = await latestSeedFile();
 if (seedFile) {
-  const outcome = await seedIfEmpty(createPgIngestionRepository(db), seedFile, config.ingest.chunk);
+  const outcome = await seedIfEmpty(ingestionRepo, seedFile, config.ingest.chunk);
   console.log(`Seed ${seedFile}: ${outcome}`);
 }
 
 const ingestions = createIngestionJobs({
   service: createIngestion(config.ingest, db),
-  getRun: createPgIngestionRepository(db).getRun,
+  getRun: ingestionRepo.getRun,
   newRun: () => ({
     window: ingestionWindow(new Date(), config.ingest.historyWeeks),
     maxRequests: config.ingest.maxRequests,

@@ -44,6 +44,14 @@ export const createMemoryIngestionRepository = () => {
       const run = runs.get(id);
       if (run) runs.set(id, { ...run, ...progress });
     },
+    failInterruptedRuns: async () => {
+      const stale = [...runs.values()].filter(
+        (r) => r.status === 'queued' || r.status === 'running',
+      );
+      for (const run of stale)
+        runs.set(run.id, { ...run, status: 'failed', error: 'Interrupted by a restart' });
+      return stale.length;
+    },
     saveTopic: async (topic, topicPosts, topicChunks) =>
       save({ topic, posts: topicPosts, chunks: topicChunks }),
     saveCorpus: async (corpus) => corpus.forEach(save),

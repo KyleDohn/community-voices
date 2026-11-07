@@ -9,14 +9,19 @@ const inProgress: ErrorResponse = {
 };
 const notFound: ErrorResponse = { error: 'not_found', message: 'No such ingestion run' };
 
-const toResponse = ({
-  window,
-  doneTopicIds: _done,
-  ...run
-}: IngestionRun): IngestionRunResponse => ({
-  ...run,
-  windowStart: window.start.toISOString(),
-  windowEnd: window.end.toISOString(),
+// Field by field, so internal run state (like the cursor) can't leak into the response.
+const toResponse = (run: IngestionRun): IngestionRunResponse => ({
+  id: run.id,
+  status: run.status,
+  windowStart: run.window.start.toISOString(),
+  windowEnd: run.window.end.toISOString(),
+  maxRequests: run.maxRequests,
+  maxTokens: run.maxTokens,
+  topicsStored: run.topicsStored,
+  postsStored: run.postsStored,
+  chunksStored: run.chunksStored,
+  tokensUsed: run.tokensUsed,
+  error: run.error,
 });
 
 export const ingestionRoutes = (jobs: IngestionJobs) =>

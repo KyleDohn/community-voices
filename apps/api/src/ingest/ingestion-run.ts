@@ -36,6 +36,8 @@ export interface IngestionRepository {
     id: string,
     progress: Partial<IngestionProgress & { maxRequests: number; maxTokens: number }>,
   ): Promise<void>;
+  /** Fails runs a previous process left queued or running; returns how many. Call once at boot. */
+  failInterruptedRuns(): Promise<number>;
   /** Idempotent upsert of a topic, its posts and their chunks. */
   saveTopic(topic: ForumTopic, posts: ForumPost[], chunks: ChunkRecord[]): Promise<void>;
   /** Upserts many topics in one transaction: all or nothing. */

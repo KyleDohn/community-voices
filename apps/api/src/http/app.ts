@@ -13,6 +13,7 @@ export interface AppDependencies {
 export const API_PREFIX = '/api/v1';
 
 const notFound: ErrorResponse = { error: 'not_found', message: 'No such API route' };
+const internal: ErrorResponse = { error: 'internal', message: 'Unexpected server error' };
 
 export const createApp = (deps: AppDependencies) =>
   new Hono()
@@ -20,4 +21,9 @@ export const createApp = (deps: AppDependencies) =>
     .route('/health', healthRoutes(deps.probeDatabase))
     .route('/ingestions', ingestionRoutes(deps.ingestions))
     // Catch-all so unknown API paths never fall through to the web app's index.html.
-    .all('/*', (c) => c.json(notFound, 404));
+    .all('/*', (c) => c.json(notFound, 404))
+    // Non-2xx bodies are always ErrorResponse; details go to the log, not the client.
+    .onError((error, c) => {
+      console.error(error);
+      return c.json(internal, 500);
+    });

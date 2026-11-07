@@ -42,6 +42,21 @@ describe('ingestion into Postgres', () => {
     });
   });
 
+  it('marks runs left unfinished by a restart as failed, so pollers get a final status', async () => {
+    const { id: stale } = await repo.createRun({ window, maxRequests: 5, maxTokens: 5 });
+    await repo.updateRun(stale, { status: 'running' });
+    const { id: finished } = await repo.createRun({ window, maxRequests: 5, maxTokens: 5 });
+    await repo.updateRun(finished, { status: 'succeeded' });
+
+    expect(await repo.failInterruptedRuns()).toBe(1);
+
+    expect(await repo.getRun(stale)).toMatchObject({
+      status: 'failed',
+      error: 'Interrupted by a restart',
+    });
+    expect((await repo.getRun(finished))?.status).toBe('succeeded');
+  });
+
   it('finds no run for an id that is not a uuid', async () => {
     expect(await repo.getRun('nope')).toBeUndefined();
   });
