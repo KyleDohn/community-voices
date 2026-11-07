@@ -45,6 +45,25 @@ describe('IngestionJobs after a run', () => {
     expect(hookRuns).toBe(1);
   });
 
+  it('frees the slot before the hook finishes, so a slow embed never blocks the next run', async () => {
+    let finishHook!: () => void;
+    let hookStarted!: () => void;
+    const started = new Promise<void>((resolve) => (hookStarted = resolve));
+    const jobs = fakeIngestionJobs({
+      afterRun: () => {
+        hookStarted();
+        return new Promise<void>((resolve) => (finishHook = resolve));
+      },
+    });
+
+    const first = await jobs.trigger();
+    await started;
+
+    expect(await jobs.trigger()).toBeDefined();
+    finishHook();
+    await first?.done;
+  });
+
   it('still frees the slot when the hook fails', async () => {
     const jobs = fakeIngestionJobs({
       afterRun: async () => {

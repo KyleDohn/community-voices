@@ -7,7 +7,7 @@ export interface IngestionJobsDeps {
   getRun: (id: string) => Promise<IngestionRun | undefined>;
   /** Window and caps for a run started now. */
   newRun: () => { window: TimeWindow; maxRequests: number; maxTokens: number };
-  /** Runs after every run, e.g. to embed the chunks it stored. */
+  /** Runs after every run, once its slot is free; `done` waits for it. */
   afterRun?: () => Promise<unknown>;
 }
 
@@ -29,9 +29,10 @@ export const createIngestionJobs = ({
       const done = service
         .ingest(id)
         .catch((error: unknown) => void console.error(`Ingestion ${id} crashed`, error))
+        // Free the slot first: the hook may queue behind a long embed that isn't an ingestion.
+        .finally(release)
         .then(afterRun)
-        .catch((error: unknown) => void console.error(`After ingestion ${id}`, error))
-        .finally(release);
+        .catch((error: unknown) => void console.error(`After ingestion ${id}`, error));
       return { id, done };
     });
     inFlight = started.catch(release);
