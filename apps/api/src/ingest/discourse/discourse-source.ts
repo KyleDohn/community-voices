@@ -47,26 +47,29 @@ export const createDiscourseSource = ({
   let requestCount = 0;
   let categoryNames: Promise<Map<number, string>> | undefined;
 
-  const request = async (path: string) => {
+  // A forum may live under a subpath; robots.txt always lives at the host root.
+  const forumRoot = baseUrl.replace(/\/+$/, '');
+  const request = async (url: URL) => {
     if (requestCount >= maxRequests) throw new RequestCapReached(maxRequests);
     if (requestCount > 0) await sleep(minIntervalMs);
     requestCount++;
-    return fetch(new URL(path, baseUrl), { headers: { 'User-Agent': userAgent } });
+    return fetch(url, { headers: { 'User-Agent': userAgent } });
   };
 
   let robotsTxt: Promise<string> | undefined;
   // A missing robots.txt allows everything; it is fetched once per source, before any API call.
   const loadRobots = async () => {
-    const res = await request('/robots.txt');
+    const res = await request(new URL('/robots.txt', forumRoot));
     return res.ok ? res.text() : '';
   };
 
   const get = async <T>(path: string, schema: z.ZodType<T>): Promise<T> => {
     robotsTxt ??= loadRobots();
-    if (!isAllowed(await robotsTxt, userAgent, path)) {
-      throw new Error(`robots.txt at ${baseUrl} disallows ${path}`);
+    const url = new URL(forumRoot + path);
+    if (!isAllowed(await robotsTxt, userAgent, url.pathname + url.search)) {
+      throw new Error(`robots.txt at ${url.origin} disallows ${url.pathname}`);
     }
-    const res = await request(path);
+    const res = await request(url);
     if (!res.ok) throw new Error(`Discourse ${res.status} for ${path}`);
     const parsed = schema.safeParse(await res.json());
     if (!parsed.success) {
@@ -127,7 +130,7 @@ export const createDiscourseSource = ({
     const rest = raw.post_stream.stream.filter((postId) => !inlineIds.has(postId));
     const tail = await fetchTailPosts(id, rest, window.start);
 
-    const url = `${baseUrl}/t/${raw.slug}/${id}`;
+    const url = `${forumRoot}/t/${raw.slug}/${id}`;
     const topic: ForumTopic = {
       id,
       title: raw.title,

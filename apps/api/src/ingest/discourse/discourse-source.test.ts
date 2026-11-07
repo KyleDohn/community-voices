@@ -3,11 +3,13 @@ import { RequestCapReached } from '../forum-source';
 import { createDiscourseSource } from './discourse-source';
 import { createFakeDiscourse } from './fake-discourse';
 
-const setup = (options: { maxRequests?: number; overrides?: Record<string, unknown> } = {}) => {
+const setup = (
+  options: { maxRequests?: number; overrides?: Record<string, unknown>; baseUrl?: string } = {},
+) => {
   const fake = createFakeDiscourse(options.overrides);
   const sleeps: number[] = [];
   const source = createDiscourseSource({
-    baseUrl: 'https://discuss.pixls.us',
+    baseUrl: options.baseUrl ?? 'https://discuss.pixls.us',
     userAgent: 'community-voices-test',
     minIntervalMs: 600,
     maxRequests: options.maxRequests ?? 100,
@@ -187,5 +189,30 @@ describe('DiscourseSource politeness', () => {
     const { source } = setup({ overrides: { '/robots.txt': null } });
 
     await expect(source.fetchTopic(62066, novemberWeek)).resolves.toBeDefined();
+  });
+});
+
+describe('DiscourseSource base URL', () => {
+  it('ignores a trailing slash', async () => {
+    const { source } = setup({ baseUrl: 'https://discuss.pixls.us/' });
+
+    const { topic } = await source.fetchTopic(62066, novemberWeek);
+
+    expect(topic.url).toBe('https://discuss.pixls.us/t/hawaiian-ferns-hilo-hi-usa/62066');
+  });
+
+  it('keeps a subpath for API calls but reads robots.txt from the host root', async () => {
+    const { source, requests } = setup({ baseUrl: 'https://discuss.pixls.us/forum' });
+
+    await source.fetchTopic(62066, novemberWeek).catch(() => undefined);
+
+    expect(requests.slice(0, 2)).toEqual(['/robots.txt', '/forum/site.json']);
+  });
+
+  it('matches robots.txt rules against the full path under a subpath', async () => {
+    const overrides = { '/robots.txt': 'User-agent: *\nDisallow: /forum/' };
+    const { source } = setup({ baseUrl: 'https://discuss.pixls.us/forum', overrides });
+
+    await expect(source.fetchTopic(62066, novemberWeek)).rejects.toThrow(/robots\.txt/);
   });
 });
