@@ -32,20 +32,25 @@ const withProgress = (source: ForumSource): ForumSource => ({
 });
 
 const service = createIngestion(config.ingest, db, withProgress);
+const caps = { maxRequests: config.ingest.maxRequests, maxTokens: config.ingest.maxTokens };
 const runId =
   values.resume ??
   (
     await service.start({
       window: ingestionWindow(new Date(), config.ingest.historyWeeks),
-      maxRequests: config.ingest.maxRequests,
-      maxTokens: config.ingest.maxTokens,
+      ...caps,
     })
   ).id;
 
 console.log(`Ingestion run ${runId} from ${config.ingest.discourseBaseUrl}`);
-const run = await service.ingest(runId);
+// A resume takes the current caps, so raising INGEST_MAX_TOKENS lets a token-capped run continue.
+const run = await service.ingest(runId, values.resume ? caps : undefined);
 const { status, topicsStored, postsStored, chunksStored, tokensUsed, error } = run;
 console.log({ status, topicsStored, postsStored, chunksStored, tokensUsed, error });
-if (status === 'capped') console.log(`Resume with: pnpm ingest --resume ${runId}`);
+if (status === 'capped') {
+  console.log(
+    `Capped. Raise INGEST_MAX_REQUESTS or INGEST_MAX_TOKENS, then: pnpm ingest --resume ${runId}`,
+  );
+}
 await pool.end();
 process.exitCode = status === 'failed' ? 1 : 0;

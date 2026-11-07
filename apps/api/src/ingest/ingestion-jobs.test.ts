@@ -21,3 +21,14 @@ describe('IngestionJobs', () => {
     expect(await jobs.trigger()).toBeDefined();
   });
 });
+
+describe('IngestionJobs under concurrent requests', () => {
+  it('starts only one run when two triggers arrive together', async () => {
+    const jobs = fakeIngestionJobs();
+
+    const results = await Promise.all([jobs.trigger(), jobs.trigger()]);
+
+    expect(results.filter(Boolean)).toHaveLength(1);
+    await Promise.all(results.map((r) => r?.done));
+  });
+});

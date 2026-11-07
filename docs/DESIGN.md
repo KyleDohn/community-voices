@@ -81,7 +81,8 @@ Model IDs and limits live in config, not in code.
 - **Resumable:** a run's cursor is the set of finished topic IDs. It isn't a position in the list, because
   `/latest` reorders whenever someone posts. `pnpm ingest --resume <id>` continues a capped or failed run.
 - **Caps:** each run has caps on requests and total tokens (about chars/4 of raw text). Hitting either ends
-  the run as `capped`, with its cursor kept. That, plus chunking and dropping noise, is our answer to
+  the run as `capped`, with its cursor kept. Caps cover the whole run, so a resume continues only under
+  raised caps, which `--resume` reads from the current config. That, plus chunking and dropping noise, is our answer to
   overly large data.
 - **Pacing:** a polite User-Agent naming the project, 600 ms between requests (half the default limit),
   and respect for robots.txt.

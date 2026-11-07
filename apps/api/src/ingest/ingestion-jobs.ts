@@ -13,15 +13,20 @@ export interface IngestionJobsDeps {
 export const createIngestionJobs = ({ service, getRun, newRun }: IngestionJobsDeps) => {
   let inFlight: Promise<unknown> | undefined;
 
+  const release = () => (inFlight = undefined);
+
   const trigger = async () => {
     if (inFlight) return undefined;
-    const { id } = await service.start(newRun());
-    const done = service.ingest(id).catch((error: unknown) => {
-      console.error(`Ingestion ${id} crashed`, error);
-      return undefined;
+    // Claim the slot before the first await, or two simultaneous requests both get past the check.
+    const started = service.start(newRun()).then(({ id }) => {
+      const done = service
+        .ingest(id)
+        .catch((error: unknown) => void console.error(`Ingestion ${id} crashed`, error))
+        .finally(release);
+      return { id, done };
     });
-    inFlight = done.finally(() => (inFlight = undefined));
-    return { id, done };
+    inFlight = started.catch(release);
+    return started;
   };
 
   return { trigger, get: getRun };

@@ -32,7 +32,10 @@ export interface IngestionRepository {
     maxTokens: number;
   }): Promise<IngestionRun>;
   getRun(id: string): Promise<IngestionRun | undefined>;
-  updateRun(id: string, progress: Partial<IngestionProgress>): Promise<void>;
+  updateRun(
+    id: string,
+    progress: Partial<IngestionProgress & { maxRequests: number; maxTokens: number }>,
+  ): Promise<void>;
   /** Idempotent upsert of a topic, its posts and their chunks. */
   saveTopic(topic: ForumTopic, posts: ForumPost[], chunks: ChunkRecord[]): Promise<void>;
   corpusCounts(): Promise<CorpusCounts>;

@@ -7,6 +7,11 @@ import type {
   IngestionStatus,
 } from './ingestion-run';
 
+export interface RunCaps {
+  maxRequests: number;
+  maxTokens: number;
+}
+
 export interface IngestionServiceDeps {
   repo: IngestionRepository;
   /** A fresh source per run, so each run gets its own request budget. */
@@ -21,10 +26,14 @@ export const createIngestionService = ({ repo, sourceFor, chunkOptions }: Ingest
   const start = (input: { window: TimeWindow; maxRequests: number; maxTokens: number }) =>
     repo.createRun(input);
 
-  /** Runs, or resumes, an ingestion. Progress is saved after each topic, so a stop loses nothing. */
-  const ingest = async (runId: string): Promise<IngestionRun> => {
-    const run = await repo.getRun(runId);
-    if (!run) throw new Error(`No ingestion run ${runId}`);
+  /**
+   * Runs, or resumes, an ingestion. Progress is saved after each topic, so a stop loses nothing.
+   * Caps apply to the whole run; pass raised `caps` to resume a run that hit one.
+   */
+  const ingest = async (runId: string, caps?: RunCaps): Promise<IngestionRun> => {
+    const stored = await repo.getRun(runId);
+    if (!stored) throw new Error(`No ingestion run ${runId}`);
+    const run = { ...stored, ...caps };
     const progress: IngestionProgress = { ...run, status: 'running', error: null };
     const done = new Set(progress.doneTopicIds);
     const save = async (patch: Partial<IngestionProgress>) => {
@@ -36,6 +45,7 @@ export const createIngestionService = ({ repo, sourceFor, chunkOptions }: Ingest
       return { ...run, ...progress };
     };
     await save({ status: 'running', error: null });
+    if (caps) await repo.updateRun(runId, caps);
 
     try {
       const source = sourceFor(run.maxRequests);

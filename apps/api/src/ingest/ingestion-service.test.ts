@@ -64,6 +64,24 @@ describe('IngestionService', () => {
     expect(forum.fetched).toEqual([1]);
   });
 
+  it('resumes a token-capped run under a raised cap', async () => {
+    const { service, start, forum } = setup([
+      scriptedTopic(1, [usefulReply]),
+      scriptedTopic(2, [usefulReply]),
+    ]);
+    const { id } = await start(10);
+    await service.ingest(id);
+
+    const resumed = await service.ingest(id, { maxRequests: 100, maxTokens: 1_000_000 });
+
+    expect(resumed).toMatchObject({
+      status: 'succeeded',
+      doneTopicIds: [1, 2],
+      maxTokens: 1_000_000,
+    });
+    expect(forum.fetched).toEqual([1, 2]);
+  });
+
   it('stops as capped when the source runs out of requests, keeping finished topics', async () => {
     const { service, start } = setup(
       [scriptedTopic(1, [usefulReply]), scriptedTopic(2, [usefulReply])],
