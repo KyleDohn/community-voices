@@ -18,7 +18,7 @@ const ingestionRepo = createPgIngestionRepository(db);
 const interrupted = await ingestionRepo.failInterruptedRuns();
 if (interrupted > 0) console.log(`Marked ${interrupted} interrupted ingestion run(s) as failed`);
 
-const seedFile = await latestSeedFile();
+const seedFile = await latestSeedFile(config.ingest.discourseBaseUrl);
 if (seedFile) {
   const outcome = await seedIfEmpty(ingestionRepo, seedFile, config.ingest.chunk);
   console.log(`Seed ${seedFile}: ${outcome}`);

@@ -68,12 +68,20 @@ export const seedIfEmpty = async (repo: IngestionRepository, file: string, chunk
 /** Repo-level `seed/`; the same relative path in dev and in the Docker image. */
 export const SEED_DIR = fileURLToPath(new URL('../../../../seed', import.meta.url));
 
-/** `<host>-<from>-<to>.json`; other files in seed/ (e.g. the sample A/B run) are not corpora. */
-const SEED_NAME = /^[a-z0-9]+-\d{4}-\d{2}-\d{2}-\d{4}-\d{2}-\d{2}\.json$/;
+const day = (d: Date) => d.toISOString().slice(0, 10);
+const hostSlug = (baseUrl: string) => new URL(baseUrl).host.toLowerCase().replace(/[^a-z0-9]+/g, '-');
 
-/** Seed files are named by date range, so the last one in sort order is the newest. */
-export const latestSeedFile = async (dir = SEED_DIR) => {
+/** `<host>-<from>-<to>.json`, e.g. `discuss-pixls-us-2026-10-05-2026-11-02.json`. */
+export const seedFileName = (baseUrl: string, window: TimeWindow) =>
+  `${hostSlug(baseUrl)}-${day(window.start)}-${day(window.end)}.json`;
+
+/**
+ * The newest seed for this forum. Names sort by date, and other files in seed/ (e.g. the sample
+ * A/B run) never match, so they are never loaded as a corpus.
+ */
+export const latestSeedFile = async (baseUrl: string, dir = SEED_DIR) => {
+  const name = new RegExp(`^${hostSlug(baseUrl)}-\\d{4}-\\d{2}-\\d{2}-\\d{4}-\\d{2}-\\d{2}\\.json$`);
   const files = await readdir(dir).catch(() => []);
-  const newest = files.filter((f) => SEED_NAME.test(f)).sort().at(-1);
+  const newest = files.filter((f) => name.test(f)).sort().at(-1);
   return newest && join(dir, newest);
 };

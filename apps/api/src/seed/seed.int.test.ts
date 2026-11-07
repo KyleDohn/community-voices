@@ -52,13 +52,20 @@ describe('seed', () => {
     expect((await repo.corpusCounts()).posts).toBe(5);
   });
 
-  it('picks the newest corpus file and ignores other JSON in the seed folder', async () => {
+  it("picks the newest seed for the configured forum and ignores other files", async () => {
     const dir = await mkdtemp(join(tmpdir(), 'cv-seed-'));
-    for (const name of ['pixls-2026-09-07-2026-10-05.json', 'pixls-2026-10-05-2026-11-02.json', 'sample-ab-run.json']) {
-      await writeFile(join(dir, name), '{}');
-    }
+    const names = [
+      'discuss-pixls-us-2026-09-07-2026-10-05.json',
+      'discuss-pixls-us-2026-10-05-2026-11-02.json',
+      'forum-example-org-2026-10-12-2026-11-09.json',
+      'sample-ab-run.json',
+    ];
+    for (const name of names) await writeFile(join(dir, name), '{}');
 
-    expect(await latestSeedFile(dir)).toBe(join(dir, 'pixls-2026-10-05-2026-11-02.json'));
+    expect(await latestSeedFile('https://discuss.pixls.us', dir)).toBe(
+      join(dir, 'discuss-pixls-us-2026-10-05-2026-11-02.json'),
+    );
+    expect(await latestSeedFile('https://other.example', dir)).toBeUndefined();
   });
 
   it('loads all or nothing, so a failed load is retried on the next boot', async () => {

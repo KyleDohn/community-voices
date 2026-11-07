@@ -1,6 +1,6 @@
 # Seed data
 
-`pixls-<from>-<to>.json` holds the raw topics and posts of [discuss.pixls.us](https://discuss.pixls.us)
+`<host>-<from>-<to>.json` (e.g. `discuss-pixls-us-2026-10-05-2026-11-02.json`) holds the raw topics and posts of [discuss.pixls.us](https://discuss.pixls.us)
 for one ingestion window, written by `pnpm seed:export`. The app loads the newest one at boot when the
 database has no posts.
 
