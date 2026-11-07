@@ -16,7 +16,8 @@ A/B comparison against an LLM that gets no retrieval.
 - Work **red → green → refactor**. Agree on the tested interfaces before a phase starts. Commit at each
   green, in small conventional commits (`feat(api):`, `test:`, `docs:`).
 - Unit tests are `*.test.ts` next to the code. Integration tests are `*.int.test.ts` and run against real
-  pgvector: `pnpm db:test:up`, then `pnpm test:integration`.
+  pgvector: `pnpm db:test:up`, then `pnpm test:integration`. Real-model tests are `*.model.test.ts`,
+  run with `pnpm test:model` and kept out of the hook.
 - The pre-commit hook runs lint-staged, typecheck and unit tests. CI also runs integration tests and the
   Docker build. A commit is finished when the hook passes.
 
@@ -40,6 +41,8 @@ A/B comparison against an LLM that gets no retrieval.
 - The Postgres 18 image keeps data under `/var/lib/postgresql/<major>`, so the volume mounts the parent.
   Host ports are 5433 (dev) and 5434 (test).
 - The API image is Debian-slim, because onnxruntime needs glibc.
+- Some script names are pnpm built-ins (`search`, `install`, `update`…) that shadow the package script, so
+  run those with `pnpm run <name>`.
 
 ## Boundaries
 

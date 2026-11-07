@@ -90,8 +90,7 @@ Model IDs and limits live in config, not in code.
 - **Triggers:** the CLI (`pnpm ingest`), `POST /api/v1/ingestions`, and a weekly in-process schedule
   (stretch). The API runs one ingestion at a time per process and answers `409` while one is in flight.
 - **Seed:** `seed/<host>-<from>-<to>.json` (written by `pnpm seed:export`) holds the raw topics and posts
-  for the four weeks. On boot, if `posts` is empty, the app loads the newest seed, then chunks it (and,
-  from phase 2, embeds it). Other files in `seed/`, such as the sample A/B run, are never loaded as a
+  for the four weeks. On boot, if `posts` is empty, the app loads the newest seed, chunks it and embeds it. Other files in `seed/`, such as the sample A/B run, are never loaded as a
   corpus.
 
 ### Chunking
@@ -107,12 +106,27 @@ Model IDs and limits live in config, not in code.
 
 ## Embeddings
 
-- **Model:** bge-small-en-v1.5 through `@huggingface/transformers`, giving 384 dimensions, normalized.
-  Posts and queries go through the same model.
-- **Model name stored:** each chunk records the model that embedded it, so changing models means
-  re-embedding everything.
-- **Search:** exact cosine distance (`<=>`) through Drizzle's `cosineDistance`. There's no ANN index: at
-  about 6k rows an exact scan takes milliseconds, and HNSW pays off orders of magnitude later.
+- **Model:** bge-small-en-v1.5 (`Xenova/bge-small-en-v1.5`) through `@huggingface/transformers`. It gives
+  384 dimensions with CLS pooling, normalized to unit length, so cosine similarity is a plain dot product.
+  The weights are q8 (8-bit), 34 MB instead of about 130 MB, and faster on CPU with little loss in quality.
+- **Posts vs queries:** `Embedder` has `embedDocuments` and `embedQuery`. Only queries get bge's
+  instruction, `"Represent this sentence for searching relevant passages: "`. Measured on the week of
+  2026-10-26, top-10 with and without the prefix overlapped 5–8 of 10 across five facet-style queries;
+  where they differed, the prefixed run tended to surface the more on-topic posts (a release
+  announcement for "new software releases"). We keep it, as the model card recommends.
+- **Model name stored:** each chunk records the model that embedded it. Search compares only vectors from
+  the current model, and changing `EMBEDDING_MODEL` re-embeds everything on the next boot.
+- **When it runs:** on boot, after seeding, in the background; the API answers meanwhile, `/health` says
+  `embedder: loading`, and `/weeks` shows `embedded` climbing. Each ingestion run (API or CLI) embeds the
+  chunks it stored. Passes are serialized and embed only pending chunks, so a reboot is a no-op. The full
+  seed (3,402 chunks) takes about 2 minutes natively and 2.7 minutes in Docker on an M-series Mac.
+- **Image:** the Docker build downloads the weights into `/app/models` and sets
+  `EMBEDDING_ALLOW_REMOTE=false`. First boot was verified on a network with no internet access.
+- **Search:** exact cosine distance (`<=>`) through Drizzle's `cosineDistance`, within one week, scored
+  `1 - distance`. There's no ANN index: at about 3.4k rows an exact scan takes milliseconds, and HNSW pays
+  off orders of magnitude later.
+- **Reading scores:** bge similarities bunch up (top hits for "export crash" were 0.67–0.70), so only the
+  ranking is meaningful. Don't filter on an absolute score threshold.
 
 ## Retrieval (RAG side only)
 
@@ -164,7 +178,7 @@ Model IDs and limits live in config, not in code.
 | Method | Path                       | Purpose                                              |
 | ------ | -------------------------- | ---------------------------------------------------- |
 | GET    | `/health`                  | Liveness, DB reachable, embedder loaded              |
-| GET    | `/weeks`                   | Weeks available, with post counts                    |
+| GET    | `/weeks`                   | Weeks with posts, chunks and embedded counts         |
 | POST   | `/ingestions`              | Start ingestion → `202 { id }`                       |
 | GET    | `/ingestions/:id`          | Ingestion status and counts                          |
 | POST   | `/ab-runs`                 | Start an A/B run for a week → `202 { id }`           |

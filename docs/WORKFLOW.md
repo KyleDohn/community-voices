@@ -24,6 +24,11 @@ This file records how the project was built with Claude Code. It is meant to be 
      recorder script. Weak tests were checked by mutation: delete the guarded line and confirm exactly
      one test fails. A real four-week ingest ran against pixls and surfaced one bug the fixtures could
      not (hidden posts).
+   - Phase 2 (embed): `tdd` again, against interfaces agreed from a handoff note after `/clear`. One
+     `Embedder` contract suite runs against both the fake and the real model, so the fake can't drift.
+     Mutants (blank query prefix, dropped model and week filters, removed pass queue) each failed a test.
+     The real boot was checked twice: natively against the dev DB, and in Docker on a fresh DB on a
+     network with no internet access.
 
 ## Where the AI was wrong or needed correcting
 
@@ -60,13 +65,24 @@ This file records how the project was built with Claude Code. It is meant to be 
   were untested. Each was fixed red-first. One of my mutants silently failed to apply (Prettier had
   reflowed the line) and another broke the syntax, so "the tests still pass" proved nothing until a
   mutant that compiled was used.
+- Phase 2: I told the developer that leaving out bge's query prefix makes retrieval "noticeably worse".
+  The first measurement, on two documents, showed no ranking difference. BAAI's v1.5 notes say the
+  instruction is optional. I corrected the claim in chat, then measured on the real corpus: top-10 overlap
+  was 5–8 of 10, with a modest gain for the prefix. The measured version is in DESIGN.
+- Phase 2: the planned demo command, `pnpm search "export crash"`, ran `npm search` against the npm
+  registry. `search` is a pnpm built-in that shadows package scripts. I had written that command into
+  PLAN. The demo is now `pnpm run search`, and `CLAUDE.md` notes the collision.
+- Phase 2: the first search integration test hard-coded chunk ids 1–5, but `truncate` doesn't reset a
+  `serial` column. This was caught before the first run by reading the reset, and fixed with
+  `restart identity`.
 - Open: one integration run timed out once (5 s, "adds no duplicates") right after the repository
   refactor. It didn't recur in 13 runs, and no stray DB connections were found. Cause unknown.
 
 ## Time log
 
-| Step                | Approx. time                          |
-| ------------------- | ------------------------------------- |
-| Research + planning | 1 h                                   |
-| Phase 0 scaffold    | 0.5 h                                 |
-| Phase 1 ingest      | 0.5 h (incl. an 8-minute live ingest) |
+| Step                | Approx. time                            |
+| ------------------- | --------------------------------------- |
+| Research + planning | 1 h                                     |
+| Phase 0 scaffold    | 0.5 h                                   |
+| Phase 1 ingest      | 0.5 h (incl. an 8-minute live ingest)   |
+| Phase 2 embed       | 0.5 h (incl. two 2–3 minute embed runs) |
