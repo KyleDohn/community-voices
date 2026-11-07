@@ -17,6 +17,7 @@ ENV NODE_ENV=production
 RUN pnpm install --frozen-lockfile --prod --filter @cv/api...
 COPY packages/contracts packages/contracts
 COPY apps/api apps/api
+COPY seed seed
 COPY --from=build /app/apps/web/dist apps/web/dist
 WORKDIR /app/apps/api
 ENV WEB_DIST_DIR=../web/dist

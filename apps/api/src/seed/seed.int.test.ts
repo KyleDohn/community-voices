@@ -7,7 +7,7 @@ import { connect, runMigrations } from '../db/client';
 import { createIngestionService } from '../ingest/ingestion-service';
 import { createPgIngestionRepository } from '../ingest/pg-ingestion-repository';
 import { createFakeForumSource, scriptedTopic } from '../ingest/testing/fake-forum-source';
-import { exportSeed, loadSeed, seedIfEmpty } from './seed';
+import { exportSeed, latestSeedFile, loadSeed, seedIfEmpty } from './seed';
 
 const { pool, db } = connect(process.env.DATABASE_URL!);
 const repo = createPgIngestionRepository(db);
@@ -50,6 +50,15 @@ describe('seed', () => {
     await truncate();
     expect(await seedIfEmpty(repo, file, chunkOptions)).toBe('loaded');
     expect((await repo.corpusCounts()).posts).toBe(5);
+  });
+
+  it('picks the newest corpus file and ignores other JSON in the seed folder', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'cv-seed-'));
+    for (const name of ['pixls-2026-09-07-2026-10-05.json', 'pixls-2026-10-05-2026-11-02.json', 'sample-ab-run.json']) {
+      await writeFile(join(dir, name), '{}');
+    }
+
+    expect(await latestSeedFile(dir)).toBe(join(dir, 'pixls-2026-10-05-2026-11-02.json'));
   });
 
   it('rejects a seed file that does not match the schema', async () => {

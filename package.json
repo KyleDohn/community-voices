@@ -19,6 +19,7 @@
     "db:test:up": "docker compose --profile test up -d --wait db-test",
     "db:generate": "pnpm --filter @cv/api db:generate",
     "ingest": "pnpm --filter @cv/api ingest",
+    "seed:export": "pnpm --filter @cv/api seed:export",
     "prepare": "husky"
   },
   "devDependencies": {

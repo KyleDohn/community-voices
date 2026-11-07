@@ -76,15 +76,21 @@ Model IDs and limits live in config, not in code.
 
 ## Ingestion
 
-- **Idempotent:** posts upsert by Discourse post ID, and a run resumes from the stored cursor.
-- **Caps:** each run has caps on requests and total tokens. That is our answer to overly large data,
-  together with chunking and dropping noise.
-- **Pacing:** a polite User-Agent naming the project, request pacing well under the rate limit, and
-  respect for robots.txt.
+- **Idempotent:** posts upsert by Discourse post ID, and chunks upsert on `(post_id, chunk_index)`. A chunk
+  keeps its embedding only while its text is unchanged, so a re-run doesn't force a re-embed.
+- **Resumable:** a run's cursor is the set of finished topic IDs. It isn't a position in the list, because
+  `/latest` reorders whenever someone posts. `pnpm ingest --resume <id>` continues a capped or failed run.
+- **Caps:** each run has caps on requests and total tokens (about chars/4 of raw text). Hitting either ends
+  the run as `capped`, with its cursor kept. That, plus chunking and dropping noise, is our answer to
+  overly large data.
+- **Pacing:** a polite User-Agent naming the project, 600 ms between requests (half the default limit),
+  and respect for robots.txt.
 - **Triggers:** the CLI (`pnpm ingest`), `POST /api/v1/ingestions`, and a weekly in-process schedule
-  (stretch).
-- **Seed:** `seed/pixls-<from>-<to>.json` holds the raw topics and posts for the four weeks. On boot, if the
-  database is empty, the app loads the seed, then chunks and embeds it.
+  (stretch). The API runs one ingestion at a time per process and answers `409` while one is in flight.
+- **Seed:** `seed/<host>-<from>-<to>.json` (written by `pnpm seed:export`) holds the raw topics and posts
+  for the four weeks. On boot, if `posts` is empty, the app loads the newest seed, then chunks it (and,
+  from phase 2, embeds it). Other files in `seed/`, such as the sample A/B run, are never loaded as a
+  corpus.
 
 ### Chunking
 

@@ -7,11 +7,18 @@ import { createApp } from './http/app';
 import { createIngestionJobs } from './ingest/ingestion-jobs';
 import { createPgIngestionRepository } from './ingest/pg-ingestion-repository';
 import { ingestionWindow } from './ingest/week';
+import { latestSeedFile, seedIfEmpty } from './seed/seed';
 import { createIngestion } from './ingest/wiring';
 
 const config = loadConfig(process.env);
 const { db } = connect(config.databaseUrl);
 await runMigrations(db);
+
+const seedFile = await latestSeedFile();
+if (seedFile) {
+  const outcome = await seedIfEmpty(createPgIngestionRepository(db), seedFile, config.ingest.chunk);
+  console.log(`Seed ${seedFile}: ${outcome}`);
+}
 
 const ingestions = createIngestionJobs({
   service: createIngestion(config.ingest, db),

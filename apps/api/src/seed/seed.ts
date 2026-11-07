@@ -1,4 +1,6 @@
-import { readFile } from 'node:fs/promises';
+import { readdir, readFile } from 'node:fs/promises';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { z } from 'zod';
 import { type ChunkOptions, chunkTopic } from '../ingest/chunk';
 import type { ForumPost, TimeWindow } from '../ingest/forum-source';
@@ -59,4 +61,17 @@ export const seedIfEmpty = async (repo: IngestionRepository, file: string, chunk
   if ((await repo.corpusCounts()).posts > 0) return 'skipped' as const;
   await loadSeed(JSON.parse(await readFile(file, 'utf8')), repo, chunkOptions);
   return 'loaded' as const;
+};
+
+/** Repo-level `seed/`; the same relative path in dev and in the Docker image. */
+export const SEED_DIR = fileURLToPath(new URL('../../../../seed', import.meta.url));
+
+/** `<host>-<from>-<to>.json`; other files in seed/ (e.g. the sample A/B run) are not corpora. */
+const SEED_NAME = /^[a-z0-9]+-\d{4}-\d{2}-\d{2}-\d{4}-\d{2}-\d{2}\.json$/;
+
+/** Seed files are named by date range, so the last one in sort order is the newest. */
+export const latestSeedFile = async (dir = SEED_DIR) => {
+  const files = await readdir(dir).catch(() => []);
+  const newest = files.filter((f) => SEED_NAME.test(f)).sort().at(-1);
+  return newest && join(dir, newest);
 };
