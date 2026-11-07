@@ -13,6 +13,7 @@ import {
   uuid,
   vector,
 } from 'drizzle-orm/pg-core';
+import { EMBEDDING_DIMENSIONS } from '../config';
 
 const timestamptz = (name: string) => timestamp(name, { withTimezone: true, mode: 'date' });
 
@@ -52,7 +53,7 @@ export const chunks = pgTable(
     chunkIndex: integer('chunk_index').notNull(),
     text: text('text').notNull(),
     /** Null until phase 2 embeds it, or after the text changed. */
-    embedding: vector('embedding', { dimensions: 384 }),
+    embedding: vector('embedding', { dimensions: EMBEDDING_DIMENSIONS }),
     embeddingModel: text('embedding_model'),
     weekStart: date('week_start', { mode: 'string' }).notNull(),
   },

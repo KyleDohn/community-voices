@@ -1,6 +1,9 @@
 import { z } from 'zod';
 import type { ChunkOptions } from './ingest/chunk';
 
+/** Width of `chunks.embedding`; a model with another width needs a migration, not just config. */
+export const EMBEDDING_DIMENSIONS = 384;
+
 const emptyAsUndefined = (value: unknown) => (value === '' ? undefined : value);
 
 const EnvSchema = z.object({
@@ -16,7 +19,7 @@ const EnvSchema = z.object({
   INGEST_MAX_REQUESTS: z.coerce.number().int().positive().default(1500),
   /** Four weeks of pixls is about 600k tokens of raw text. */
   INGEST_MAX_TOKENS: z.coerce.number().int().positive().default(1_500_000),
-  /** Changing it re-embeds every chunk on the next boot. */
+  /** Changing it re-embeds every chunk on the next boot; it must output EMBEDDING_DIMENSIONS. */
   EMBEDDING_MODEL: z.string().default('Xenova/bge-small-en-v1.5'),
   EMBEDDING_BATCH_SIZE: z.coerce.number().int().positive().default(32),
   /** Where model weights are cached; the Docker image bakes them in here. */
@@ -43,6 +46,7 @@ export interface EmbeddingConfig {
   model: string;
   /** 8-bit weights: about 4x smaller and faster on CPU, with little loss in retrieval quality. */
   dtype: 'q8';
+  dimensions: number;
   batchSize: number;
   /** bge's instruction for short queries; posts are embedded without it. */
   queryPrefix: string;
@@ -82,6 +86,7 @@ export const loadConfig = (env: Record<string, string | undefined>): Config => {
     embedding: {
       model: vars.EMBEDDING_MODEL,
       dtype: 'q8',
+      dimensions: EMBEDDING_DIMENSIONS,
       batchSize: vars.EMBEDDING_BATCH_SIZE,
       queryPrefix: 'Represent this sentence for searching relevant passages: ',
       cacheDir: vars.EMBEDDING_CACHE_DIR,

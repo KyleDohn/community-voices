@@ -20,6 +20,7 @@ describe('loadConfig', () => {
       embedding: {
         model: 'Xenova/bge-small-en-v1.5',
         dtype: 'q8',
+        dimensions: 384,
         batchSize: 32,
         queryPrefix: 'Represent this sentence for searching relevant passages: ',
         cacheDir: undefined,

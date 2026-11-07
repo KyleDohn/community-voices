@@ -24,3 +24,11 @@ describe('bge-small retrieval', () => {
     expect(dot(query, crash!)).toBeGreaterThan(dot(query, walk!) + 0.1);
   });
 });
+
+describe('loadBgeEmbedder', () => {
+  it('refuses a model whose vectors do not fit the chunks column', async () => {
+    await expect(loadBgeEmbedder({ ...config, dimensions: 768 })).rejects.toThrow(
+      /384.*768|768.*384/,
+    );
+  });
+});
