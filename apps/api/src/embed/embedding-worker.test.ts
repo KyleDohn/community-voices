@@ -51,4 +51,34 @@ describe('createEmbeddingWorker', () => {
     expect(embeddedTexts).toBe(3);
     expect(chunks.every((c) => c.embeddingModel === 'fake-hash-384')).toBe(true);
   });
+
+  it('fails quietly when the model cannot load and nothing is waiting on it', async () => {
+    const { store } = createMemoryEmbeddingStore([]);
+    const worker = createEmbeddingWorker(() => Promise.reject(new Error('no weights')), store, {
+      batchSize: 8,
+    });
+
+    // An unhandled rejection here would crash the server; vitest fails the run on one.
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(worker.status()).toBe('failed');
+  });
+
+  it('keeps accepting passes after one fails', async () => {
+    const { store, chunks } = createMemoryEmbeddingStore(['a']);
+    let saves = 0;
+    const flaky = {
+      ...store,
+      saveEmbeddings: async (...args: Parameters<typeof store.saveEmbeddings>) => {
+        if (saves++ === 0) throw new Error('connection reset');
+        return store.saveEmbeddings(...args);
+      },
+    };
+    const worker = createEmbeddingWorker(async () => fakeEmbedder(), flaky, { batchSize: 8 });
+
+    await expect(worker.embedPending()).rejects.toThrow('connection reset');
+
+    expect(await worker.embedPending()).toEqual({ embedded: 1 });
+    expect(chunks[0]?.embeddingModel).toBe('fake-hash-384');
+  });
 });
