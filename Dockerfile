@@ -20,6 +20,7 @@ RUN pnpm install --frozen-lockfile --prod --filter @cv/api...
 # downloads at runtime: first boot embeds the seed with no network.
 ARG EMBEDDING_MODEL=Xenova/bge-small-en-v1.5
 ENV EMBEDDING_MODEL=$EMBEDDING_MODEL EMBEDDING_CACHE_DIR=/app/models
+# Only these files load in this step: keep their imports to type-only or package imports.
 COPY apps/api/src/config.ts apps/api/src/
 COPY apps/api/src/embed/bge-embedder.ts apps/api/src/embed/embedder.ts apps/api/src/embed/
 COPY apps/api/src/cli/fetch-model.ts apps/api/src/cli/

@@ -1,33 +1,49 @@
 /**
- * `pnpm search "export crash"` prints the chunks closest to a query in the latest complete week.
+ * `pnpm run search "export crash"` prints the chunks closest to a query in the latest complete week.
  * `--week 2026-10-19` picks another week, `--k 5` the number of hits.
  */
 import { parseArgs } from 'node:util';
+import { z } from 'zod';
 import { loadConfig } from '../config';
 import { connect } from '../db/client';
 import { loadBgeEmbedder } from '../embed/bge-embedder';
 import { createPgChunkRepository } from '../embed/pg-chunk-repository';
-import { targetWeek } from '../ingest/week';
+import { targetWeek, weekOf } from '../ingest/week';
 
 const { values, positionals } = parseArgs({
   allowPositionals: true,
   options: { week: { type: 'string' }, k: { type: 'string', default: '10' } },
 });
-const query = positionals.join(' ').trim();
-if (!query) {
-  console.error('Usage: pnpm search "<query>" [--week YYYY-MM-DD] [--k 10]');
+const isoDay = (d: Date) => d.toISOString().slice(0, 10);
+const Args = z.object({
+  query: z.string().trim().min(1),
+  // Chunks are keyed by the Monday that starts their week, so any other day matches nothing.
+  week: z.iso
+    .date()
+    // zod still runs refinements after the date check fails, so guard against an invalid date.
+    .refine((day) => {
+      const date = new Date(day);
+      return !Number.isNaN(date.getTime()) && isoDay(weekOf(date)) === day;
+    }, 'must be a Monday')
+    .default(isoDay(targetWeek(new Date()).start)),
+  k: z.coerce.number().int().positive(),
+});
+const parsed = Args.safeParse({ query: positionals.join(' '), week: values.week, k: values.k });
+if (!parsed.success) {
+  console.error(z.prettifyError(parsed.error));
+  console.error('Usage: pnpm run search "<query>" [--week YYYY-MM-DD (a Monday)] [--k 10]');
   process.exit(2);
 }
+const { query, week: weekStart, k } = parsed.data;
 
 const config = loadConfig(process.env);
 const { pool, db } = connect(config.databaseUrl);
-const weekStart = values.week ?? targetWeek(new Date()).start.toISOString().slice(0, 10);
 const embedder = await loadBgeEmbedder(config.embedding);
 const hits = await createPgChunkRepository(db).search({
   model: embedder.model,
   weekStart,
   vector: await embedder.embedQuery(query),
-  k: Number(values.k),
+  k,
 });
 
 console.log(`"${query}" in the week of ${weekStart}: ${hits.length} hit(s)\n`);
