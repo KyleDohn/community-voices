@@ -32,3 +32,30 @@ describe('IngestionJobs under concurrent requests', () => {
     await Promise.all(results.map((r) => r?.done));
   });
 });
+
+describe('IngestionJobs after a run', () => {
+  it('runs the after-run hook before the run counts as done', async () => {
+    let hookRuns = 0;
+    const jobs = fakeIngestionJobs({ afterRun: async () => void hookRuns++ });
+
+    await (
+      await jobs.trigger()
+    )?.done;
+
+    expect(hookRuns).toBe(1);
+  });
+
+  it('still frees the slot when the hook fails', async () => {
+    const jobs = fakeIngestionJobs({
+      afterRun: async () => {
+        throw new Error('embedder failed');
+      },
+    });
+
+    await (
+      await jobs.trigger()
+    )?.done;
+
+    expect(await jobs.trigger()).toBeDefined();
+  });
+});

@@ -3,6 +3,8 @@ import { serveStatic } from '@hono/node-server/serve-static';
 import { Hono } from 'hono';
 import { loadConfig } from './config';
 import { connect, probe, runMigrations } from './db/client';
+import { loadBgeEmbedder } from './embed/bge-embedder';
+import { createEmbeddingWorker } from './embed/embedding-worker';
 import { createPgChunkRepository } from './embed/pg-chunk-repository';
 import { createApp } from './http/app';
 import { createIngestionJobs } from './ingest/ingestion-jobs';
@@ -25,6 +27,18 @@ if (seedFile) {
   console.log(`Seed ${seedFile}: ${outcome}`);
 }
 
+const chunkRepo = createPgChunkRepository(db);
+// The model loads in the background so the API answers while boot embeds the seed.
+const embedding = createEmbeddingWorker(() => loadBgeEmbedder(config.embedding), chunkRepo, {
+  batchSize: config.embedding.batchSize,
+});
+const embedPending = async () => {
+  const started = Date.now();
+  const { embedded } = await embedding.embedPending();
+  if (embedded > 0) console.log(`Embedded ${embedded} chunk(s) in ${Date.now() - started} ms`);
+};
+embedPending().catch((error: unknown) => console.error('Embedding failed', error));
+
 const ingestions = createIngestionJobs({
   service: createIngestion(config.ingest, db),
   getRun: ingestionRepo.getRun,
@@ -33,14 +47,14 @@ const ingestions = createIngestionJobs({
     maxRequests: config.ingest.maxRequests,
     maxTokens: config.ingest.maxTokens,
   }),
+  afterRun: embedPending,
 });
-
-const chunkRepo = createPgChunkRepository(db);
 
 const root = new Hono().route(
   '/',
   createApp({
     probeDatabase: () => probe(db),
+    embedderStatus: embedding.status,
     ingestions,
     listWeeks: () => chunkRepo.listWeeks(config.embedding.model),
   }),

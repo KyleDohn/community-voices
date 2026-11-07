@@ -1,10 +1,10 @@
-import { createIngestionJobs } from '../ingestion-jobs';
+import { createIngestionJobs, type IngestionJobsDeps } from '../ingestion-jobs';
 import { createIngestionService } from '../ingestion-service';
 import { createFakeForumSource, scriptedTopic } from './fake-forum-source';
 import { createMemoryIngestionRepository } from './memory-ingestion-repository';
 
 /** Real job runner over an in-memory repo and a one-topic fake forum. */
-export const fakeIngestionJobs = () => {
+export const fakeIngestionJobs = (options: Pick<IngestionJobsDeps, 'afterRun'> = {}) => {
   const { repo } = createMemoryIngestionRepository();
   const { source } = createFakeForumSource([scriptedTopic(1, [])]);
   const service = createIngestionService({
@@ -20,5 +20,6 @@ export const fakeIngestionJobs = () => {
       maxRequests: 10,
       maxTokens: 1000,
     }),
+    ...options,
   });
 };

@@ -7,10 +7,17 @@ export interface IngestionJobsDeps {
   getRun: (id: string) => Promise<IngestionRun | undefined>;
   /** Window and caps for a run started now. */
   newRun: () => { window: TimeWindow; maxRequests: number; maxTokens: number };
+  /** Runs after every run, e.g. to embed the chunks it stored. */
+  afterRun?: () => Promise<unknown>;
 }
 
 /** Runs one ingestion at a time in this process; two concurrent runs would only double forum load. */
-export const createIngestionJobs = ({ service, getRun, newRun }: IngestionJobsDeps) => {
+export const createIngestionJobs = ({
+  service,
+  getRun,
+  newRun,
+  afterRun = async () => undefined,
+}: IngestionJobsDeps) => {
   let inFlight: Promise<unknown> | undefined;
 
   const release = () => (inFlight = undefined);
@@ -22,6 +29,8 @@ export const createIngestionJobs = ({ service, getRun, newRun }: IngestionJobsDe
       const done = service
         .ingest(id)
         .catch((error: unknown) => void console.error(`Ingestion ${id} crashed`, error))
+        .then(afterRun)
+        .catch((error: unknown) => void console.error(`After ingestion ${id}`, error))
         .finally(release);
       return { id, done };
     });

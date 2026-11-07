@@ -4,6 +4,7 @@ import type { AppDependencies } from '../app';
 /** Healthy fakes for every boundary; each test overrides only the one it exercises. */
 export const testDependencies = (overrides: Partial<AppDependencies> = {}): AppDependencies => ({
   probeDatabase: async () => true,
+  embedderStatus: () => 'ready',
   ingestions: fakeIngestionJobs(),
   listWeeks: async () => [],
   ...overrides,

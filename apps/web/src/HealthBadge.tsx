@@ -7,7 +7,9 @@ type HealthState = HealthResponse | 'loading' | 'unreachable';
 const label = (health: HealthState) => {
   if (health === 'loading') return 'Checking API…';
   if (health === 'unreachable') return 'API unreachable';
-  return health.status === 'ok' ? 'API healthy' : `API degraded (database ${health.database})`;
+  const detail = `database ${health.database}, embedder ${health.embedder}`;
+  if (health.status !== 'ok') return `API degraded (${detail})`;
+  return health.embedder === 'loading' ? 'API healthy, embedder loading…' : 'API healthy';
 };
 
 const isHealthy = (health: HealthState) => typeof health === 'object' && health.status === 'ok';
