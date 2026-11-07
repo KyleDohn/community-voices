@@ -19,6 +19,11 @@ This file records how the project was built with Claude Code. It is meant to be 
 3. **Build** (`tdd` skill, phase by phase per `PLAN.md`).
    - Phase 0 (scaffold): `setup-pre-commit` for Husky and lint-staged, and `writing-for-agents` for the
      project `CLAUDE.md`. The health route and config loader were built test-first.
+   - Phase 1 (ingest): `tdd`, one vertical slice per agreed interface. Before the client was written, the
+     Discourse API was checked by curling pixls. Fixtures are real trimmed responses from a re-runnable
+     recorder script. Weak tests were checked by mutation: delete the guarded line and confirm exactly
+     one test fails. A real four-week ingest ran against pixls and surfaced one bug the fixtures could
+     not (hidden posts).
 
 ## Where the AI was wrong or needed correcting
 
@@ -45,10 +50,15 @@ This file records how the project was built with Claude Code. It is meant to be 
   5 topics: a post the community had flagged and hidden comes back without `raw`. The fixtures had no
   hidden post, so the tests couldn't catch it. Hidden posts are now dropped, with a test. Schema errors
   now name the URL instead of dumping zod issues, and the run was resumed from its cursor.
+- Phase 1: the Docker image no longer built. The root `prepare: husky` script ran during the runtime
+  stage's `--prod` install, where husky isn't installed. The bug dated from adding hooks in phase 0, after
+  the last image build. It was caught by the "curl the running container" check, not by a test. The fix
+  is husky's documented install guard, which skips when `NODE_ENV=production` or `CI=true`.
 
 ## Time log
 
-| Step                | Approx. time |
-| ------------------- | ------------ |
-| Research + planning | 1 h          |
-| Phase 0 scaffold    | 0.5 h        |
+| Step                | Approx. time                          |
+| ------------------- | ------------------------------------- |
+| Research + planning | 1 h                                   |
+| Phase 0 scaffold    | 0.5 h                                 |
+| Phase 1 ingest      | 0.5 h (incl. an 8-minute live ingest) |
