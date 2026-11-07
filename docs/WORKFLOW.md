@@ -54,6 +54,14 @@ This file records how the project was built with Claude Code. It is meant to be 
   stage's `--prod` install, where husky isn't installed. The bug dated from adding hooks in phase 0, after
   the last image build. It was caught by the "curl the running container" check, not by a test. The fix
   is husky's documented install guard, which skips when `NODE_ENV=production` or `CI=true`.
+- Phase 1 review (subagent): found a race in the single-flight guard. Two simultaneous POSTs both started
+  a run, because the slot was claimed only after an `await`. It also found that resuming a token-capped
+  run did nothing, that a crash mid-seed was never repaired, and that two upsert guarantees in DESIGN
+  were untested. Each was fixed red-first. One of my mutants silently failed to apply (Prettier had
+  reflowed the line) and another broke the syntax, so "the tests still pass" proved nothing until a
+  mutant that compiled was used.
+- Open: one integration run timed out once (5 s, "adds no duplicates") right after the repository
+  refactor. It didn't recur in 13 runs, and no stray DB connections were found. Cause unknown.
 
 ## Time log
 

@@ -3,19 +3,19 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { z } from 'zod';
 import { type ChunkOptions, chunkTopic } from '../ingest/chunk';
-import type { ForumPost, TimeWindow } from '../ingest/forum-source';
+import type { TimeWindow } from '../ingest/forum-source';
 import type { IngestionRepository } from '../ingest/ingestion-run';
 
-const isoDate = z.iso.datetime().transform((s) => new Date(s));
+const IsoDateTime = z.iso.datetime().transform((s) => new Date(s));
 
 const SeedFileSchema = z.object({
   source: z.string(),
   license: z.string(),
   attribution: z.string(),
-  window: z.object({ start: isoDate, end: isoDate }),
-  exportedAt: isoDate,
+  window: z.object({ start: IsoDateTime, end: IsoDateTime }),
+  exportedAt: IsoDateTime,
   topics: z.array(
-    z.object({ id: z.number(), title: z.string(), category: z.string(), url: z.string(), createdAt: isoDate }),
+    z.object({ id: z.number(), title: z.string(), category: z.string(), url: z.string(), createdAt: IsoDateTime }),
   ),
   posts: z.array(
     z.object({
@@ -24,7 +24,7 @@ const SeedFileSchema = z.object({
       postNumber: z.number(),
       username: z.string(),
       raw: z.string(),
-      createdAt: isoDate,
+      createdAt: IsoDateTime,
       url: z.string(),
     }),
   ),
@@ -49,11 +49,13 @@ export const exportSeed = async (repo: IngestionRepository, { baseUrl, license, 
 export const loadSeed = async (data: unknown, repo: IngestionRepository, chunkOptions: ChunkOptions) => {
   const parsed = SeedFileSchema.safeParse(data);
   if (!parsed.success) throw new Error(`Invalid seed file: ${z.prettifyError(parsed.error)}`);
-  const postsByTopic = Map.groupBy(parsed.data.posts, (p: ForumPost) => p.topicId);
-  for (const topic of parsed.data.topics) {
-    const posts = postsByTopic.get(topic.id) ?? [];
-    if (posts.length > 0) await repo.saveTopic(topic, posts, chunkTopic(topic, posts, chunkOptions));
-  }
+  const postsByTopic = Map.groupBy(parsed.data.posts, (p) => p.topicId);
+  const corpus = parsed.data.topics
+    .map((topic) => ({ topic, posts: postsByTopic.get(topic.id) ?? [] }))
+    .filter(({ posts }) => posts.length > 0)
+    .map(({ topic, posts }) => ({ topic, posts, chunks: chunkTopic(topic, posts, chunkOptions) }));
+  // One transaction: a half-loaded seed would make seedIfEmpty skip it forever.
+  await repo.saveCorpus(corpus);
 };
 
 /** Boot-time fallback: a fresh database gets the committed seed, so the demo works offline. */

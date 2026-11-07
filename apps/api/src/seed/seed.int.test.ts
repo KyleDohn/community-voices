@@ -61,6 +61,17 @@ describe('seed', () => {
     expect(await latestSeedFile(dir)).toBe(join(dir, 'pixls-2026-10-05-2026-11-02.json'));
   });
 
+  it('loads all or nothing, so a failed load is retried on the next boot', async () => {
+    await ingestFakeForum();
+    const seed = JSON.parse(JSON.stringify(await exportSeed(repo, { ...source, window })));
+    seed.posts.at(-1).raw = 'Postgres rejects a NUL byte: \u0000';
+    await truncate();
+
+    await expect(loadSeed(seed, repo, chunkOptions)).rejects.toThrow();
+
+    expect(await repo.corpusCounts()).toEqual({ topics: 0, posts: 0, chunks: 0 });
+  });
+
   it('rejects a seed file that does not match the schema', async () => {
     await expect(loadSeed({ topics: 'nope' }, repo, chunkOptions)).rejects.toThrow(/seed/i);
   });

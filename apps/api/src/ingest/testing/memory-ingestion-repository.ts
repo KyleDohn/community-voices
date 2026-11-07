@@ -1,5 +1,5 @@
 import type { ForumPost, ForumTopic } from '../forum-source';
-import type { ChunkRecord, IngestionRepository, IngestionRun } from '../ingestion-run';
+import type { ChunkRecord, IngestionRepository, IngestionRun, SavedTopic } from '../ingestion-run';
 
 /** In-memory stand-in for the Postgres repository, for unit tests of the service's control flow. */
 export const createMemoryIngestionRepository = () => {
@@ -7,6 +7,16 @@ export const createMemoryIngestionRepository = () => {
   const topics = new Map<number, ForumTopic>();
   const posts = new Map<number, ForumPost>();
   const chunks = new Map<string, ChunkRecord>();
+
+  // Mirrors the Postgres upsert: a re-saved post replaces all of its chunks.
+  const save = ({ topic, posts: topicPosts, chunks: topicChunks }: SavedTopic) => {
+    topics.set(topic.id, topic);
+    for (const post of topicPosts) {
+      posts.set(post.id, post);
+      for (const key of chunks.keys()) if (key.startsWith(`${post.id}:`)) chunks.delete(key);
+    }
+    for (const chunk of topicChunks) chunks.set(`${chunk.postId}:${chunk.chunkIndex}`, chunk);
+  };
 
   const repo: IngestionRepository = {
     createRun: async ({ window, maxRequests, maxTokens }) => {
@@ -34,11 +44,9 @@ export const createMemoryIngestionRepository = () => {
       const run = runs.get(id);
       if (run) runs.set(id, { ...run, ...progress });
     },
-    saveTopic: async (topic, topicPosts, topicChunks) => {
-      topics.set(topic.id, topic);
-      for (const post of topicPosts) posts.set(post.id, post);
-      for (const chunk of topicChunks) chunks.set(`${chunk.postId}:${chunk.chunkIndex}`, chunk);
-    },
+    saveTopic: async (topic, topicPosts, topicChunks) =>
+      save({ topic, posts: topicPosts, chunks: topicChunks }),
+    saveCorpus: async (corpus) => corpus.forEach(save),
     exportCorpus: async () => ({
       topics: [...topics.values()].sort((a, b) => a.id - b.id),
       posts: [...posts.values()].sort((a, b) => a.id - b.id),

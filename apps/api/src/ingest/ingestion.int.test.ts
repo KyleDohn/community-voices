@@ -76,3 +76,46 @@ describe('ingestion into Postgres', () => {
     expect(await repo.corpusCounts()).toEqual({ topics: 3, posts: 7, chunks: 7 });
   });
 });
+
+describe('chunk upserts', () => {
+  const {
+    topic,
+    posts: [post],
+  } = scriptedTopic(9, []);
+  const weekStart = window.start;
+  const chunk = (chunkIndex: number, text: string) => ({
+    postId: post!.id,
+    chunkIndex,
+    text,
+    weekStart,
+  });
+  const stored = async () =>
+    (
+      await db.execute<{ chunk_index: number; has_embedding: boolean }>(
+        sql`select chunk_index, embedding is not null as has_embedding from chunks order by chunk_index`,
+      )
+    ).rows;
+
+  beforeEach(async () => {
+    await repo.saveTopic(topic, [post!], [chunk(0, 'first half'), chunk(1, 'second half')]);
+    const vector = `[${Array(384).fill(0.1).join(',')}]`;
+    await db.execute(
+      sql`update chunks set embedding = ${vector}::vector, embedding_model = 'test'`,
+    );
+  });
+
+  it('keeps the embedding of a chunk whose text is unchanged', async () => {
+    await repo.saveTopic(topic, [post!], [chunk(0, 'first half'), chunk(1, 'second half, edited')]);
+
+    expect(await stored()).toEqual([
+      { chunk_index: 0, has_embedding: true },
+      { chunk_index: 1, has_embedding: false },
+    ]);
+  });
+
+  it('drops chunk indexes a shrunken post no longer produces', async () => {
+    await repo.saveTopic(topic, [post!], [chunk(0, 'first half')]);
+
+    expect(await stored()).toEqual([{ chunk_index: 0, has_embedding: true }]);
+  });
+});
