@@ -75,6 +75,14 @@ This file records how the project was built with Claude Code. It is meant to be 
 - Phase 2: the first search integration test hard-coded chunk ids 1–5, but `truncate` doesn't reset a
   `serial` column. This was caught before the first run by reading the reset, and fixed with
   `restart identity`.
+- Phase 2 review (subagent): found two real bugs. (1) A model with a different width would fail every
+  save while `/health` said `ready`. It now fails at load. (2) The after-ingest embed held the ingestion
+  slot, so a run that finished during the 2–3 minute boot embed blocked new runs with 409s. The slot is
+  now freed first. It also found three surviving mutants (the queue's `.catch`, the unhandled-rejection
+  guard, `countDistinct`), now covered, and unvalidated CLI flags. Fixing those flags surfaced a zod 4
+  behaviour I hadn't expected: `.refine` still runs after a failed `z.iso.date()`, so `--week foo` threw
+  instead of printing a usage error. Known gaps left on purpose: the `server.ts` wiring (covered by the
+  live boot checks) and CLS vs mean pooling (the ranking test's margin can't tell them apart).
 - Open: one integration run timed out once (5 s, "adds no duplicates") right after the repository
   refactor. It didn't recur in 13 runs, and no stray DB connections were found. Cause unknown.
 

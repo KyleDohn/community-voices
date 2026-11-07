@@ -115,10 +115,12 @@ Model IDs and limits live in config, not in code.
   where they differed, the prefixed run tended to surface the more on-topic posts (a release
   announcement for "new software releases"). We keep it, as the model card recommends.
 - **Model name stored:** each chunk records the model that embedded it. Search compares only vectors from
-  the current model, and changing `EMBEDDING_MODEL` re-embeds everything on the next boot.
+  the current model, and changing `EMBEDDING_MODEL` re-embeds everything on the next boot. The new model
+  must output 384 dimensions (the `chunks.embedding` width); the embedder checks this at load and reports
+  `failed` otherwise, since a wider model needs a migration.
 - **When it runs:** on boot, after seeding, in the background; the API answers meanwhile, `/health` says
-  `embedder: loading`, and `/weeks` shows `embedded` climbing. Each ingestion run (API or CLI) embeds the
-  chunks it stored. Passes are serialized and embed only pending chunks, so a reboot is a no-op. The full
+  `embedder: loading`, and `/weeks` shows `embedded` climbing. After each ingestion run (API or CLI) the
+  pending chunks are embedded, once the run has freed its slot. Passes are serialized and embed only pending chunks, so a reboot is a no-op. The full
   seed (3,402 chunks) takes about 2 minutes natively and 2.7 minutes in Docker on an M-series Mac.
 - **Image:** the Docker build downloads the weights into `/app/models` and sets
   `EMBEDDING_ALLOW_REMOTE=false`. First boot was verified on a network with no internet access.
@@ -188,6 +190,9 @@ Model IDs and limits live in config, not in code.
 | GET    | `/embeddings/map?runId=`   | 2D points, optionally marked with a run's retrievals |
 
 Long-running work runs in-process. Status lives in Postgres and the client polls it.
+
+`/health` is the one exception to "non-2xx bodies are `ErrorResponse`": its 503 still carries a
+`HealthResponse`, so a client can see which dependency is down.
 
 ## UI
 
