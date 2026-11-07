@@ -46,7 +46,7 @@ describe('DiscourseSource.listActiveTopics', () => {
     const topics = await source.listActiveTopics(new Date('2020-01-01T00:00:00Z'));
 
     expect(topics).toHaveLength(30);
-    expect(requests).toHaveLength(2);
+    expect(requests.filter((r) => r.startsWith('/latest.json'))).toHaveLength(2);
   });
 });
 
@@ -154,14 +154,38 @@ describe('DiscourseSource politeness', () => {
 
     await source.fetchTopic(60539, novemberWeek);
 
-    expect(requests).toHaveLength(3);
-    expect(sleeps).toEqual([600, 600]);
+    expect(requests).toEqual([
+      '/robots.txt',
+      '/site.json',
+      '/t/60539.json?include_raw=true',
+      expect.stringMatching(/^\/t\/60539\/posts\.json/),
+    ]);
+    expect(sleeps).toEqual([600, 600, 600]);
   });
 
   it('throws RequestCapReached instead of exceeding the request cap', async () => {
-    const { source, requests } = setup({ maxRequests: 2 });
+    const { source, requests } = setup({ maxRequests: 3 });
 
     await expect(source.fetchTopic(60539, novemberWeek)).rejects.toBeInstanceOf(RequestCapReached);
-    expect(requests).toHaveLength(2);
+    expect(requests).toHaveLength(3);
+  });
+
+  it('checks robots.txt once and refuses paths it disallows', async () => {
+    const { source, requests } = setup({
+      overrides: { '/robots.txt': 'User-agent: *\nDisallow: /t/' },
+    });
+
+    await expect(source.listActiveTopics(new Date('2026-11-05T00:00:00Z'))).resolves.toHaveLength(
+      49,
+    );
+    await expect(source.fetchTopic(62066, novemberWeek)).rejects.toThrow(/robots\.txt/);
+    expect(requests.filter((r) => r === '/robots.txt')).toHaveLength(1);
+    expect(requests.some((r) => r.startsWith('/t/'))).toBe(false);
+  });
+
+  it('treats a missing robots.txt as allowing everything', async () => {
+    const { source } = setup({ overrides: { '/robots.txt': null } });
+
+    await expect(source.fetchTopic(62066, novemberWeek)).resolves.toBeDefined();
   });
 });

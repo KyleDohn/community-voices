@@ -7,6 +7,7 @@ import {
   type TimeWindow,
   type TopicActivity,
 } from '../forum-source';
+import { isAllowed } from './robots';
 import {
   type DiscoursePost,
   LatestSchema,
@@ -46,11 +47,26 @@ export const createDiscourseSource = ({
   let requestCount = 0;
   let categoryNames: Promise<Map<number, string>> | undefined;
 
-  const get = async <T>(path: string, schema: z.ZodType<T>): Promise<T> => {
+  const request = async (path: string) => {
     if (requestCount >= maxRequests) throw new RequestCapReached(maxRequests);
     if (requestCount > 0) await sleep(minIntervalMs);
     requestCount++;
-    const res = await fetch(new URL(path, baseUrl), { headers: { 'User-Agent': userAgent } });
+    return fetch(new URL(path, baseUrl), { headers: { 'User-Agent': userAgent } });
+  };
+
+  let robotsTxt: Promise<string> | undefined;
+  // A missing robots.txt allows everything; it is fetched once per source, before any API call.
+  const loadRobots = async () => {
+    const res = await request('/robots.txt');
+    return res.ok ? res.text() : '';
+  };
+
+  const get = async <T>(path: string, schema: z.ZodType<T>): Promise<T> => {
+    robotsTxt ??= loadRobots();
+    if (!isAllowed(await robotsTxt, userAgent, path)) {
+      throw new Error(`robots.txt at ${baseUrl} disallows ${path}`);
+    }
+    const res = await request(path);
     if (!res.ok) throw new Error(`Discourse ${res.status} for ${path}`);
     const parsed = schema.safeParse(await res.json());
     if (!parsed.success) {
