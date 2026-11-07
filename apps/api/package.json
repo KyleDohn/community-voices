@@ -8,7 +8,8 @@
     "typecheck": "tsc -p tsconfig.json",
     "db:generate": "drizzle-kit generate",
     "ingest": "tsx --env-file-if-exists=../../.env src/cli/ingest.ts",
-    "seed:export": "tsx --env-file-if-exists=../../.env src/cli/seed-export.ts"
+    "seed:export": "tsx --env-file-if-exists=../../.env src/cli/seed-export.ts",
+    "search": "tsx --env-file-if-exists=../../.env src/cli/search.ts"
   },
   "dependencies": {
     "@cv/contracts": "workspace:*",

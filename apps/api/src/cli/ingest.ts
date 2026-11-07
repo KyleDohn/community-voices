@@ -1,10 +1,13 @@
 /**
- * `pnpm ingest` fetches four weeks of the configured Discourse forum into Postgres.
+ * `pnpm ingest` fetches four weeks of the configured Discourse forum into Postgres, then embeds it.
  * `pnpm ingest --resume <run-id>` continues a capped or failed run from its cursor.
  */
 import { parseArgs } from 'node:util';
 import { loadConfig } from '../config';
 import { connect, runMigrations } from '../db/client';
+import { loadBgeEmbedder } from '../embed/bge-embedder';
+import { embedPendingChunks } from '../embed/embed-pending';
+import { createPgChunkRepository } from '../embed/pg-chunk-repository';
 import type { ForumSource } from '../ingest/forum-source';
 import { ingestionWindow } from '../ingest/week';
 import { createIngestion } from '../ingest/wiring';
@@ -52,5 +55,11 @@ if (status === 'capped') {
     `Capped. Raise INGEST_MAX_REQUESTS or INGEST_MAX_TOKENS, then: pnpm ingest --resume ${runId}`,
   );
 }
+// Embed here too, so `pnpm run search` works without restarting the server.
+const embedder = await loadBgeEmbedder(config.embedding);
+const { embedded } = await embedPendingChunks(createPgChunkRepository(db), embedder, {
+  batchSize: config.embedding.batchSize,
+});
+console.log(`Embedded ${embedded} chunk(s)`);
 await pool.end();
 process.exitCode = status === 'failed' ? 1 : 0;
