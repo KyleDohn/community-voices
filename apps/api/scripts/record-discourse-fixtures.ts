@@ -1,6 +1,6 @@
 /**
  * Re-records the trimmed pixls fixtures used by the DiscourseSource unit tests.
- * Run from apps/api: `pnpm tsx scripts/record-discourse-fixtures.ts`. Makes about 8 paced requests.
+ * Run from apps/api: `pnpm tsx scripts/record-discourse-fixtures.ts`. Makes about 9 paced requests.
  */
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -29,6 +29,8 @@ const save = (name: string, data: unknown) =>
   writeFile(join(OUT, name), JSON.stringify(data, null, 2) + '\n');
 
 await mkdir(OUT, { recursive: true });
+const robots = await fetch(`${BASE}/robots.txt`, { headers: { 'User-Agent': USER_AGENT } });
+await writeFile(join(OUT, 'robots.txt'), await robots.text());
 await save('site.json', await get('/site.json', SiteSchema));
 for (const page of [0, 1]) {
   await save(

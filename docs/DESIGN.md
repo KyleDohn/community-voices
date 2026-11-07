@@ -84,8 +84,9 @@ Model IDs and limits live in config, not in code.
   the run as `capped`, with its cursor kept. Caps cover the whole run, so a resume continues only under
   raised caps, which `--resume` reads from the current config. That, plus chunking and dropping noise, is our answer to
   overly large data.
-- **Pacing:** a polite User-Agent naming the project, 600 ms between requests (half the default limit),
-  and respect for robots.txt.
+- **Pacing:** a polite User-Agent naming the project, and 600 ms between requests (half the default
+  limit). robots.txt is fetched once per run from the host root, and every request is checked against
+  it, `*` wildcards included. A disallowed path fails the run instead of being fetched.
 - **Triggers:** the CLI (`pnpm ingest`), `POST /api/v1/ingestions`, and a weekly in-process schedule
   (stretch). The API runs one ingestion at a time per process and answers `409` while one is in flight.
 - **Seed:** `seed/<host>-<from>-<to>.json` (written by `pnpm seed:export`) holds the raw topics and posts
