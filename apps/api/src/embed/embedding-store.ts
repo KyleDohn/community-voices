@@ -1,3 +1,5 @@
+import type { WeekSummary } from '@cv/contracts';
+
 export interface PendingChunk {
   id: number;
   text: string;
@@ -38,4 +40,6 @@ export interface SearchHit {
 
 export interface ChunkRepository extends EmbeddingStore {
   search(query: SearchQuery): Promise<SearchHit[]>;
+  /** Weeks that have chunks, newest first; `embedded` counts only this model's vectors. */
+  listWeeks(model: string): Promise<WeekSummary[]>;
 }

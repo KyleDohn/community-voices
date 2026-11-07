@@ -5,5 +5,6 @@ import type { AppDependencies } from '../app';
 export const testDependencies = (overrides: Partial<AppDependencies> = {}): AppDependencies => ({
   probeDatabase: async () => true,
   ingestions: fakeIngestionJobs(),
+  listWeeks: async () => [],
   ...overrides,
 });

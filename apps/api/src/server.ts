@@ -3,6 +3,7 @@ import { serveStatic } from '@hono/node-server/serve-static';
 import { Hono } from 'hono';
 import { loadConfig } from './config';
 import { connect, probe, runMigrations } from './db/client';
+import { createPgChunkRepository } from './embed/pg-chunk-repository';
 import { createApp } from './http/app';
 import { createIngestionJobs } from './ingest/ingestion-jobs';
 import { createPgIngestionRepository } from './ingest/pg-ingestion-repository';
@@ -34,7 +35,16 @@ const ingestions = createIngestionJobs({
   }),
 });
 
-const root = new Hono().route('/', createApp({ probeDatabase: () => probe(db), ingestions }));
+const chunkRepo = createPgChunkRepository(db);
+
+const root = new Hono().route(
+  '/',
+  createApp({
+    probeDatabase: () => probe(db),
+    ingestions,
+    listWeeks: () => chunkRepo.listWeeks(config.embedding.model),
+  }),
+);
 
 if (config.webDistDir) {
   const webRoot = config.webDistDir;

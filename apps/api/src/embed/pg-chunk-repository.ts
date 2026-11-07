@@ -1,4 +1,16 @@
-import { and, asc, cosineDistance, eq, isNull, ne, or, sql } from 'drizzle-orm';
+import {
+  and,
+  asc,
+  cosineDistance,
+  count,
+  countDistinct,
+  desc,
+  eq,
+  isNull,
+  ne,
+  or,
+  sql,
+} from 'drizzle-orm';
 import type { Database } from '../db/client';
 import { chunks, posts, topics } from '../db/schema';
 import type { ChunkRepository } from './embedding-store';
@@ -47,4 +59,18 @@ export const createPgChunkRepository = (db: Database): ChunkRepository => ({
       .limit(k);
     return rows.map(({ distance, ...hit }) => ({ ...hit, score: 1 - Number(distance) }));
   },
+
+  listWeeks: (model) =>
+    db
+      .select({
+        weekStart: chunks.weekStart,
+        posts: countDistinct(chunks.postId),
+        chunks: count(),
+        embedded: sql<number>`count(*) filter (where ${chunks.embeddingModel} = ${model})`.mapWith(
+          Number,
+        ),
+      })
+      .from(chunks)
+      .groupBy(chunks.weekStart)
+      .orderBy(desc(chunks.weekStart)),
 });

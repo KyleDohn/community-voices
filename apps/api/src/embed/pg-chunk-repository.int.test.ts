@@ -95,3 +95,20 @@ describe('pg chunk repository: search', () => {
     ]);
   });
 });
+
+describe('pg chunk repository: weeks', () => {
+  it('counts posts, chunks and current-model embeddings per week, newest first', async () => {
+    await seedChunks(ingestion, [
+      { text: 'a', week },
+      { text: 'b', week },
+      { text: 'c', week: '2026-10-26' },
+    ]);
+    await chunks.saveEmbeddings('m', [{ id: 1, embedding: axis(0) }]);
+    await chunks.saveEmbeddings('other', [{ id: 2, embedding: axis(0) }]);
+
+    expect(await chunks.listWeeks('m')).toEqual([
+      { weekStart: week, posts: 2, chunks: 2, embedded: 1 },
+      { weekStart: '2026-10-26', posts: 1, chunks: 1, embedded: 0 },
+    ]);
+  });
+});
