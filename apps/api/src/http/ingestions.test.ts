@@ -2,10 +2,11 @@ import { AcceptedResponse, ErrorResponse, IngestionRunResponse } from '@cv/contr
 import { describe, expect, it } from 'vitest';
 import { fakeIngestionJobs } from '../ingest/testing/fake-ingestion-jobs';
 import { createApp } from './app';
+import { testDependencies } from './testing/test-dependencies';
 
 const setup = () => {
   const ingestions = fakeIngestionJobs();
-  const app = createApp({ probeDatabase: async () => true, ingestions });
+  const app = createApp(testDependencies({ ingestions }));
   return { app, ingestions };
 };
 
@@ -54,7 +55,7 @@ describe('unexpected errors', () => {
         throw new Error('database is down');
       },
     };
-    const app = createApp({ probeDatabase: async () => true, ingestions });
+    const app = createApp(testDependencies({ ingestions }));
 
     const res = await app.request('/api/v1/ingestions', { method: 'POST' });
 
