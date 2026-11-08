@@ -26,7 +26,7 @@ export interface GenerateDeps {
 }
 
 export type GenerationErrorCode =
-  'no_data' | 'invalid_output' | 'refused' | 'cost_cap_exceeded' | LlmError['code'];
+  'no_data' | 'invalid_output' | 'refused' | 'cost_cap_exceeded' | 'internal' | LlmError['code'];
 
 /** A run that stopped; `calls` holds what was spent before it did. */
 export class GenerationError extends Error {
@@ -105,12 +105,14 @@ const createCaller = ({ llm, config }: Pick<GenerateDeps, 'llm' | 'config'>) => 
       throw error;
     }
     const { usage } = response;
+    // A dated snapshot id isn't in the price table; its alias's price beats losing a paid call.
+    const priced = response.model in config.prices ? response.model : model;
     calls.push({
       step,
       attempt,
       model: response.model,
       ...usage,
-      costUsd: costOf(usage, response.model, config.prices),
+      costUsd: costOf(usage, priced, config.prices),
     });
     if (response.stopReason === 'refusal') {
       throw new GenerationError('refused', `The model declined the ${step} request.`, calls);
@@ -133,7 +135,8 @@ const createCaller = ({ llm, config }: Pick<GenerateDeps, 'llm' | 'config'>) => 
       system: prompt.system,
       messages: [
         ...prompt.messages,
-        { role: 'assistant', content: first.text },
+        // The API rejects an empty assistant turn; a reply can be all thinking, cut off at the cap.
+        { role: 'assistant', content: first.text || '(no output)' },
         repairMessage(firstResult.errors),
       ],
     };
@@ -186,7 +189,22 @@ export const generateReport = async (
     throw new GenerationError('no_data', `No embedded posts in the week of ${week}`, []);
   }
   const caller = createCaller(deps);
+  try {
+    return await writeReport(deps, week, chunks, caller);
+  } catch (error) {
+    if (error instanceof GenerationError) throw error;
+    // Anything else after the first call must still report what was paid for; details stay in the log.
+    console.error(`Report for ${week} failed after ${caller.calls.length} call(s)`, error);
+    throw new GenerationError('internal', 'Unexpected error; see the server log', caller.calls);
+  }
+};
 
+const writeReport = async (
+  deps: GenerateDeps,
+  week: string,
+  chunks: RetrievedChunk[],
+  caller: ReturnType<typeof createCaller>,
+): Promise<GeneratedReport> => {
   const extracted = await caller.run(
     'extract',
     extractPrompt(week, chunks),

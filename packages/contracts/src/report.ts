@@ -53,7 +53,7 @@ export const ReportSource = z.object({
   url: z.string(),
   topicTitle: z.string(),
   /** Monday, `YYYY-MM-DD`. */
-  weekStart: z.string(),
+  weekStart: z.iso.date(),
 });
 export type ReportSource = z.infer<typeof ReportSource>;
 
@@ -72,6 +72,7 @@ export type LlmCall = z.infer<typeof LlmCall>;
 export const WeekStart = z.iso
   .date()
   .refine((day) => new Date(`${day}T00:00:00Z`).getUTCDay() === 1, 'must be a Monday');
+export type WeekStart = z.infer<typeof WeekStart>;
 
 /** `POST /api/v1/reports` body. */
 export const StartReportRequest = z.object({ week: WeekStart });

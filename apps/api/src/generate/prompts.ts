@@ -90,5 +90,5 @@ export const repairMessage = (errors: string[]): LlmMessage => ({
   content:
     'That output failed validation:\n' +
     errors.map((e) => `- ${e}`).join('\n') +
-    '\n\nReturn the complete corrected JSON. Cite only posts listed above.',
+    '\n\nReturn the complete corrected JSON.',
 });

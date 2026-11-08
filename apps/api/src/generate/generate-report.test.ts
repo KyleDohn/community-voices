@@ -211,6 +211,35 @@ describe('generateReport', () => {
     expect(seen).toEqual([eight.slice(0, 6)]);
   });
 
+  it('keeps the paid calls when something else fails after them', async () => {
+    const llm = scriptedLlm([extracted, written]);
+    const broken = { ...retrieval, trends: () => Promise.reject(new Error('db down')) };
+    const result = generateReport(
+      { retrieval: broken, log: memoryLog(), llm: llm.client, config },
+      week,
+    );
+
+    await expect(result).rejects.toMatchObject({
+      code: 'internal',
+      calls: [expect.objectContaining({ step: 'extract' })],
+    });
+  });
+
+  it('prices a reply from an unlisted model id at the configured model, rather than failing', async () => {
+    const report = await run([extracted, { ...written, model: 'sonnet-20261101' }]).result;
+    expect(report.calls[1]).toMatchObject({
+      model: 'sonnet-20261101',
+      costUsd: expect.closeTo(0.007, 10),
+    });
+  });
+
+  it('never sends an empty assistant turn in a repair', async () => {
+    // The cap covers thinking, so a reply can stop at max_tokens with no text at all.
+    const { result, requests } = run([extracted, { text: '', stopReason: 'max_tokens' }, written]);
+    await result;
+    expect(requests[2]!.messages.at(-2)!.content).not.toBe('');
+  });
+
   it('stops on a refusal without trying a repair', async () => {
     const { result, requests } = run([extracted, { text: '', stopReason: 'refusal' }, written]);
     await expect(result).rejects.toMatchObject({ code: 'refused' });
