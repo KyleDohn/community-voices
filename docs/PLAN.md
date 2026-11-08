@@ -15,7 +15,7 @@ Status: ⬜ not started · 🟨 in progress · ✅ done
 | 2   | **Embed and store.** `Embedder` + bge-small built into the image, embed on boot, chunk repository with cosine search, `GET /weeks`.                                                                                                                                                        | `pnpm run search "export crash"` returns relevant posts from a week.                          | 1 h   | ✅     |
 | 3   | **Retrieve and log.** Facet config, MMR, merge, trend lookup, `retrievals` logging.                                                                                                                                                                                                        | `pnpm run retrieve --week 2026-10-26` prints ~40 diverse posts by facet.                      | 1 h   | ✅     |
 | 4   | **Generate.** `LlmClient` (Anthropic), document schema, prompts, structured output, repair retry, cost accounting. Report view.                                                                                                                                                            | The Report view shows a cited RAG document for the week.                                      | 1.5 h | ✅     |
-| 5   | **A/B compare.** No-RAG variant, citation checks, rubric and pairwise judge with order swap, `POST/GET /ab-runs` (202 + polling), A/B view, committed sample run.                                                                                                                          | "Run new A/B" → both documents side by side with scores and cost.                             | 1.5 h | ⬜     |
+| 5   | **A/B compare.** No-RAG variant, citation checks, rubric and pairwise judge with order swap, `POST/GET /ab-runs` (202 + polling), A/B view, committed sample run.                                                                                                                          | "Run new A/B" → both documents side by side with scores and cost.                             | 1.5 h | 🟨     |
 
 ### Phase 1: agreed test interfaces
 
@@ -105,6 +105,45 @@ citations split by section, and a $0.50 per-run cost cap. Details are in DESIGN,
 8. **Report view** (web). Week selector, "Generate report", polling, then themes, threads, mood and
    predictions, with each citation linking to the forum post and the cost per call. It parses every
    response with the contract schema. Manual check in the browser; no component tests.
+
+### Phase 5: agreed test interfaces
+
+Settled 2026-11-08: each A/B run generates a fresh RAG report, the judge sees the target-week posts the
+RAG writer read as evidence for both documents, the A/B run has its own cost cap
+(`MAX_AB_RUN_COST_USD`, $1.50), and the judge's shared prefix is prompt-cached. Details are in DESIGN,
+"A/B comparison".
+
+1. **Shared caller** (`generate/caller.ts`), extracted from `generate-report.ts`: cost cap, call records,
+   refusal handling, one repair. It takes its cap, and `generateReport` accepts an optional caller so an
+   A/B run keeps one spend total. The existing `generateReport` tests stay green unchanged. Unit test:
+   two steps on one caller trip the cap together.
+2. **Prompt caching in the LLM port.** `LlmRequest.cacheSystem` sends the system prompt as a block with
+   `cache_control`. `TokenUsage` and `LlmCall` gain `cacheWriteTokens` and `cacheReadTokens` (default 0,
+   so stored reports still parse), and `costOf` prices them from per-model cache prices in config. Unit
+   tests: the adapter's request shape, and the cost of a cached call.
+3. **`checkCitations(document, { corpus, retrieved, week })`.** A pure function that counts, per
+   document: citations, ids not in the corpus, ids outside the target week (prior-week ids are allowed in
+   predictions, ASSUMPTIONS #27), uncited claims, and cited-but-not-retrieved ids. One unit test per
+   count.
+4. **No-RAG write.** `noRagPrompt(week)` uses the same schema and rules with no posts. Unit test: the
+   prompt holds no `[post` block and no post id. Its output is schema-validated but not
+   grounding-validated; the checks count its citations instead.
+5. **`judgeRubric` and `judgePairwise`.** One cached system prompt (instructions plus the evidence
+   posts). The rubric sees one unlabelled document. Pairwise asks with X/Y, then again swapped, and maps
+   the second answer back; a split verdict is a tie. Unit tests with the scripted LLM: no prompt names a
+   variant, the swap really swaps, a split becomes a tie, every call is recorded, and every judge call
+   sets `cacheSystem`.
+6. **`runAb(deps, week)`.** Fresh RAG report, no-RAG document, checks, two rubric calls, two pairwise
+   calls, in sequence on one caller capped by `MAX_AB_RUN_COST_USD`. A `GenerationError` stops the run
+   with every call made so far. Unit tests.
+7. **Persistence, jobs and routes.** Migration `0005`, `AbRunRepository` with one contract suite over
+   memory and pg, `POST /ab-runs { week }` → `202 { id }` (409 while one runs, 503 without an API key),
+   `GET /ab-runs`, `GET /ab-runs/:id`. Route and integration tests, following `/reports`.
+8. **Sample run.** `seed/ab-run-sample.json` holds one real run and its report, loaded when `ab_runs` is
+   empty, with `isSample: true`. Integration test of the round trip.
+9. **A/B view** (web). Both documents side by side (`ReportDocumentView`), check counts, rubric scores
+   and reasons, both pairwise verdicts, cost per call, a visible "Sample run" label, "Run new A/B".
+   Manual check in Chrome at desktop and phone widths.
 
 ## Extras, ranked by demo value per hour
 

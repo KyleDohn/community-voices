@@ -72,8 +72,9 @@ Model IDs and limits live in config, not in code.
 - `reports`: id, week_start, status, retrieval_run id, extracted themes, the document (JSON), the sources
   in its context (post id, url, topic title, week), usage and cost per call, error code and message,
   timestamps. One row per RAG report run.
-- `ab_runs`: id, week_start, status, the RAG report it used, the no-RAG document (JSON), checks, judge
-  results, token usage and cost per call, model IDs, `is_sample` flag.
+- `ab_runs`: id, week_start, status, the RAG report it generated, the no-RAG document (JSON), checks,
+  judge results, token usage (cache writes and reads included) and cost per call, model IDs, error code
+  and message, timestamps, `is_sample` flag.
 - `retrieval_runs`: id, week_start, created_at. One row per retrieval (the CLI demo included); phase 5's
   `ab_runs` points to one.
 - `retrievals`: retrieval_run id, chunk id (null once re-ingestion drops the chunk), post id, facet or
@@ -208,7 +209,8 @@ chunks already picked)`. Measured on 2026-10-26, distinct topics among the ~39 m
     reuses its step's cap. It covers thinking tokens too, so a reply can stop with no text at all.
   - A failure after a paid call (a crash, a refusal, a cap) still stores the calls already made, so a
     failed run shows what it cost.
-  - **Per-run cap** (`MAX_RUN_COST_USD`, default $0.50; a report run costs about $0.03–0.08). Before each
+  - **Per-run cap** (`MAX_RUN_COST_USD`, default $0.50; a report run costs about $0.03–0.08). An A/B run
+    has its own cap over all of its calls (see A/B comparison). Before each
     call, the run adds its spend so far to that call's worst case (estimated input plus `max_tokens` at
     the output price). If that exceeds the cap, the run stops as `cost_cap_exceeded` before the call.
   - **Spend limits stop the run.** The Console workspace limit (HTTP 400, "You have reached your specified
@@ -227,9 +229,20 @@ chunks already picked)`. Measured on 2026-10-26, distinct topics among the ~39 m
   1. **Deterministic checks.** Citations must exist in the corpus and fall inside the target week. We
      also count claims with no citation and citations to posts that weren't retrieved.
   2. **Rubric.** Claude Opus 5.5 (`claude-opus-5-5`) scores each document 1–5 on grounding, specificity,
-     coverage, prediction plausibility and readability, with a short reason for each.
+     coverage, prediction plausibility and readability, with a short reason for each. Each document is
+     scored on its own, never named as RAG or no-RAG.
   3. **Blind pairwise.** The two documents are labeled X and Y, and the judge is asked twice with the order
-     swapped. A disagreement counts as a tie.
+     swapped. A disagreement counts as a tie. Judges favor the first answer they read (position bias);
+     swapping cancels it, and a verdict that flips with the order was decided by position, not content.
+- **One run, fresh inputs.** An A/B run generates its own RAG report (a `reports` row the `ab_runs` row
+  points to), then the no-RAG document, so both come from the same moment.
+- **The judge's evidence.** Every judge call gets the target-week posts the RAG writer read, as `[post N]`
+  blocks, as the reference for both documents. Without them "grounding" means "sounds plausible", which
+  no-RAG is good at. This favors RAG by construction, because it is RAG's own context; the README says so.
+- **Cost.** The judge's system prompt (instructions plus evidence, about 20k tokens) is the same in all
+  four calls and is prompt-cached: the first call writes it, the next three read it at a fraction of the
+  input price. The whole run shares one spend total under `MAX_AB_RUN_COST_USD` (default $1.50; a run
+  costs about $0.40). The calls run in sequence, so a run takes a few minutes.
 - **Sample run:** one real run, labeled with its model and date, is committed in `seed/`. A reviewer sees a
   full result without an API key.
 
