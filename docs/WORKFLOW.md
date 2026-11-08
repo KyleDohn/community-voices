@@ -134,6 +134,10 @@ This file records how the project was built with Claude Code. It is meant to be 
   could strand a starting run, first boot stuck on Loading, a stale poll error) were fixed without
   component tests, as agreed. Three doc mismatches and four clean-ups were fixed. Known gap left on
   purpose: the Report view has no automated tests.
+- Phase 5: the AI's A/B tests labeled the two documents `RAG-THEME` and `NO-RAG-THEME`, so
+  "contains RAG-THEME" also matched the no-RAG document. A mutant that judged the wrong document
+  survived. The markers are now `THEME-ONE`/`THEME-TWO`, and each assertion also checks the other is
+  absent. The same check caught a cap test whose arithmetic tripped at the wrong step.
 
 ## Time log
 

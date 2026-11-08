@@ -42,6 +42,7 @@ describe('loadConfig', () => {
           judge_pairwise: { model: 'claude-opus-5-5', maxTokens: 6_000, effort: 'medium' },
         },
         maxRunCostUsd: 0.5,
+        maxAbRunCostUsd: 1.5,
         prices: {
           'claude-haiku-5-5': { inputPerMillion: 0.1, outputPerMillion: 0.5 },
           'claude-sonnet-5-5': { inputPerMillion: 2, outputPerMillion: 10 },
@@ -70,6 +71,7 @@ describe('loadConfig', () => {
       EMBEDDING_CACHE_DIR: '/models',
       EMBEDDING_ALLOW_REMOTE: 'false',
       MAX_RUN_COST_USD: '0.2',
+      MAX_AB_RUN_COST_USD: '0.9',
     });
     expect(config).toMatchObject({
       port: 8080,
@@ -83,7 +85,7 @@ describe('loadConfig', () => {
         cacheDir: '/models',
         allowRemoteModels: false,
       },
-      llm: { maxRunCostUsd: 0.2 },
+      llm: { maxRunCostUsd: 0.2, maxAbRunCostUsd: 0.9 },
     });
   });
 

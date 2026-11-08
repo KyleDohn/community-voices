@@ -33,6 +33,7 @@ const EnvSchema = z.object({
     .transform((v) => v === 'true'),
   /** A report run costs about $0.03-0.08; the cap only stops a runaway. */
   MAX_RUN_COST_USD: z.coerce.number().positive().default(0.5),
+  MAX_AB_RUN_COST_USD: z.coerce.number().positive().default(1.5),
 });
 
 export interface IngestConfig {
@@ -83,6 +84,8 @@ export interface LlmStepConfig {
 export interface LlmConfig {
   steps: Record<LlmStep, LlmStepConfig>;
   maxRunCostUsd: number;
+  /** One cap over every call in an A/B run: its report, the no-RAG write and the judge. */
+  maxAbRunCostUsd: number;
   prices: PriceTable;
 }
 
@@ -143,6 +146,7 @@ export const loadConfig = (env: Record<string, string | undefined>): Config => {
         judge_pairwise: { model: 'claude-opus-5-5', maxTokens: 6_000, effort: 'medium' },
       },
       maxRunCostUsd: vars.MAX_RUN_COST_USD,
+      maxAbRunCostUsd: vars.MAX_AB_RUN_COST_USD,
       // docs/research/stack.md section 5; Haiku's price holds for prompts up to 100k tokens.
       prices: {
         'claude-haiku-5-5': { inputPerMillion: 0.1, outputPerMillion: 0.5 },

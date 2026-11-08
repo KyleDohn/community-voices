@@ -6,6 +6,7 @@ import { testLlmConfig } from './testing/llm-config';
 import { scriptedLlm } from './testing/scripted-llm';
 
 const config: LlmConfig = {
+  ...testLlmConfig,
   steps: {
     ...testLlmConfig.steps,
     extract: { model: 'sonnet', maxTokens: 100, effort: 'low' },

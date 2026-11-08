@@ -19,8 +19,8 @@ const docAbout = (title: string): ReportDocument => ({
   mood: { summary: 'm', citations: [] },
   predictions: [],
 });
-const rag = docAbout('RAG-THEME');
-const noRag = docAbout('NO-RAG-THEME');
+const rag = docAbout('THEME-ONE');
+const noRag = docAbout('THEME-TWO');
 
 const score = (n: number) => ({ score: n, reason: `r${n}` });
 const scores: RubricScores = {
@@ -55,7 +55,8 @@ describe('judgeRubric', () => {
     expect(request).toMatchObject({ model: 'opus', schema: RubricScores, cacheSystem: true });
     expect(request!.system).toContain('[post 11]');
     expect(request!.system).toContain('exports look pink');
-    expect(userText(request!)).toContain('RAG-THEME');
+    expect(userText(request!)).toContain('THEME-ONE');
+    expect(userText(request!)).not.toContain('THEME-TWO');
     expect(caller.calls.map((c) => c.step)).toEqual(['judge_rubric']);
   });
 });
@@ -75,8 +76,8 @@ describe('judgePairwise', () => {
       winner: 'rag',
     });
     const [first, second] = requests.map(userText);
-    expect(first!.indexOf('RAG-THEME')).toBeLessThan(first!.indexOf('NO-RAG-THEME'));
-    expect(second!.indexOf('NO-RAG-THEME')).toBeLessThan(second!.indexOf('RAG-THEME'));
+    expect(first!.indexOf('THEME-ONE')).toBeLessThan(first!.indexOf('THEME-TWO'));
+    expect(second!.indexOf('THEME-TWO')).toBeLessThan(second!.indexOf('THEME-ONE'));
     expect(requests.every((r) => r.cacheSystem && r.schema === PairwiseAnswer)).toBe(true);
     expect(caller.calls.map((c) => c.step)).toEqual(['judge_pairwise', 'judge_pairwise']);
   });
@@ -106,7 +107,7 @@ describe('the judge prompts', () => {
 
     expect(new Set(requests.map((r) => r.system)).size).toBe(1);
     for (const r of requests) {
-      const text = (r.system + userText(r)).replace(/(NO-)?RAG-THEME/g, '');
+      const text = (r.system + userText(r)).replace(/THEME-(ONE|TWO)/g, '');
       expect(text).not.toMatch(/\bRAG\b|retriev|no_rag|without/i);
     }
   });

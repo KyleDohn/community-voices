@@ -10,6 +10,7 @@ export const testLlmConfig: LlmConfig = {
     judge_pairwise: { model: 'opus', maxTokens: 2_000, effort: 'medium' },
   },
   maxRunCostUsd: 0.5,
+  maxAbRunCostUsd: 1.5,
   prices: {
     haiku: { inputPerMillion: 1, outputPerMillion: 5 },
     sonnet: { inputPerMillion: 2, outputPerMillion: 10 },
