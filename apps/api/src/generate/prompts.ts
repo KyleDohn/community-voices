@@ -101,7 +101,7 @@ const NO_RAG_SYSTEM = [
   APPROX_COUNT,
 ].join('\n\n');
 
-const addDays = (day: string, days: number) => {
+export const addDays = (day: string, days: number) => {
   const date = new Date(`${day}T00:00:00Z`);
   date.setUTCDate(date.getUTCDate() + days);
   return date.toISOString().slice(0, 10);

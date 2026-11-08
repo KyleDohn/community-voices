@@ -17,3 +17,34 @@ export const CitationChecks = z.object({
   notRetrieved: PostIds,
 });
 export type CitationChecks = z.infer<typeof CitationChecks>;
+
+const Score = z.object({ score: z.number().int().min(1).max(5), reason: z.string() });
+
+/** What the judge returns for one document, scored alone. */
+export const RubricScores = z.object({
+  grounding: Score,
+  specificity: Score,
+  coverage: Score,
+  predictionPlausibility: Score,
+  readability: Score,
+});
+export type RubricScores = z.infer<typeof RubricScores>;
+
+/** What the judge returns when comparing documents X and Y. */
+export const PairwiseAnswer = z.object({
+  winner: z.enum(['X', 'Y', 'tie']),
+  reason: z.string(),
+});
+export type PairwiseAnswer = z.infer<typeof PairwiseAnswer>;
+
+export const Variant = z.enum(['rag', 'no_rag']);
+export type Variant = z.infer<typeof Variant>;
+
+const Verdict = z.enum(['rag', 'no_rag', 'tie']);
+
+/** Two passes with the order swapped, mapped back to variants; a split is a tie. */
+export const PairwiseResult = z.object({
+  passes: z.array(z.object({ x: Variant, winner: Verdict, reason: z.string() })).length(2),
+  winner: Verdict,
+});
+export type PairwiseResult = z.infer<typeof PairwiseResult>;
