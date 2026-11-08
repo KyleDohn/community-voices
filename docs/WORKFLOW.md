@@ -104,6 +104,10 @@ This file records how the project was built with Claude Code. It is meant to be 
   and the pg search's id tiebreak has no test of its own.
 - Phase 3: a SKILL.md example I wrote paired a mutant with the wrong file. The skill's own script
   printed `NOT APPLIED` on the first dry run, which is the check it exists for.
+- Phase 3: a scripted DESIGN edit replaced "from retrieval step 4 up to `## A/B comparison`" and so
+  deleted the whole `## Generation` section between them. It went unnoticed for six commits and was
+  caught while writing the phase-4 handoff, then restored from git. A scripted replace now needs a
+  `git diff` of the doc before commit.
 - Open: one integration run timed out once (5 s, "adds no duplicates") right after the repository
   refactor. It didn't recur in 13 runs, and no stray DB connections were found. Cause unknown.
 

@@ -167,6 +167,20 @@ chunks already picked)`. Measured on 2026-10-26, distinct topics among the ~39 m
 5. **Logging:** each retrieval creates a `retrieval_runs` row, and every retrieved chunk is written to
    `retrievals` with the facet (or theme), rank and score. A chunk found by two facets gets two rows.
 
+## Generation
+
+- **Writer:** Claude Sonnet 5.5 (`claude-sonnet-5-5`) writes both documents.
+- **Output:** a zod schema in `packages/contracts`, sent as a JSON schema:
+  - `themes[]`: title, summary, approximate post count, `citations[]` of post IDs
+  - `notableThreads[]`
+  - `mood`
+  - `predictions[]`: claim, rationale, confidence, `citations[]`
+- **Keeping the model on task:**
+  - The system prompt says to use only the supplied posts, and allows "insufficient evidence" as an answer.
+  - Every call has a `max_tokens` cap.
+  - zod validates the output. On failure there is one repair retry that sends the validation errors back.
+- **Cost:** token usage and dollar cost are recorded per call and shown in the UI.
+
 ## A/B comparison
 
 - **Variant A (no RAG):** the community name, a short description and the date range. No posts.
