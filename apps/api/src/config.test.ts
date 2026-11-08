@@ -33,6 +33,16 @@ describe('loadConfig', () => {
         trendPoolSize: 40,
         trendExamplesPerWeek: 3,
       },
+      llm: {
+        models: { extract: 'claude-haiku-5-5', write: 'claude-sonnet-5-5' },
+        maxTokens: { extract: 2_000, write: 8_000, repair: 8_000 },
+        maxRunCostUsd: 0.5,
+        prices: {
+          'claude-haiku-5-5': { inputPerMillion: 0.1, outputPerMillion: 0.5 },
+          'claude-sonnet-5-5': { inputPerMillion: 2, outputPerMillion: 10 },
+          'claude-opus-5-5': { inputPerMillion: 4, outputPerMillion: 20 },
+        },
+      },
     });
   });
 
@@ -49,6 +59,7 @@ describe('loadConfig', () => {
       EMBEDDING_BATCH_SIZE: '8',
       EMBEDDING_CACHE_DIR: '/models',
       EMBEDDING_ALLOW_REMOTE: 'false',
+      MAX_RUN_COST_USD: '0.2',
     });
     expect(config).toMatchObject({
       port: 8080,
@@ -62,11 +73,16 @@ describe('loadConfig', () => {
         cacheDir: '/models',
         allowRemoteModels: false,
       },
+      llm: { maxRunCostUsd: 0.2 },
     });
   });
 
   it('treats an empty API key as missing', () => {
     expect(loadConfig({ ANTHROPIC_API_KEY: '' }).anthropicApiKey).toBeUndefined();
+  });
+
+  it('rejects a non-positive cost cap', () => {
+    expect(() => loadConfig({ MAX_RUN_COST_USD: '0' })).toThrow(/MAX_RUN_COST_USD/);
   });
 
   it('rejects a non-numeric port', () => {

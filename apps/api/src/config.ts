@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import type { PriceTable } from './generate/cost';
 import type { ChunkOptions } from './ingest/chunk';
 
 /** Width of `chunks.embedding`; a model with another width needs a migration, not just config. */
@@ -29,6 +30,8 @@ const EnvSchema = z.object({
     .enum(['true', 'false'])
     .default('true')
     .transform((v) => v === 'true'),
+  /** A report run costs about $0.03-0.08; the cap only stops a runaway. */
+  MAX_RUN_COST_USD: z.coerce.number().positive().default(0.5),
 });
 
 export interface IngestConfig {
@@ -66,6 +69,16 @@ export interface RetrievalConfig {
   trendExamplesPerWeek: number;
 }
 
+export type LlmPurpose = 'extract' | 'write' | 'repair';
+
+export interface LlmConfig {
+  models: { extract: string; write: string };
+  /** Per-call output caps, thinking included; sized to the output, not a large default. */
+  maxTokens: Record<LlmPurpose, number>;
+  maxRunCostUsd: number;
+  prices: PriceTable;
+}
+
 export interface Config {
   port: number;
   databaseUrl: string;
@@ -74,6 +87,7 @@ export interface Config {
   ingest: IngestConfig;
   embedding: EmbeddingConfig;
   retrieval: RetrievalConfig;
+  llm: LlmConfig;
 }
 
 export const loadConfig = (env: Record<string, string | undefined>): Config => {
@@ -111,6 +125,17 @@ export const loadConfig = (env: Record<string, string | undefined>): Config => {
       lambda: 0.7,
       trendPoolSize: 40,
       trendExamplesPerWeek: 3,
+    },
+    llm: {
+      models: { extract: 'claude-haiku-5-5', write: 'claude-sonnet-5-5' },
+      maxTokens: { extract: 2_000, write: 8_000, repair: 8_000 },
+      maxRunCostUsd: vars.MAX_RUN_COST_USD,
+      // docs/research/stack.md section 5; Haiku's price holds for prompts up to 100k tokens.
+      prices: {
+        'claude-haiku-5-5': { inputPerMillion: 0.1, outputPerMillion: 0.5 },
+        'claude-sonnet-5-5': { inputPerMillion: 2, outputPerMillion: 10 },
+        'claude-opus-5-5': { inputPerMillion: 4, outputPerMillion: 20 },
+      },
     },
   };
 };
