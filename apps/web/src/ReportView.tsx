@@ -152,7 +152,7 @@ export const ReportView = () => {
         </p>
       )}
 
-      <div className="mt-10 grid gap-10 lg:grid-cols-[minmax(0,68ch)_18rem] lg:justify-between">
+      <div className="mt-10 grid gap-10 lg:grid-cols-[minmax(0,68ch)_20rem] lg:justify-between">
         <div>
           {shown.kind === 'loading' && <p className="text-mid">Loading…</p>}
           {shown.kind === 'error' && <p className="text-warn">{shown.message}</p>}

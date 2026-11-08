@@ -5,7 +5,7 @@ const STEP_LABEL = { extract: 'Find themes', write: 'Write report' } as const;
 
 /** What the run did and cost, so every number in the report can be traced to a call. */
 export const RunReceipt = ({ run }: { run: ReportRunResponse }) => (
-  <aside className="rounded-md bg-panel p-5 text-sm">
+  <aside className="self-start rounded-md bg-panel p-5 text-sm lg:sticky lg:top-8">
     <h2 className="font-semibold">This run</h2>
     <p className="mt-1 text-mid">
       {new Date(run.createdAt).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' })}
@@ -17,7 +17,7 @@ export const RunReceipt = ({ run }: { run: ReportRunResponse }) => (
         <thead className="text-xs text-mid">
           <tr>
             <th className="pb-1 font-normal">Call</th>
-            <th className="pb-1 text-right font-normal">Tokens in / out</th>
+            <th className="pb-1 text-right font-normal">Tokens</th>
             <th className="pb-1 text-right font-normal">Cost</th>
           </tr>
         </thead>
@@ -27,12 +27,13 @@ export const RunReceipt = ({ run }: { run: ReportRunResponse }) => (
               <td className="py-1.5">
                 {STEP_LABEL[c.step]}
                 {c.attempt > 1 && <span className="text-warn"> (repair)</span>}
-                <div className="text-xs text-mid">{c.model}</div>
+                <div className="text-xs whitespace-nowrap text-mid">{c.model}</div>
               </td>
-              <td className="py-1.5 text-right">
-                {tokens(c.inputTokens)} / {tokens(c.outputTokens)}
+              <td className="py-1.5 text-right whitespace-nowrap">
+                {tokens(c.inputTokens)}
+                <div className="text-xs text-mid">{tokens(c.outputTokens)} out</div>
               </td>
-              <td className="py-1.5 text-right">{usd(c.costUsd)}</td>
+              <td className="py-1.5 pl-3 text-right">{usd(c.costUsd)}</td>
             </tr>
           ))}
         </tbody>
