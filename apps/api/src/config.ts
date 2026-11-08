@@ -54,6 +54,18 @@ export interface EmbeddingConfig {
   allowRemoteModels: boolean;
 }
 
+export interface RetrievalConfig {
+  /** Nearest chunks fetched per facet before MMR. */
+  candidatesPerFacet: number;
+  /** Chunks MMR keeps per facet; 5 facets x 8 gives about 40 after merging. */
+  keepPerFacet: number;
+  /** MMR trade-off: 1 = pure relevance, 0 = pure diversity. */
+  lambda: number;
+  /** Nearest chunks pooled across all weeks per theme; each week's count is its share. */
+  trendPoolSize: number;
+  trendExamplesPerWeek: number;
+}
+
 export interface Config {
   port: number;
   databaseUrl: string;
@@ -61,6 +73,7 @@ export interface Config {
   webDistDir: string | undefined;
   ingest: IngestConfig;
   embedding: EmbeddingConfig;
+  retrieval: RetrievalConfig;
 }
 
 export const loadConfig = (env: Record<string, string | undefined>): Config => {
@@ -91,6 +104,13 @@ export const loadConfig = (env: Record<string, string | undefined>): Config => {
       queryPrefix: 'Represent this sentence for searching relevant passages: ',
       cacheDir: vars.EMBEDDING_CACHE_DIR,
       allowRemoteModels: vars.EMBEDDING_ALLOW_REMOTE,
+    },
+    retrieval: {
+      candidatesPerFacet: 15,
+      keepPerFacet: 8,
+      lambda: 0.7,
+      trendPoolSize: 40,
+      trendExamplesPerWeek: 3,
     },
   };
 };

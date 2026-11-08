@@ -26,6 +26,13 @@ describe('loadConfig', () => {
         cacheDir: undefined,
         allowRemoteModels: true,
       },
+      retrieval: {
+        candidatesPerFacet: 15,
+        keepPerFacet: 8,
+        lambda: 0.7,
+        trendPoolSize: 40,
+        trendExamplesPerWeek: 3,
+      },
     });
   });
 
