@@ -65,7 +65,7 @@ describe('retrieveWeek', () => {
 
 describe('toLogEntries', () => {
   it('gives one entry per facet that found a chunk', () => {
-    const hit = { postId: 7, topicId: 7, topicTitle: 'T', url: 'u', text: 't', score: 0.7 };
+    const hit = { postId: 7, topicId: 7, topicTitle: 'T', url: 'u', text: 't' };
     const chunks = [
       { ...hit, chunkId: 1, facets: [{ facetId: 'releases', rank: 1, score: 0.72 }] },
       {

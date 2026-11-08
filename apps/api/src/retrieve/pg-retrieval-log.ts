@@ -1,20 +1,7 @@
 import { asc, eq } from 'drizzle-orm';
 import type { Database } from '../db/client';
 import { retrievalRuns, retrievals } from '../db/schema';
-
-export interface RetrievalEntry {
-  chunkId: number;
-  /** The facet id, or the theme text for a trend lookup. */
-  query: string;
-  rank: number;
-  score: number;
-}
-
-export interface RetrievalLog {
-  /** Stores the entries under a new run and returns its id. */
-  record(weekStart: string, entries: RetrievalEntry[]): Promise<string>;
-  entriesFor(runId: string): Promise<RetrievalEntry[]>;
-}
+import type { RetrievalLog } from './retrieval-log';
 
 export const createPgRetrievalLog = (db: Database): RetrievalLog => ({
   record: (weekStart, entries) =>

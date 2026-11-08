@@ -1,7 +1,7 @@
 import type { ChunkSearch, SearchHit } from '../embed/embedding-store';
 import type { Embedder } from '../embed/embedder';
 import { mmr } from './mmr';
-import type { RetrievalEntry } from './pg-retrieval-log';
+import type { RetrievalEntry } from './retrieval-log';
 
 export interface Facet {
   id: string;
@@ -28,7 +28,8 @@ export interface FacetMatch {
   score: number;
 }
 
-export interface RetrievedChunk extends SearchHit {
+/** No top-level score: a merged chunk has one per facet, in `facets`. */
+export interface RetrievedChunk extends Omit<SearchHit, 'score'> {
   facets: FacetMatch[];
 }
 
@@ -54,9 +55,9 @@ export const retrieveWeek = async (
         candidates.map((hit) => ({ ...hit, id: hit.chunkId, vector: hit.embedding })),
         { lambda: options.lambda, k: options.keepPerFacet },
       );
-      return picks.map(({ id: _id, vector: _vector, embedding: _embedding, ...hit }, i) => ({
+      return picks.map(({ id: _id, vector: _vector, embedding: _embedding, score, ...hit }, i) => ({
         ...hit,
-        facets: [{ facetId: facet.id, rank: i + 1, score: hit.score }],
+        facets: [{ facetId: facet.id, rank: i + 1, score }],
       }));
     }),
   );

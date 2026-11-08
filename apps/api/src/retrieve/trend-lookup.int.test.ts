@@ -2,7 +2,7 @@ import { sql } from 'drizzle-orm';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { connect, runMigrations } from '../db/client';
 import { createPgChunkRepository } from '../embed/pg-chunk-repository';
-import { unitVector } from '../embed/testing/fake-embedder';
+import { vectorOf } from '../embed/testing/fake-embedder';
 import { seedChunks } from '../embed/testing/seed-chunks';
 import { createPgIngestionRepository } from '../ingest/pg-ingestion-repository';
 import { scriptedEmbedder } from './testing/memory-chunk-search';
@@ -10,9 +10,6 @@ import { trendLookup } from './trend-lookup';
 
 const { pool, db } = connect(process.env.DATABASE_URL!);
 const chunks = createPgChunkRepository(db);
-
-/** A 384-d vector with the given leading components. */
-const vec = (...head: number[]) => unitVector(Array.from({ length: 384 }, (_, i) => head[i] ?? 0));
 
 beforeAll(() => runMigrations(db));
 beforeEach(() =>
@@ -29,13 +26,13 @@ describe('trendLookup on pgvector', () => {
       { text: 'unrelated, last week', week: '2026-10-19' },
       { text: 'unrelated, two weeks ago', week: '2026-10-12' },
     ]);
-    const embedder = scriptedEmbedder({ 'export crash': vec(1, 0) });
+    const embedder = scriptedEmbedder({ 'export crash': vectorOf(1, 0) });
     await chunks.saveEmbeddings(embedder.model, [
-      { id: 1, embedding: vec(1, 0.1) },
-      { id: 2, embedding: vec(1, 0.2) },
-      { id: 3, embedding: vec(1, 0.3) },
-      { id: 4, embedding: vec(0, 1) },
-      { id: 5, embedding: vec(0, 1) },
+      { id: 1, embedding: vectorOf(1, 0.1) },
+      { id: 2, embedding: vectorOf(1, 0.2) },
+      { id: 3, embedding: vectorOf(1, 0.3) },
+      { id: 4, embedding: vectorOf(0, 1) },
+      { id: 5, embedding: vectorOf(0, 1) },
     ]);
 
     const [trend] = await trendLookup(

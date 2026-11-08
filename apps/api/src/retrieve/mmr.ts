@@ -1,3 +1,5 @@
+import { dot } from '../embed/vector';
+
 export interface MmrCandidate {
   id: number;
   /** Relevance to the query: cosine similarity. */
@@ -11,8 +13,6 @@ export interface MmrOptions {
   lambda: number;
   k: number;
 }
-
-const dot = (a: number[], b: number[]) => a.reduce((sum, x, i) => sum + x * (b[i] ?? 0), 0);
 
 /** Greedy maximal marginal relevance: each pick trades relevance against similarity to earlier picks. */
 export const mmr = <T extends MmrCandidate>(candidates: T[], { lambda, k }: MmrOptions): T[] => {

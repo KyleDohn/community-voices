@@ -2,7 +2,7 @@ import { sql } from 'drizzle-orm';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { connect, runMigrations } from '../db/client';
 import { createPgChunkRepository } from '../embed/pg-chunk-repository';
-import { unitVector } from '../embed/testing/fake-embedder';
+import { vectorOf } from '../embed/testing/fake-embedder';
 import { seedChunks } from '../embed/testing/seed-chunks';
 import { createPgIngestionRepository } from '../ingest/pg-ingestion-repository';
 import { retrieveWeek } from './retrieve-week';
@@ -11,9 +11,6 @@ import { scriptedEmbedder } from './testing/memory-chunk-search';
 const { pool, db } = connect(process.env.DATABASE_URL!);
 const chunks = createPgChunkRepository(db);
 const week = '2026-10-26';
-
-/** A 384-d vector with the given leading components. */
-const vec = (...head: number[]) => unitVector(Array.from({ length: 384 }, (_, i) => head[i] ?? 0));
 
 beforeAll(() => runMigrations(db));
 beforeEach(() =>
@@ -29,12 +26,12 @@ describe('retrieveWeek on pgvector', () => {
       { text: 'help', week },
       { text: 'release, prior week', week: '2026-10-19' },
     ]);
-    const embedder = scriptedEmbedder({ releases: vec(1, 0, 0), help: vec(0, 0, 1) });
+    const embedder = scriptedEmbedder({ releases: vectorOf(1, 0, 0), help: vectorOf(0, 0, 1) });
     await chunks.saveEmbeddings(embedder.model, [
-      { id: 1, embedding: vec(1, 0, 0) },
-      { id: 2, embedding: vec(1, 0, 1) },
-      { id: 3, embedding: vec(0, 0, 1) },
-      { id: 4, embedding: vec(1, 0, 0) },
+      { id: 1, embedding: vectorOf(1, 0, 0) },
+      { id: 2, embedding: vectorOf(1, 0, 1) },
+      { id: 3, embedding: vectorOf(0, 0, 1) },
+      { id: 4, embedding: vectorOf(1, 0, 0) },
     ]);
 
     const retrieved = await retrieveWeek(

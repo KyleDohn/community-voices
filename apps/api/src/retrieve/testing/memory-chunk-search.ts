@@ -1,6 +1,7 @@
 import type { ChunkSearch, SearchHit, SearchQuery, VectorHit } from '../../embed/embedding-store';
 import type { Embedder } from '../../embed/embedder';
 import { fakeEmbedder, unitVector } from '../../embed/testing/fake-embedder';
+import { dot } from '../../embed/vector';
 
 export interface MemoryChunk {
   chunkId: number;
@@ -9,8 +10,6 @@ export interface MemoryChunk {
   /** Normalized on the way in. */
   vector: number[];
 }
-
-const dot = (a: number[], b: number[]) => a.reduce((sum, x, i) => sum + x * (b[i] ?? 0), 0);
 
 /** Exact cosine search over hand-placed vectors; post id = chunk id, topic "Topic <id>". */
 export const createMemoryChunkSearch = (chunks: MemoryChunk[]): ChunkSearch => {

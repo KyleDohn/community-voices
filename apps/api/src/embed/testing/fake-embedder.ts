@@ -23,6 +23,10 @@ export const unitVector = (values: number[]) => {
   return values.map((x) => x / length);
 };
 
+/** A 384-d unit vector with the given leading components, for hand-placed test vectors. */
+export const vectorOf = (...head: number[]) =>
+  unitVector(Array.from({ length: DIMENSIONS }, (_, i) => head[i] ?? 0));
+
 const hashVector = (text: string) => {
   const next = random(hash(text));
   return unitVector(Array.from({ length: DIMENSIONS }, () => next() - 0.5));
