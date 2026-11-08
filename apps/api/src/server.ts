@@ -6,6 +6,10 @@ import { connect, probe, runMigrations } from './db/client';
 import { loadBgeEmbedder } from './embed/bge-embedder';
 import { createEmbeddingWorker } from './embed/embedding-worker';
 import { createPgChunkRepository } from './embed/pg-chunk-repository';
+import { createAnthropicLlmClient } from './generate/anthropic-llm-client';
+import { createPgReportRepository } from './generate/pg-report-repository';
+import { createReportJobs } from './generate/report-jobs';
+import { createReportGenerator } from './generate/wiring';
 import { createApp } from './http/app';
 import { createIngestionJobs } from './ingest/ingestion-jobs';
 import { createPgIngestionRepository } from './ingest/pg-ingestion-repository';
@@ -50,6 +54,25 @@ const ingestions = createIngestionJobs({
   afterRun: embedPending,
 });
 
+const reportRepo = createPgReportRepository(db);
+const interruptedReports = await reportRepo.failInterruptedRuns();
+if (interruptedReports > 0)
+  console.log(`Marked ${interruptedReports} interrupted report run(s) as failed`);
+
+const { anthropicApiKey } = config;
+const reports = createReportJobs({
+  repo: reportRepo,
+  canGenerate: anthropicApiKey !== undefined,
+  generate: anthropicApiKey
+    ? createReportGenerator(
+        config,
+        db,
+        embedding.embedder,
+        createAnthropicLlmClient({ apiKey: anthropicApiKey }),
+      )
+    : () => Promise.reject(new Error('No ANTHROPIC_API_KEY')),
+});
+
 const root = new Hono().route(
   '/',
   createApp({
@@ -57,6 +80,7 @@ const root = new Hono().route(
     embedderStatus: embedding.status,
     ingestions,
     listWeeks: () => chunkRepo.listWeeks(config.embedding.model),
+    reports,
   }),
 );
 

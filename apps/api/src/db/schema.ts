@@ -1,4 +1,5 @@
 // Tables arrive with the phases that need them (see docs/DESIGN.md "Data model").
+import type { LlmCall, ReportDocument, ReportSource } from '@cv/contracts';
 import { sql } from 'drizzle-orm';
 import {
   date,
@@ -110,4 +111,36 @@ export const retrievals = pgTable(
     score: doublePrecision('score').notNull(),
   },
   (t) => [index('retrievals_run_idx').on(t.runId), index('retrievals_chunk_idx').on(t.chunkId)],
+);
+
+/** One RAG report run (phase 4); jsonb holds the contract shapes from `@cv/contracts`. */
+export const reports = pgTable(
+  'reports',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    weekStart: date('week_start', { mode: 'string' }).notNull(),
+    status: text('status', { enum: ['running', 'succeeded', 'failed'] }).notNull(),
+    retrievalRunId: uuid('retrieval_run_id').references(() => retrievalRuns.id, {
+      onDelete: 'set null',
+    }),
+    themes: jsonb('themes')
+      .$type<string[]>()
+      .notNull()
+      .default(sql`'[]'::jsonb`),
+    document: jsonb('document').$type<ReportDocument>(),
+    sources: jsonb('sources')
+      .$type<ReportSource[]>()
+      .notNull()
+      .default(sql`'[]'::jsonb`),
+    calls: jsonb('calls')
+      .$type<LlmCall[]>()
+      .notNull()
+      .default(sql`'[]'::jsonb`),
+    costUsd: doublePrecision('cost_usd').notNull().default(0),
+    errorCode: text('error_code'),
+    errorMessage: text('error_message'),
+    createdAt: timestamptz('created_at').notNull().defaultNow(),
+    finishedAt: timestamptz('finished_at'),
+  },
+  (t) => [index('reports_week_created_idx').on(t.weekStart, t.createdAt)],
 );

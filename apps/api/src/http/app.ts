@@ -1,8 +1,10 @@
 import type { EmbedderStatus, ErrorResponse, WeekSummary } from '@cv/contracts';
 import { Hono } from 'hono';
+import type { ReportJobs } from '../generate/report-jobs';
 import type { IngestionJobs } from '../ingest/ingestion-jobs';
 import { healthRoutes } from './health';
 import { ingestionRoutes } from './ingestions';
+import { reportRoutes } from './reports';
 import { weekRoutes } from './weeks';
 
 export interface AppDependencies {
@@ -12,6 +14,7 @@ export interface AppDependencies {
   ingestions: IngestionJobs;
   /** Weeks that have chunks, newest first. */
   listWeeks: () => Promise<WeekSummary[]>;
+  reports: ReportJobs;
 }
 
 export const API_PREFIX = '/api/v1';
@@ -25,6 +28,7 @@ export const createApp = (deps: AppDependencies) =>
     .route('/health', healthRoutes(deps.probeDatabase, deps.embedderStatus))
     .route('/ingestions', ingestionRoutes(deps.ingestions))
     .route('/weeks', weekRoutes(deps.listWeeks))
+    .route('/reports', reportRoutes(deps.reports))
     // Catch-all so unknown API paths never fall through to the web app's index.html.
     .all('/*', (c) => c.json(notFound, 404))
     // Non-2xx bodies are always ErrorResponse; details go to the log, not the client.

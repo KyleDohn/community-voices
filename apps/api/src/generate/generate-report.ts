@@ -4,7 +4,7 @@ import type { LlmConfig, LlmStep } from '../config';
 import type { RetrievalLog } from '../retrieve/retrieval-log';
 import { type RetrievedChunk, toLogEntries } from '../retrieve/retrieve-week';
 import { type ThemeTrend, trendLogEntries } from '../retrieve/trend-lookup';
-import { costOf } from './cost';
+import { costOf, sumCost } from './cost';
 import { type AllowedCitations, validateGrounding } from './grounding';
 import { LlmError, type LlmClient, type LlmResponse } from './llm-client';
 import { extractPrompt, type Prompt, repairMessage, writePrompt } from './prompts';
@@ -52,8 +52,6 @@ export interface GeneratedReport {
 const MAX_THEMES = 6;
 
 const ExtractedThemes = z.object({ themes: z.array(z.string()).min(1) });
-
-const sumCost = (calls: LlmCall[]) => calls.reduce((sum, c) => sum + c.costUsd, 0);
 
 // English runs about 4 characters per token; 3 overestimates, which is the safe side for a cap.
 const estimateTokens = ({ system, messages }: Prompt) =>

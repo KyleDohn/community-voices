@@ -1,3 +1,5 @@
+import type { LlmCall } from '@cv/contracts';
+
 export interface TokenUsage {
   inputTokens: number;
   outputTokens: number;
@@ -25,3 +27,6 @@ export const costOf = (usage: TokenUsage, model: string, prices: PriceTable): nu
     1_000_000
   );
 };
+
+/** Total dollars across a run's calls. */
+export const sumCost = (calls: LlmCall[]) => calls.reduce((sum, c) => sum + c.costUsd, 0);

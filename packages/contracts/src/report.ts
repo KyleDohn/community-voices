@@ -67,3 +67,50 @@ export const LlmCall = z.object({
   costUsd: z.number(),
 });
 export type LlmCall = z.infer<typeof LlmCall>;
+
+/** A Monday, `YYYY-MM-DD`: chunks are keyed by the Monday that starts their week. */
+export const WeekStart = z.iso
+  .date()
+  .refine((day) => new Date(`${day}T00:00:00Z`).getUTCDay() === 1, 'must be a Monday');
+
+/** `POST /api/v1/reports` body. */
+export const StartReportRequest = z.object({ week: WeekStart });
+export type StartReportRequest = z.infer<typeof StartReportRequest>;
+
+export const ReportStatus = z.enum(['running', 'succeeded', 'failed']);
+export type ReportStatus = z.infer<typeof ReportStatus>;
+
+/** Why a run stopped, e.g. `cost_cap_exceeded`, `spend_limit_reached`, `invalid_output`. */
+export const ReportError = z.object({ code: z.string(), message: z.string() });
+export type ReportError = z.infer<typeof ReportError>;
+
+/** `GET /api/v1/reports/:id`. A failed run still lists the calls it paid for. */
+export const ReportRunResponse = z.object({
+  id: z.string(),
+  weekStart: z.iso.date(),
+  status: ReportStatus,
+  createdAt: z.iso.datetime(),
+  finishedAt: z.iso.datetime().nullable(),
+  retrievalRunId: z.string().nullable(),
+  /** The themes extracted by the first call, as used for the trend lookup. */
+  themes: z.array(z.string()),
+  document: ReportDocument.nullable(),
+  sources: z.array(ReportSource),
+  calls: z.array(LlmCall),
+  costUsd: z.number(),
+  error: ReportError.nullable(),
+});
+export type ReportRunResponse = z.infer<typeof ReportRunResponse>;
+
+export const ReportSummary = ReportRunResponse.pick({
+  id: true,
+  weekStart: true,
+  status: true,
+  createdAt: true,
+  costUsd: true,
+});
+export type ReportSummary = z.infer<typeof ReportSummary>;
+
+/** `GET /api/v1/reports?week=`: runs, newest first. */
+export const ReportListResponse = z.object({ reports: z.array(ReportSummary) });
+export type ReportListResponse = z.infer<typeof ReportListResponse>;
