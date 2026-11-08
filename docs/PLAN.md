@@ -173,7 +173,7 @@ and the cost list shows **A/B runs plus the reports no A/B run points to**, so e
 
 | Rank | Phase                                                                                                                                 | Est.   | Status |
 | ---- | ------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------ |
-| 1    | **Retrieval stats.** `GET /stats/retrievals`, Stats view with most-retrieved posts and cost per run.                                  | 0.5 h  | ⬜     |
+| 1    | **Retrieval stats.** `GET /stats/retrievals`, Stats view with most-retrieved posts and cost per run.                                  | 0.5 h  | ✅     |
 | 2    | **Embeddings map.** UMAP on the server, cached `map_points`, `GET /embeddings/map`, canvas scatter with retrieved chunks highlighted. | 1.5 h  | ⬜     |
 | —    | **✂️ Cut line.** Everything below is built only if time allows.                                                                       |        |        |
 | 3    | Variant C: the whole week in context, as a third A/B column.                                                                          | 0.75 h | ⬜     |

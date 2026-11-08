@@ -152,6 +152,15 @@ This file records how the project was built with Claude Code. It is meant to be 
   one failed poll hid a running run. The first two were fixed red → green with mutants killed, the
   rest as wording and UI fixes checked in the browser. Left on purpose: a `reports.succeed` failure
   inside an A/B run leaves that report row `running` until the next restart.
+- Extra 1, Stats view: the first design drew a meter of "runs out of total runs" per post. On the real
+  data every post read 7 of 7, since all dev runs cover one week, so the meter said nothing and was
+  dropped for plain counts. The same check showed three rows with one title (different posts in one
+  thread), which led to adding the post number to the contract. Vite also served a stale contract
+  module after the change; a reload fixed it.
+- Extra 1 review (subagent): no bug in ranking, the facet/trend split or the double-count exclusion.
+  It found that `week_start::text` follows the session DateStyle (fixed red → green with a
+  `set local datestyle` test), row types that claimed `Date` where the driver returns text, and an
+  undercount if an A/B run crashes after linking its report (recorded in ASSUMPTIONS #34).
 
 ## Time log
 
@@ -164,3 +173,4 @@ This file records how the project was built with Claude Code. It is meant to be 
 | Phase 3 retrieve    | 0.5 h (incl. facet measurements and review fixes)      |
 | Phase 4 generate    | 2 h (incl. ~30 min recovering Docker from a full disk) |
 | Phase 5 A/B compare | 1.25 h (incl. two live A/B runs, $0.57)                |
+| Extra 1 stats       | 0.75 h (incl. review fixes)                            |
