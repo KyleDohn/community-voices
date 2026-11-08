@@ -145,6 +145,13 @@ This file records how the project was built with Claude Code. It is meant to be 
   from its own knowledge under the same honesty rules. It also expected all four judge calls to share
   one cache entry; the structured-output schema is part of the prefix, so rubric and pairwise each
   write their own. Measuring a real run before committing the sample caught both.
+- Phase 5 review (subagent): no bug in the cost cap, blinding, order swap or checks, but five real
+  gaps that every test had passed. The sample's RAG report would have shown as live output in the
+  Report tab; a storage failure after a paid run recorded $0 spent; "cited posts that do not exist"
+  also counted real posts older than the corpus; the A/B tab could open on a week with no run; and
+  one failed poll hid a running run. The first two were fixed red → green with mutants killed, the
+  rest as wording and UI fixes checked in the browser. Left on purpose: a `reports.succeed` failure
+  inside an A/B run leaves that report row `running` until the next restart.
 
 ## Time log
 
@@ -156,3 +163,4 @@ This file records how the project was built with Claude Code. It is meant to be 
 | Phase 2 embed       | 0.5 h (incl. two 2–3 minute embed runs)                |
 | Phase 3 retrieve    | 0.5 h (incl. facet measurements and review fixes)      |
 | Phase 4 generate    | 2 h (incl. ~30 min recovering Docker from a full disk) |
+| Phase 5 A/B compare | 1.25 h (incl. two live A/B runs, $0.57)                |

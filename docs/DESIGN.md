@@ -225,7 +225,9 @@ chunks already picked)`. Measured on 2026-10-26, distinct topics among the ~39 m
 - **Variant A (no RAG):** the community name, a short description and the date range. No posts. It is
   told it has no posts and writes from what it knows, with the same schema and honesty rules (cite only
   real ids it knows, never invent). Given the RAG writer's "use only the supplied posts" rule instead, it
-  returned an empty report, which made the comparison say nothing.
+  returned an empty report, which made the comparison say nothing. Even writing from its own knowledge,
+  Sonnet 5.5 mostly says "Insufficient evidence" and offers only generalities about the forum: with
+  honesty rules it declines rather than invents. That is the finding the sample run shows.
 - **Variant B (RAG):** the retrieval output above.
 - **Stretch variant C (paste everything in):** the whole target week in context, with no retrieval.
 - **Scoring**, in three layers:
