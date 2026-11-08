@@ -18,4 +18,25 @@ describe('mmr', () => {
 
     expect(mmr(candidates, { lambda: 1, k: 3 }).map((c) => c.id)).toEqual([1, 3, 2]);
   });
+
+  it('demotes a near-duplicate of the top hit below a less relevant but different chunk', () => {
+    const candidates = [
+      candidate(1, 0.9, [1, 0, 0]),
+      candidate(2, 0.88, [1, 0.05, 0]),
+      candidate(3, 0.7, [0, 1, 0]),
+    ];
+
+    expect(mmr(candidates, { lambda: 0.7, k: 3 }).map((c) => c.id)).toEqual([1, 3, 2]);
+  });
+
+  it('keeps at most k, and every candidate when there are fewer than k', () => {
+    const candidates = [
+      candidate(1, 0.9, [1, 0, 0]),
+      candidate(2, 0.8, [0, 1, 0]),
+      candidate(3, 0.7, [0, 0, 1]),
+    ];
+
+    expect(mmr(candidates, { lambda: 0.7, k: 2 })).toHaveLength(2);
+    expect(mmr(candidates, { lambda: 0.7, k: 5 })).toHaveLength(3);
+  });
 });
