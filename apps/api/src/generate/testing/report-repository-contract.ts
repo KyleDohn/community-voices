@@ -35,6 +35,7 @@ const calls: LlmCall[] = [
 
 const reportWith = (retrievalRunId: string): GeneratedReport => ({
   retrievalRunId,
+  evidence: [],
   themes: ['colour shifts'],
   document: {
     themes: [{ title: 't', summary: 's', approxPostCount: 3, citations: [7] }],
@@ -78,8 +79,14 @@ export const describeReportRepositoryContract = (
 
       await repo.succeed(id, report);
 
+      // Evidence is the judge's working input, not part of the stored report.
+      const { retrievalRunId: runId, themes, document, sources, calls: stored } = report;
       expect(await repo.getRun(id)).toMatchObject({
-        ...report,
+        retrievalRunId: runId,
+        themes,
+        document,
+        sources,
+        calls: stored,
         status: 'succeeded',
         finishedAt: expect.any(String),
         costUsd: expect.closeTo(0.0068, 10),

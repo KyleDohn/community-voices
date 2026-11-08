@@ -4,6 +4,7 @@ import type { LlmConfig } from '../config';
 import type { RetrievalLog } from '../retrieve/retrieval-log';
 import { type RetrievedChunk, toLogEntries } from '../retrieve/retrieve-week';
 import { type ThemeTrend, trendLogEntries } from '../retrieve/trend-lookup';
+import type { EvidencePost } from '../ab/judge';
 import { type Caller, createCaller, GenerationError } from './caller';
 import { sumCost } from './cost';
 import { type AllowedCitations, validateGrounding } from './grounding';
@@ -33,6 +34,8 @@ export interface GeneratedReport {
   themes: string[];
   document: ReportDocument;
   sources: ReportSource[];
+  /** Target-week posts the writer read, with their text: the A/B judge's reference. */
+  evidence: EvidencePost[];
   calls: LlmCall[];
   costUsd: number;
 }
@@ -61,6 +64,23 @@ const sourcesOf = (
     ]),
   );
   return [...byPost.values()];
+};
+
+const evidenceOf = (
+  week: string,
+  chunks: RetrievedChunk[],
+  trends: ThemeTrend[],
+): EvidencePost[] => {
+  const all = [
+    ...chunks,
+    ...trends.flatMap((t) =>
+      t.weeks.filter((w) => w.weekStart === week).flatMap((w) => w.examples),
+    ),
+  ];
+  const byChunk = new Map(
+    all.map(({ chunkId, postId, topicTitle, text }) => [chunkId, { postId, topicTitle, text }]),
+  );
+  return [...byChunk.values()];
 };
 
 const allowedFrom = (week: string, sources: ReportSource[]): AllowedCitations => ({
@@ -125,6 +145,7 @@ const writeReport = async (
     themes,
     document,
     sources,
+    evidence: evidenceOf(week, chunks, trends),
     calls,
     costUsd: sumCost(calls),
   };

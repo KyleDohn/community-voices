@@ -33,6 +33,7 @@ const call = {
 
 const generated: GeneratedReport = {
   retrievalRunId: 'run-1',
+  evidence: [],
   themes: ['a theme'],
   document,
   sources: [{ postId: 1, url: 'https://forum.test/p/1', topicTitle: 'T', weekStart: week }],

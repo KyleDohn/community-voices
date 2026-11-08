@@ -104,6 +104,12 @@ describe('generateReport', () => {
       { postId: 13, url: hit(13).url, topicTitle: 'Topic 13', weekStart: week },
       { postId: 50, url: hit(50).url, topicTitle: 'Topic 50', weekStart: '2026-10-19' },
     ]);
+    // The judge's reference: target-week posts the writer read, with their text; not post 50.
+    expect(report.evidence.map((e) => [e.postId, e.text])).toEqual([
+      [11, 'text of post 11'],
+      [12, 'text of post 12'],
+      [13, 'text of post 13'],
+    ]);
     expect(report.retrievalRunId).toBe('run-1');
     expect(log.recorded[0]!.entries.map((e) => [e.postId, e.query])).toEqual([
       [11, 'releases'],
