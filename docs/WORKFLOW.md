@@ -29,6 +29,12 @@ This file records how the project was built with Claude Code. It is meant to be 
      Mutants (blank query prefix, dropped model and week filters, removed pass queue) each failed a test.
      The real boot was checked twice: natively against the dev DB, and in Docker on a fresh DB on a
      network with no internet access.
+   - Phase 3 (retrieve): `tdd` against interfaces agreed from a handoff note, plus one more question the
+     interfaces left open (what a trend "match" is). Facet wording and MMR's λ were measured on the real
+     week with a scratch script before any value was chosen; the before/after is in DESIGN. The mutant
+     loop, run about 14 times by now, became the project skill `.claude/skills/mutant-check` (written with
+     `writing-for-agents`), with a script that refuses to count an unapplied mutant. A review subagent
+     checked the phase diff against DESIGN and the Clean Code bar.
 
 ## Where the AI was wrong or needed correcting
 
@@ -87,14 +93,26 @@ This file records how the project was built with Claude Code. It is meant to be 
   relevance ranked C above the near-duplicate B too. The test passed with MMR switched off (λ=1). The
   mutant check caught it. C is now less relevant than B, so only MMR can move it up. A second
   surviving mutant showed that no test pinned the per-facet candidate pool, so one was added.
+- Phase 3 review (subagent): found one real bug. A post edited down to fewer chunks lost its
+  trailing chunks on re-ingestion, and the `retrievals` cascade silently erased those rows from past
+  runs. History now keeps the post id and nulls the chunk (ASSUMPTIONS #24). Three mutants survived every
+  test (MMR `max` → `min`, the trend pool's sort, the log transaction); each now has a test, confirmed red
+  on the mutant. It also found that trend examples weren't logged despite DESIGN saying every retrieved
+  chunk is, a repeated week was double-counted, and exact ties favoured the first-listed week. Smaller
+  fixes: the ambiguous top-level score on merged chunks, the log port living in the pg file, duplicated
+  helpers, and the CLI logging an empty run. Known gaps left on purpose: the CLI has no tests (agreed),
+  and the pg search's id tiebreak has no test of its own.
+- Phase 3: a SKILL.md example I wrote paired a mutant with the wrong file. The skill's own script
+  printed `NOT APPLIED` on the first dry run, which is the check it exists for.
 - Open: one integration run timed out once (5 s, "adds no duplicates") right after the repository
   refactor. It didn't recur in 13 runs, and no stray DB connections were found. Cause unknown.
 
 ## Time log
 
-| Step                | Approx. time                            |
-| ------------------- | --------------------------------------- |
-| Research + planning | 1 h                                     |
-| Phase 0 scaffold    | 0.5 h                                   |
-| Phase 1 ingest      | 0.5 h (incl. an 8-minute live ingest)   |
-| Phase 2 embed       | 0.5 h (incl. two 2–3 minute embed runs) |
+| Step                | Approx. time                                      |
+| ------------------- | ------------------------------------------------- |
+| Research + planning | 1 h                                               |
+| Phase 0 scaffold    | 0.5 h                                             |
+| Phase 1 ingest      | 0.5 h (incl. an 8-minute live ingest)             |
+| Phase 2 embed       | 0.5 h (incl. two 2–3 minute embed runs)           |
+| Phase 3 retrieve    | 0.5 h (incl. facet measurements and review fixes) |
