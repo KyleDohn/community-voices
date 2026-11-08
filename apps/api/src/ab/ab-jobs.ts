@@ -1,4 +1,4 @@
-import type { AbRunResponse } from '@cv/contracts';
+import type { AbRunResponse, LlmCall } from '@cv/contracts';
 import { GenerationError } from '../generate/caller';
 import type { ReportRepository } from '../generate/report-repository';
 import type { AbRunRepository } from './ab-run-repository';
@@ -18,6 +18,8 @@ export const createAbJobs = ({ repo, reports, run, canGenerate }: AbJobsDeps) =>
   let inFlight: Promise<void> | undefined;
 
   const execute = async (id: string, week: string) => {
+    // Once the run returns, its calls are paid for even if storing the result fails.
+    let paid: LlmCall[] = [];
     try {
       const result = await run(week, {
         onReport: async (report) => {
@@ -26,6 +28,7 @@ export const createAbJobs = ({ repo, reports, run, canGenerate }: AbJobsDeps) =>
           await repo.linkReport(id, stored.id);
         },
       });
+      paid = result.calls;
       await repo.succeed(id, result);
     } catch (error) {
       if (error instanceof GenerationError) {
@@ -36,7 +39,7 @@ export const createAbJobs = ({ repo, reports, run, canGenerate }: AbJobsDeps) =>
       await repo.fail(
         id,
         { code: 'internal', message: 'Unexpected error; see the server log' },
-        [],
+        paid,
       );
     }
   };
