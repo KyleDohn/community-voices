@@ -42,7 +42,12 @@ describe('loadConfig', () => {
         prices: {
           'claude-haiku-5-5': { inputPerMillion: 0.1, outputPerMillion: 0.5 },
           'claude-sonnet-5-5': { inputPerMillion: 2, outputPerMillion: 10 },
-          'claude-opus-5-5': { inputPerMillion: 4, outputPerMillion: 20 },
+          'claude-opus-5-5': {
+            inputPerMillion: 4,
+            outputPerMillion: 20,
+            cacheWritePerMillion: 5,
+            cacheReadPerMillion: 0.2,
+          },
         },
       },
     });

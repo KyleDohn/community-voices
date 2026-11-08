@@ -17,6 +17,8 @@ const calls: LlmCall[] = [
     model: 'haiku',
     inputTokens: 100,
     outputTokens: 20,
+    cacheWriteTokens: 0,
+    cacheReadTokens: 0,
     costUsd: 0.001,
   },
   {
@@ -25,6 +27,8 @@ const calls: LlmCall[] = [
     model: 'sonnet',
     inputTokens: 900,
     outputTokens: 400,
+    cacheWriteTokens: 0,
+    cacheReadTokens: 0,
     costUsd: 0.0058,
   },
 ];

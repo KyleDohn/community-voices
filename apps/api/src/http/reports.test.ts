@@ -26,6 +26,8 @@ const call = {
   model: 'haiku',
   inputTokens: 10,
   outputTokens: 5,
+  cacheWriteTokens: 0,
+  cacheReadTokens: 0,
   costUsd: 0.01,
 };
 

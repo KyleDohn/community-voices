@@ -142,7 +142,13 @@ export const loadConfig = (env: Record<string, string | undefined>): Config => {
       prices: {
         'claude-haiku-5-5': { inputPerMillion: 0.1, outputPerMillion: 0.5 },
         'claude-sonnet-5-5': { inputPerMillion: 2, outputPerMillion: 10 },
-        'claude-opus-5-5': { inputPerMillion: 4, outputPerMillion: 20 },
+        // Only the judge is cached. 5-minute writes are 1.25x input; Opus 5.5 reads are 0.05x.
+        'claude-opus-5-5': {
+          inputPerMillion: 4,
+          outputPerMillion: 20,
+          cacheWritePerMillion: 5,
+          cacheReadPerMillion: 0.2,
+        },
       },
     },
   };

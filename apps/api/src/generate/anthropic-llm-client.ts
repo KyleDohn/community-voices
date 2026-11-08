@@ -41,12 +41,14 @@ export const createAnthropicLlmClient = ({ apiKey, fetch }: AnthropicLlmOptions)
   const client = new Anthropic({ apiKey, maxRetries: 1, ...(fetch && { fetch }) });
 
   return {
-    generate: async ({ model, system, messages, schema, maxTokens, effort }) => {
+    generate: async ({ model, system, messages, schema, maxTokens, effort, cacheSystem }) => {
       try {
         const message = await client.messages.create({
           model,
           max_tokens: maxTokens,
-          system,
+          system: cacheSystem
+            ? [{ type: 'text', text: system, cache_control: { type: 'ephemeral' } }]
+            : system,
           messages,
           output_config: { effort, format: zodOutputFormat(schema) },
         });
@@ -56,6 +58,8 @@ export const createAnthropicLlmClient = ({ apiKey, fetch }: AnthropicLlmOptions)
           usage: {
             inputTokens: message.usage.input_tokens,
             outputTokens: message.usage.output_tokens,
+            cacheWriteTokens: message.usage.cache_creation_input_tokens ?? 0,
+            cacheReadTokens: message.usage.cache_read_input_tokens ?? 0,
           },
           model: message.model,
         };

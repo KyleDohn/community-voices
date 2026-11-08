@@ -31,6 +31,11 @@ export interface CostCap {
   envVar: string;
 }
 
+export interface CallOptions {
+  /** The system prompt is a shared prefix other calls in the run reuse. */
+  cacheSystem?: boolean;
+}
+
 // English runs about 4 characters per token; 3 overestimates, which is the safe side for a cap.
 const estimateTokens = ({ system, messages }: Prompt) =>
   Math.ceil((system.length + messages.reduce((n, m) => n + m.content.length, 0)) / 3);
@@ -62,10 +67,20 @@ export const createCaller = (
 ) => {
   const calls: LlmCall[] = [];
 
-  const call = async (step: LlmStep, attempt: number, prompt: Prompt, schema: z.ZodType) => {
+  const call = async (
+    step: LlmStep,
+    attempt: number,
+    prompt: Prompt,
+    schema: z.ZodType,
+    { cacheSystem = false }: CallOptions,
+  ) => {
     const { model, maxTokens, effort } = config.steps[step];
+    const inputTokens = estimateTokens(prompt);
+    // A cached call may write the whole prompt to the cache, which costs more than plain input.
     const worstCase = costOf(
-      { inputTokens: estimateTokens(prompt), outputTokens: maxTokens },
+      cacheSystem
+        ? { inputTokens: 0, cacheWriteTokens: inputTokens, outputTokens: maxTokens }
+        : { inputTokens, outputTokens: maxTokens },
       model,
       config.prices,
     );
@@ -80,7 +95,7 @@ export const createCaller = (
     }
     let response: LlmResponse;
     try {
-      response = await llm.generate({ ...prompt, model, maxTokens, effort, schema });
+      response = await llm.generate({ ...prompt, model, maxTokens, effort, schema, cacheSystem });
     } catch (error) {
       if (error instanceof LlmError) throw new GenerationError(error.code, error.message, calls);
       throw error;
@@ -92,7 +107,10 @@ export const createCaller = (
       step,
       attempt,
       model: response.model,
-      ...usage,
+      inputTokens: usage.inputTokens,
+      outputTokens: usage.outputTokens,
+      cacheWriteTokens: usage.cacheWriteTokens ?? 0,
+      cacheReadTokens: usage.cacheReadTokens ?? 0,
       costUsd: costOf(usage, priced, config.prices),
     });
     if (response.stopReason === 'refusal') {
@@ -107,8 +125,9 @@ export const createCaller = (
     prompt: Prompt,
     schema: z.ZodType<T>,
     check: (value: T) => string[],
+    options: CallOptions = {},
   ) => {
-    const first = await call(step, 1, prompt, schema);
+    const first = await call(step, 1, prompt, schema, options);
     const firstResult = validate(first, schema, check);
     if ('value' in firstResult) return firstResult.value;
 
@@ -121,7 +140,7 @@ export const createCaller = (
         repairMessage(firstResult.errors),
       ],
     };
-    const second = validate(await call(step, 2, repair, schema), schema, check);
+    const second = validate(await call(step, 2, repair, schema, options), schema, check);
     if ('value' in second) return second.value;
     throw new GenerationError(
       'invalid_output',

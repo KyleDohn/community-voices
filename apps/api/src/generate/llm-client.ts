@@ -15,6 +15,8 @@ export interface LlmRequest {
   schema: z.ZodType;
   maxTokens: number;
   effort: Effort;
+  /** Mark the system prompt as a cache breakpoint; calls sharing it read it back cheaply. */
+  cacheSystem?: boolean;
 }
 
 export interface LlmResponse {

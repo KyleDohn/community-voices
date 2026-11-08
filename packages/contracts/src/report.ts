@@ -64,6 +64,9 @@ export const LlmCall = z.object({
   model: z.string(),
   inputTokens: z.number().int(),
   outputTokens: z.number().int(),
+  // Absent on reports stored before phase 5.
+  cacheWriteTokens: z.number().int().default(0),
+  cacheReadTokens: z.number().int().default(0),
   costUsd: z.number(),
 });
 export type LlmCall = z.infer<typeof LlmCall>;

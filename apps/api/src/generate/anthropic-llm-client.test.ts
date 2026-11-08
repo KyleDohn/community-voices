@@ -62,7 +62,7 @@ describe('AnthropicLlmClient', () => {
     expect(response).toEqual({
       text: '{"answer":"yes"}',
       stopReason: 'end_turn',
-      usage: { inputTokens: 321, outputTokens: 45 },
+      usage: { inputTokens: 321, outputTokens: 45, cacheWriteTokens: 0, cacheReadTokens: 0 },
       model: 'claude-sonnet-5-5',
     });
     expect(bodies[0]).toMatchObject({
@@ -74,6 +74,31 @@ describe('AnthropicLlmClient', () => {
         effort: 'medium',
         format: { type: 'json_schema', schema: expect.objectContaining({ required: ['answer'] }) },
       },
+    });
+  });
+
+  it('marks the system prompt for caching when asked, and reports cache usage', async () => {
+    const cached = {
+      ...message,
+      usage: {
+        input_tokens: 50,
+        output_tokens: 45,
+        cache_creation_input_tokens: 0,
+        cache_read_input_tokens: 9_000,
+      },
+    };
+    const { client, bodies } = clientWith([json(200, cached)]);
+
+    const response = await client.generate({ ...request, cacheSystem: true });
+
+    expect(bodies[0]!.system).toEqual([
+      { type: 'text', text: 'sys', cache_control: { type: 'ephemeral' } },
+    ]);
+    expect(response.usage).toEqual({
+      inputTokens: 50,
+      outputTokens: 45,
+      cacheWriteTokens: 0,
+      cacheReadTokens: 9_000,
     });
   });
 
