@@ -48,8 +48,8 @@ export const ReportDocumentView = ({ document, sources, week }: Props) => {
           <Empty />
         ) : (
           <ul className="space-y-6">
-            {document.themes.map((t) => (
-              <li key={t.title}>
+            {document.themes.map((t, i) => (
+              <li key={i}>
                 <h3 className="text-lg font-semibold text-balance">{t.title}</h3>
                 <p className="mt-1 font-sans text-xs text-mid">about {t.approxPostCount} posts</p>
                 <p className="mt-2 leading-7">{t.summary}</p>
@@ -65,8 +65,8 @@ export const ReportDocumentView = ({ document, sources, week }: Props) => {
           <Empty />
         ) : (
           <ul className="space-y-5">
-            {document.notableThreads.map((t) => (
-              <li key={t.title} className="border-l-2 border-rule pl-4">
+            {document.notableThreads.map((t, i) => (
+              <li key={i} className="border-l-2 border-rule pl-4">
                 <h3 className="font-semibold">{t.title}</h3>
                 <p className="mt-1 leading-7">{t.why}</p>
                 <div className="mt-2">{cite(t.citations)}</div>
@@ -81,8 +81,8 @@ export const ReportDocumentView = ({ document, sources, week }: Props) => {
           <Empty />
         ) : (
           <ul className="space-y-6">
-            {document.predictions.map((p) => (
-              <li key={p.claim}>
+            {document.predictions.map((p, i) => (
+              <li key={i}>
                 <h3 className="text-lg font-semibold text-balance">{p.claim}</h3>
                 <div className="mt-1">
                   <ConfidenceScale level={p.confidence} />

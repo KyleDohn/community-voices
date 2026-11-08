@@ -13,15 +13,20 @@ type Shown =
   | { kind: 'run'; run: ReportRunResponse }
   | { kind: 'error'; message: string };
 
-const messageOf = (error: unknown) =>
-  error instanceof ApiError
-    ? error.message
-    : 'The API could not be reached. Is the server running?';
+// fetch rejects with a TypeError when the server is down; anything else is a bad response body.
+const messageOf = (error: unknown) => {
+  if (error instanceof ApiError) return error.message;
+  if (error instanceof TypeError) return 'The API could not be reached. Is the server running?';
+  return 'The API sent a response this page could not read. Check the server log.';
+};
 
-/** The latest succeeded run for the week, or else the latest of any status. */
+/** A run in progress first (so a reload keeps polling it), then the latest success, then any. */
 const latestRun = async (week: string) => {
   const { reports } = await listReports(week);
-  const pick = reports.find((r) => r.status === 'succeeded') ?? reports[0];
+  const pick =
+    reports.find((r) => r.status === 'running') ??
+    reports.find((r) => r.status === 'succeeded') ??
+    reports[0];
   return pick && fetchReport(pick.id);
 };
 
@@ -29,16 +34,19 @@ const WeekPicker = ({
   weeks,
   week,
   onChange,
+  disabled,
 }: {
   weeks: WeekSummary[];
   week: string;
   onChange: (week: string) => void;
+  disabled: boolean;
 }) => (
   <label className="flex flex-col gap-1 text-sm">
     <span className="text-mid">Week</span>
     <select
       value={week}
       onChange={(e) => onChange(e.target.value)}
+      disabled={disabled}
       className="rounded-md border border-rule bg-panel px-3 py-2 text-ink"
     >
       {weeks.map((w) => (
@@ -83,8 +91,14 @@ export const ReportView = () => {
     fetchWeeks()
       .then(({ weeks }) => {
         setWeeks(weeks);
-        setWeek(weeks.find((w) => w.embedded > 0)?.weekStart);
+        const ready = weeks.find((w) => w.embedded > 0)?.weekStart;
+        setWeek(ready);
         if (weeks.length === 0) setShown({ kind: 'none' });
+        else if (!ready) {
+          const message =
+            'The server is still indexing the posts after first boot. Reload in a few minutes.';
+          setShown({ kind: 'error', message });
+        }
       })
       .catch((error: unknown) => setShown({ kind: 'error', message: messageOf(error) }));
   }, []);
@@ -106,7 +120,13 @@ export const ReportView = () => {
         .then((run) =>
           setShown((s) => (s.kind === 'run' && s.run.id === run.id ? { kind: 'run', run } : s)),
         )
-        .catch((error: unknown) => setShown({ kind: 'error', message: messageOf(error) }));
+        .catch((error: unknown) =>
+          setShown((s) =>
+            s.kind === 'run' && s.run.id === running.id
+              ? { kind: 'error', message: messageOf(error) }
+              : s,
+          ),
+        );
     }, POLL_MS);
     return () => clearTimeout(timer);
   }, [running]);
@@ -136,7 +156,15 @@ export const ReportView = () => {
   return (
     <div>
       <div className="flex flex-wrap items-end gap-4">
-        {weeks.length > 0 && week && <WeekPicker weeks={weeks} week={week} onChange={selectWeek} />}
+        {weeks.length > 0 && week && (
+          // Locked while a run starts or runs, so its result can't land under another week.
+          <WeekPicker
+            weeks={weeks}
+            week={week}
+            onChange={selectWeek}
+            disabled={starting || running !== undefined}
+          />
+        )}
         <button
           type="button"
           onClick={generate}
@@ -163,7 +191,7 @@ export const ReportView = () => {
             </p>
           )}
           {shownRun && <RunStatus run={shownRun} />}
-          {shownRun?.document && week && (
+          {shownRun?.document && (
             <ReportDocumentView
               document={shownRun.document}
               sources={shownRun.sources}
