@@ -56,12 +56,12 @@ const latestRun = async (week: string) => {
 
 /** Five stops, like the exposure scale on the predictions: how well a report did on one criterion. */
 const ScoreScale = ({ score }: { score: number }) => (
-  <span className="inline-flex items-center gap-2">
+  <span className="inline-flex items-center gap-1.5 whitespace-nowrap sm:gap-2">
     <span className="flex gap-0.5" aria-hidden>
       {[1, 2, 3, 4, 5].map((stop) => (
         <span
           key={stop}
-          className={`h-3 w-5 rounded-[1px] ${stop <= score ? 'bg-ink' : 'bg-rule'}`}
+          className={`h-3 w-2.5 rounded-[1px] sm:w-5 ${stop <= score ? 'bg-ink' : 'bg-rule'}`}
         />
       ))}
     </span>
@@ -88,7 +88,7 @@ const Rubric = ({ rubric }: { rubric: NonNullable<AbRunResponse['rubric']> }) =>
   <section className="mt-8">
     <h2 className="text-sm font-semibold text-mid">Rubric scores, each report judged alone</h2>
     <div className="mt-3 max-w-3xl overflow-x-auto">
-      <table className="w-full min-w-[34rem] text-left text-sm">
+      <table className="w-full text-left text-sm">
         <thead className="text-xs text-mid">
           <tr>
             <th className="pb-2 font-normal">Criterion</th>
@@ -102,13 +102,13 @@ const Rubric = ({ rubric }: { rubric: NonNullable<AbRunResponse['rubric']> }) =>
         <tbody>
           {CRITERIA.map((c) => (
             <tr key={c.key} className="border-t border-rule align-top">
-              <th scope="row" className="py-2 pr-4 font-medium">
+              <th scope="row" className="py-2 pr-2 font-medium sm:pr-4">
                 {c.name}
               </th>
               {VARIANTS.map((v) => {
                 const { score, reason } = rubric[v.key][c.key];
                 return (
-                  <td key={v.key} className="py-2 pr-4">
+                  <td key={v.key} className="py-2 pr-2 sm:pr-4">
                     <details>
                       <summary className="cursor-pointer list-none">
                         <ScoreScale score={score} />
