@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { retrieveWeek } from './retrieve-week';
+import { retrieveWeek, toLogEntries } from './retrieve-week';
 import { createMemoryChunkSearch, scriptedEmbedder } from './testing/memory-chunk-search';
 
 const week = '2026-10-26';
@@ -60,5 +60,28 @@ describe('retrieveWeek', () => {
     );
 
     expect(chunks.map((c) => c.chunkId)).toEqual([1, 2]);
+  });
+});
+
+describe('toLogEntries', () => {
+  it('gives one entry per facet that found a chunk', () => {
+    const hit = { postId: 7, topicId: 7, topicTitle: 'T', url: 'u', text: 't', score: 0.7 };
+    const chunks = [
+      { ...hit, chunkId: 1, facets: [{ facetId: 'releases', rank: 1, score: 0.72 }] },
+      {
+        ...hit,
+        chunkId: 2,
+        facets: [
+          { facetId: 'releases', rank: 2, score: 0.7 },
+          { facetId: 'help', rank: 1, score: 0.66 },
+        ],
+      },
+    ];
+
+    expect(toLogEntries(chunks)).toEqual([
+      { chunkId: 1, query: 'releases', rank: 1, score: 0.72 },
+      { chunkId: 2, query: 'releases', rank: 2, score: 0.7 },
+      { chunkId: 2, query: 'help', rank: 1, score: 0.66 },
+    ]);
   });
 });

@@ -1,6 +1,7 @@
 import type { ChunkSearch, SearchHit } from '../embed/embedding-store';
 import type { Embedder } from '../embed/embedder';
 import { mmr } from './mmr';
+import type { RetrievalEntry } from './pg-retrieval-log';
 
 export interface Facet {
   id: string;
@@ -72,3 +73,9 @@ const mergeByChunk = (entries: RetrievedChunk[]) => {
   }
   return [...merged.values()];
 };
+
+/** Log rows for a retrieval: a chunk found by two facets was retrieved twice, so it gets two rows. */
+export const toLogEntries = (chunks: RetrievedChunk[]): RetrievalEntry[] =>
+  chunks.flatMap(({ chunkId, facets }) =>
+    facets.map(({ facetId, rank, score }) => ({ chunkId, query: facetId, rank, score })),
+  );
