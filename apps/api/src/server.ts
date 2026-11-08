@@ -11,6 +11,7 @@ import { createAbJobs } from './ab/ab-jobs';
 import { createPgAbRunRepository } from './ab/pg-ab-run-repository';
 import { createPgCorpus } from './ab/pg-corpus';
 import { runAb } from './ab/run-ab';
+import { loadSampleIfEmpty } from './ab/sample-run';
 import { createPgReportRepository } from './generate/pg-report-repository';
 import { createReportJobs } from './generate/report-jobs';
 import { createReportGenerator } from './generate/wiring';
@@ -67,6 +68,7 @@ const abRepo = createPgAbRunRepository(db);
 const interruptedAbRuns = await abRepo.failInterruptedRuns();
 if (interruptedAbRuns > 0)
   console.log(`Marked ${interruptedAbRuns} interrupted A/B run(s) as failed`);
+console.log(`Sample A/B run: ${await loadSampleIfEmpty(db)}`);
 
 const { anthropicApiKey } = config;
 const llm = anthropicApiKey ? createAnthropicLlmClient({ apiKey: anthropicApiKey }) : undefined;

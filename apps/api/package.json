@@ -9,6 +9,7 @@
     "db:generate": "drizzle-kit generate",
     "ingest": "tsx --env-file-if-exists=../../.env src/cli/ingest.ts",
     "seed:export": "tsx --env-file-if-exists=../../.env src/cli/seed-export.ts",
+    "ab:export-sample": "tsx --env-file-if-exists=../../.env src/cli/ab-export-sample.ts",
     "search": "tsx --env-file-if-exists=../../.env src/cli/search.ts",
     "retrieve": "tsx --env-file-if-exists=../../.env src/cli/retrieve.ts"
   },

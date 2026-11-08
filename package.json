@@ -21,6 +21,7 @@
     "db:generate": "pnpm --filter @cv/api db:generate",
     "ingest": "pnpm --filter @cv/api ingest",
     "seed:export": "pnpm --filter @cv/api seed:export",
+    "ab:export-sample": "pnpm --filter @cv/api ab:export-sample",
     "prepare": "node .husky/install.mjs",
     "search": "pnpm --filter @cv/api search",
     "retrieve": "pnpm --filter @cv/api retrieve"
