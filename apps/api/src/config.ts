@@ -69,12 +69,18 @@ export interface RetrievalConfig {
   trendExamplesPerWeek: number;
 }
 
-export type LlmPurpose = 'extract' | 'write' | 'repair';
+export type LlmStep = 'extract' | 'write';
+export type Effort = 'low' | 'medium' | 'high';
+
+export interface LlmStepConfig {
+  model: string;
+  /** Output cap, thinking included, sized to the output; a repair call reuses its step's cap. */
+  maxTokens: number;
+  effort: Effort;
+}
 
 export interface LlmConfig {
-  models: { extract: string; write: string };
-  /** Per-call output caps, thinking included; sized to the output, not a large default. */
-  maxTokens: Record<LlmPurpose, number>;
+  steps: Record<LlmStep, LlmStepConfig>;
   maxRunCostUsd: number;
   prices: PriceTable;
 }
@@ -127,8 +133,10 @@ export const loadConfig = (env: Record<string, string | undefined>): Config => {
       trendExamplesPerWeek: 3,
     },
     llm: {
-      models: { extract: 'claude-haiku-5-5', write: 'claude-sonnet-5-5' },
-      maxTokens: { extract: 2_000, write: 8_000, repair: 8_000 },
+      steps: {
+        extract: { model: 'claude-haiku-5-5', maxTokens: 2_000, effort: 'low' },
+        write: { model: 'claude-sonnet-5-5', maxTokens: 8_000, effort: 'medium' },
+      },
       maxRunCostUsd: vars.MAX_RUN_COST_USD,
       // docs/research/stack.md section 5; Haiku's price holds for prompts up to 100k tokens.
       prices: {

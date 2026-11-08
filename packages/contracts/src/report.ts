@@ -46,3 +46,24 @@ export const ReportDocument = z.object({
   predictions: z.array(Prediction),
 });
 export type ReportDocument = z.infer<typeof ReportDocument>;
+
+/** A post the writer saw, so a citation can link to it. Prior-week ones are trend examples. */
+export const ReportSource = z.object({
+  postId: PostId,
+  url: z.string(),
+  topicTitle: z.string(),
+  /** Monday, `YYYY-MM-DD`. */
+  weekStart: z.string(),
+});
+export type ReportSource = z.infer<typeof ReportSource>;
+
+/** One LLM call and what it cost; a repair is attempt 2 of its step. */
+export const LlmCall = z.object({
+  step: z.enum(['extract', 'write']),
+  attempt: z.number().int(),
+  model: z.string(),
+  inputTokens: z.number().int(),
+  outputTokens: z.number().int(),
+  costUsd: z.number(),
+});
+export type LlmCall = z.infer<typeof LlmCall>;

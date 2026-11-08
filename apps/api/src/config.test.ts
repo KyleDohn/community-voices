@@ -34,8 +34,10 @@ describe('loadConfig', () => {
         trendExamplesPerWeek: 3,
       },
       llm: {
-        models: { extract: 'claude-haiku-5-5', write: 'claude-sonnet-5-5' },
-        maxTokens: { extract: 2_000, write: 8_000, repair: 8_000 },
+        steps: {
+          extract: { model: 'claude-haiku-5-5', maxTokens: 2_000, effort: 'low' },
+          write: { model: 'claude-sonnet-5-5', maxTokens: 8_000, effort: 'medium' },
+        },
         maxRunCostUsd: 0.5,
         prices: {
           'claude-haiku-5-5': { inputPerMillion: 0.1, outputPerMillion: 0.5 },
