@@ -69,8 +69,11 @@ Model IDs and limits live in config, not in code.
 - `chunks`: id, post id, chunk index, text (topic title and category added in front), `embedding vector(384)`,
   `embedding_model`, `week_start`.
 - `ingestion_runs`: id, status, cursor, counts, request and token caps, timestamps, error.
-- `ab_runs`: id, week_start, status, the two documents (JSON), checks, judge results, token usage and cost
-  per call, model IDs, `is_sample` flag.
+- `reports`: id, week_start, status, retrieval_run id, extracted themes, the document (JSON), the sources
+  in its context (post id, url, topic title, week), usage and cost per call, error code and message,
+  timestamps. One row per RAG report run.
+- `ab_runs`: id, week_start, status, the RAG report it used, the no-RAG document (JSON), checks, judge
+  results, token usage and cost per call, model IDs, `is_sample` flag.
 - `retrieval_runs`: id, week_start, created_at. One row per retrieval (the CLI demo included); phase 5's
   `ab_runs` points to one.
 - `retrievals`: retrieval_run id, chunk id (null once re-ingestion drops the chunk), post id, facet or
@@ -170,16 +173,46 @@ chunks already picked)`. Measured on 2026-10-26, distinct topics among the ~39 m
 ## Generation
 
 - **Writer:** Claude Sonnet 5.5 (`claude-sonnet-5-5`) writes both documents.
-- **Output:** a zod schema in `packages/contracts`, sent as a JSON schema:
+- **A RAG report is two calls** (`generateReport`):
+  1. **Extract themes.** Claude Haiku 5.5 (`claude-haiku-5-5`, effort `low`) reads the ~40 retrieved
+     chunks and names 4–6 themes, each as one sentence that works as a search query.
+  2. **Trend lookup** (Retrieval step 4) runs each theme over the target week and the three before it.
+  3. **Write.** Sonnet 5.5 (effort `medium`) gets the chunks, each labeled `[post 12345]`, plus each
+     theme's weekly counts with its example posts, and returns the document.
+  4. **Validate**, repair once if needed, then log the retrieval run (facet picks plus trend examples).
+- **Output:** a zod schema in `packages/contracts` (`ReportDocument`), sent as structured output
+  (`output_config.format` via the SDK's `zodOutputFormat`). The API guarantees the JSON shape; limits it
+  can't enforce (min/max) are stripped by the SDK and checked on our side.
   - `themes[]`: title, summary, approximate post count, `citations[]` of post IDs
-  - `notableThreads[]`
-  - `mood`
-  - `predictions[]`: claim, rationale, confidence, `citations[]`
+  - `notableThreads[]`: title, why it stands out, `citations[]`
+  - `mood`: summary, `citations[]`
+  - `predictions[]`: claim, rationale, confidence (`low | medium | high`), `citations[]`
+  - Citations may be empty in the schema, because the no-RAG variant has nothing to cite. Uncited claims
+    are counted in phase 5, not rejected.
+- **What a citation may point to** (`validateGrounding`, RAG only): theme, thread and mood citations must
+  be target-week posts that were in the context. Prediction citations may also point to the prior-week
+  trend examples, since those are the evidence for a trend. Phase 5's "inside the target week" check
+  applies this same split.
 - **Keeping the model on task:**
   - The system prompt says to use only the supplied posts, and allows "insufficient evidence" as an answer.
-  - Every call has a `max_tokens` cap.
-  - zod validates the output. On failure there is one repair retry that sends the validation errors back.
-- **Cost:** token usage and dollar cost are recorded per call and shown in the UI.
+  - Trend counts are presented as hints, with their examples to check, and the prompt asks for `low` or
+    `medium` confidence unless the examples back a prediction up (Retrieval step 4 says why).
+  - zod and `validateGrounding` check the output. On failure (bad JSON, cut off at `max_tokens`, a
+    broken limit, a citation outside the context) there is **exactly one** repair call that sends the
+    errors back. A second failure fails the run: it usually means a prompt problem, and looping would
+    multiply cost. A refusal stops the run with no repair.
+- **Cost guards:**
+  - Every call has a `max_tokens` cap from config, sized per purpose (extract, write, repair). It covers
+    thinking tokens too.
+  - **Per-run cap** (`MAX_RUN_COST_USD`, default $0.50; a report run costs about $0.03–0.08). Before each
+    call, the run adds its spend so far to that call's worst case (estimated input plus `max_tokens` at
+    the output price). If that exceeds the cap, the run stops as `cost_cap_exceeded` before the call.
+  - **Spend limits stop the run.** The Console workspace limit (HTTP 400, "You have reached your specified
+    … API usage limits") and the tier cap (HTTP 429, `enforced_spend_limit_reached`) become
+    `spend_limit_reached`, with no repair. The SDK's `maxRetries` is 1, so a 429 costs at most one more
+    rejected (free) request.
+- **Cost:** `costOf(usage, model, prices)` uses a price table in config. Token usage and dollar cost are
+  recorded per call and shown in the UI.
 
 ## A/B comparison
 
@@ -204,6 +237,9 @@ chunks already picked)`. Measured on 2026-10-26, distinct topics among the ~39 m
 | GET    | `/weeks`                   | Weeks with posts, chunks and embedded counts         |
 | POST   | `/ingestions`              | Start ingestion → `202 { id }`                       |
 | GET    | `/ingestions/:id`          | Ingestion status and counts                          |
+| POST   | `/reports`                 | Generate the RAG report for a week → `202 { id }`    |
+| GET    | `/reports?week=`           | List report runs, newest first                       |
+| GET    | `/reports/:id`             | Status, document, sources, cost per call             |
 | POST   | `/ab-runs`                 | Start an A/B run for a week → `202 { id }`           |
 | GET    | `/ab-runs`                 | List runs                                            |
 | GET    | `/ab-runs/:id`             | Status, both documents, checks, judge results, cost  |

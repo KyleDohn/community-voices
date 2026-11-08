@@ -14,7 +14,7 @@ Status: ⬜ not started · 🟨 in progress · ✅ done
 | 1   | **Ingest.** `ForumSource` + Discourse client (fixture-tested), week window, chunking, idempotent upsert with cursor and caps, `pnpm ingest`, `POST/GET /ingestions`, seed export and load-on-empty.                                                                                        | `pnpm ingest` fills posts for four weeks. The seed file is committed and a fresh DB loads it. | 1.5 h | ✅     |
 | 2   | **Embed and store.** `Embedder` + bge-small built into the image, embed on boot, chunk repository with cosine search, `GET /weeks`.                                                                                                                                                        | `pnpm run search "export crash"` returns relevant posts from a week.                          | 1 h   | ✅     |
 | 3   | **Retrieve and log.** Facet config, MMR, merge, trend lookup, `retrievals` logging.                                                                                                                                                                                                        | `pnpm run retrieve --week 2026-10-26` prints ~40 diverse posts by facet.                      | 1 h   | ✅     |
-| 4   | **Generate.** `LlmClient` (Anthropic), document schema, prompts, structured output, repair retry, cost accounting. Report view.                                                                                                                                                            | The Report view shows a cited RAG document for the week.                                      | 1.5 h | ⬜     |
+| 4   | **Generate.** `LlmClient` (Anthropic), document schema, prompts, structured output, repair retry, cost accounting. Report view.                                                                                                                                                            | The Report view shows a cited RAG document for the week.                                      | 1.5 h | 🟨     |
 | 5   | **A/B compare.** No-RAG variant, citation checks, rubric and pairwise judge with order swap, `POST/GET /ab-runs` (202 + polling), A/B view, committed sample run.                                                                                                                          | "Run new A/B" → both documents side by side with scores and cost.                             | 1.5 h | ⬜     |
 
 ### Phase 1: agreed test interfaces
@@ -66,6 +66,43 @@ Resolved 2026-11-06 by curling pixls: raw text needs `include_raw=true`, and lon
    facet or query, rank and score. Integration test.
 5. **`pnpm run retrieve [--week]`.** The demo prints posts grouped by facet. `--week` defaults to
    `targetWeek(now)`. No tests of its own.
+
+### Phase 4: agreed test interfaces
+
+Settled 2026-11-07: two LLM calls (extract themes, then write), a `reports` resource with its own routes,
+citations split by section, and a $0.50 per-run cost cap. Details are in DESIGN, "Generation".
+
+1. **`ReportDocument`** (`packages/contracts`). `themes[]`, `notableThreads[]`, `mood`, `predictions[]`,
+   each with `citations[]` of post ids. Empty citations are allowed, because phase 5's no-RAG variant
+   uses the same schema. Unit tests: a valid document parses; a non-integer id or a bad confidence fails.
+2. **`LlmClient`.** `generate({ purpose, model, system, messages, schema, maxTokens, effort })` returns
+   `{ text, stopReason, usage: { inputTokens, outputTokens }, model }`. The caller parses and validates,
+   so repair logic is testable with a scripted fake. The Anthropic implementation sends the schema as
+   structured output and maps spend-limit errors (interface 7). A real-API test is a `*.model.test.ts`.
+3. **`costOf(usage, model, prices)`.** A pure function over a price table in config. Unit test: 10k in +
+   2k out on Sonnet 5.5 = $0.02 + $0.02 = $0.04. An unknown model throws.
+4. **`validateGrounding(document, allowed)`.** Theme, thread and mood citations must be target-week posts
+   from the context; prediction citations may also be prior-week trend examples. Returns readable errors.
+   Unit tests for each section.
+5. **`generateReport(deps, week)`.** Retrieve, extract themes (call 1), trend lookup, write (call 2),
+   validate, log the retrieval run. Unit tests with the scripted LLM: the writer prompt holds every
+   retrieved post id and the trend examples; invalid output triggers **exactly one** repair call that
+   carries the errors, and a third call never happens; a second failure is a clean `invalid_output`
+   error; a refusal stops with no repair; cost is summed across calls.
+6. **Report jobs, persistence and routes.** `POST /reports { week }` returns `202 { id }` (409 while one
+   runs, 503 without an API key); `GET /reports/:id` returns status, document, sources and cost per call;
+   `GET /reports?week=` lists runs newest first. Contract, route and integration tests, following the
+   `/ingestions` pattern.
+7. **Cost guards.** Unit tests with the scripted LLM:
+   - Every call carries the `max_tokens` cap from config for its purpose (extract, write, repair).
+   - Per-run cap (`MAX_RUN_COST_USD`, default $0.50): before each call the run checks spent + that call's
+     worst case (estimated input + `max_tokens` at output price). Crossing it stops with
+     `cost_cap_exceeded` and the amount spent, before the call is made.
+   - Spend-limit errors (the 400 "API usage limits" and the 429 `enforced_spend_limit_reached`) stop the
+     run as `spend_limit_reached` with no repair or retry.
+8. **Report view** (web). Week selector, "Generate report", polling, then themes, threads, mood and
+   predictions, with each citation linking to the forum post and the cost per call. It parses every
+   response with the contract schema. Manual check in the browser; no component tests.
 
 ## Extras, ranked by demo value per hour
 
