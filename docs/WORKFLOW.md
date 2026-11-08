@@ -83,6 +83,10 @@ This file records how the project was built with Claude Code. It is meant to be 
   behaviour I hadn't expected: `.refine` still runs after a failed `z.iso.date()`, so `--week foo` threw
   instead of printing a usage error. Known gaps left on purpose: the `server.ts` wiring (covered by the
   live boot checks) and CLS vs mean pooling (the ranking test's margin can't tell them apart).
+- Phase 3: my first `retrieveWeek` MMR test set the "different" chunk C exactly as relevant as A, so pure
+  relevance ranked C above the near-duplicate B too. The test passed with MMR switched off (λ=1). The
+  mutant check caught it. C is now less relevant than B, so only MMR can move it up. A second
+  surviving mutant showed that no test pinned the per-facet candidate pool, so one was added.
 - Open: one integration run timed out once (5 s, "adds no duplicates") right after the repository
   refactor. It didn't recur in 13 runs, and no stray DB connections were found. Cause unknown.
 

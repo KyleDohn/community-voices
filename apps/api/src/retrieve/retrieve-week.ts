@@ -59,5 +59,16 @@ export const retrieveWeek = async (
       }));
     }),
   );
-  return perFacet.flat();
+  return mergeByChunk(perFacet.flat());
+};
+
+/** One entry per chunk, in first-seen order, carrying every facet that found it. */
+const mergeByChunk = (entries: RetrievedChunk[]) => {
+  const merged = new Map<number, RetrievedChunk>();
+  for (const entry of entries) {
+    const seen = merged.get(entry.chunkId);
+    if (seen) seen.facets.push(...entry.facets);
+    else merged.set(entry.chunkId, entry);
+  }
+  return [...merged.values()];
 };
