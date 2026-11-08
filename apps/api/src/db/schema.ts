@@ -2,6 +2,7 @@
 import { sql } from 'drizzle-orm';
 import {
   date,
+  doublePrecision,
   index,
   integer,
   jsonb,
@@ -84,3 +85,28 @@ export const ingestionRuns = pgTable('ingestion_runs', {
   createdAt: timestamptz('created_at').notNull().defaultNow(),
   updatedAt: timestamptz('updated_at').notNull().defaultNow(),
 });
+
+/** One per retrieval pass (CLI or A/B run), so its rows can be grouped and counted. */
+export const retrievalRuns = pgTable('retrieval_runs', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  weekStart: date('week_start', { mode: 'string' }).notNull(),
+  createdAt: timestamptz('created_at').notNull().defaultNow(),
+});
+
+export const retrievals = pgTable(
+  'retrievals',
+  {
+    id: serial('id').primaryKey(),
+    runId: uuid('run_id')
+      .notNull()
+      .references(() => retrievalRuns.id, { onDelete: 'cascade' }),
+    chunkId: integer('chunk_id')
+      .notNull()
+      .references(() => chunks.id, { onDelete: 'cascade' }),
+    /** The facet id, or the theme text for a trend lookup. */
+    query: text('query').notNull(),
+    rank: integer('rank').notNull(),
+    score: doublePrecision('score').notNull(),
+  },
+  (t) => [index('retrievals_run_idx').on(t.runId), index('retrievals_chunk_idx').on(t.chunkId)],
+);

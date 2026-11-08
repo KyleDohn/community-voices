@@ -15,6 +15,13 @@
       "when": 1794009133954,
       "tag": "0001_ingest-tables",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794107076579,
+      "tag": "0002_retrievals",
+      "breakpoints": true
     }
   ]
 }
