@@ -1,9 +1,11 @@
 import { ReportDocument } from '@cv/contracts';
 import { describe, expect, it } from 'vitest';
+import { z } from 'zod';
 import type { LlmConfig } from '../config';
 import type { RetrievalEntry } from '../retrieve/retrieval-log';
 import type { RetrievedChunk } from '../retrieve/retrieve-week';
 import type { ThemeTrend } from '../retrieve/trend-lookup';
+import { createCaller } from './caller';
 import { generateReport, type Retrieval } from './generate-report';
 import { LlmError } from './llm-client';
 import { scriptedLlm, type ScriptedReply } from './testing/scripted-llm';
@@ -285,5 +287,18 @@ describe('generateReport', () => {
       week,
     );
     await expect(result).rejects.toMatchObject({ code: 'no_data' });
+  });
+
+  it('on a shared caller, returns only its own calls but counts earlier ones toward the cap', async () => {
+    const llm = scriptedLlm([{ text: '{}' }, extracted, written]);
+    const deps = { retrieval, log: memoryLog(), llm: llm.client, config };
+    const caller = createCaller(deps);
+    await caller.run('extract', { system: 's', messages: [] }, z.object({}), () => []);
+
+    const report = await generateReport(deps, week, caller);
+
+    expect(report.calls.map((c) => c.step)).toEqual(['extract', 'write']);
+    expect(report.costUsd).toBeCloseTo(report.calls[0]!.costUsd + report.calls[1]!.costUsd, 9);
+    expect(caller.calls).toHaveLength(3);
   });
 });
