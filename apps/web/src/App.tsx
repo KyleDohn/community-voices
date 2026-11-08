@@ -1,13 +1,17 @@
 import { HealthBadge } from './HealthBadge';
+import { ReportView } from './ReportView';
 
 export const App = () => (
-  <main className="mx-auto max-w-5xl p-8">
-    <header className="flex items-center justify-between">
-      <h1 className="text-2xl font-semibold">Community Voices</h1>
+  <main className="mx-auto max-w-6xl px-4 py-8 sm:px-8">
+    <header className="flex flex-wrap items-baseline justify-between gap-3 border-b border-rule pb-6">
+      <div>
+        <h1 className="font-serif text-3xl font-semibold">Community Voices</h1>
+        <p className="mt-1 text-mid">The week on discuss.pixls.us, written from its own posts.</p>
+      </div>
       <HealthBadge />
     </header>
-    <p className="mt-4 text-slate-600">
-      Weekly report for discuss.pixls.us. Views arrive in later phases.
-    </p>
+    <div className="mt-8">
+      <ReportView />
+    </div>
   </main>
 );
