@@ -13,7 +13,7 @@ Status: ⬜ not started · 🟨 in progress · ✅ done
 | 0   | **Scaffold and guardrails.** pnpm workspace, `apps/api` (Hono), `apps/web` (Vite/React/Tailwind), `packages/contracts`, docker compose with pgvector, Drizzle migrations, `GET /health`. Husky pre-commit (Prettier, lint, typecheck, unit tests), GitHub Actions CI, project `CLAUDE.md`. | `docker compose up` → web shell shows API health is green. A commit runs the hooks.           | 1 h   | ✅     |
 | 1   | **Ingest.** `ForumSource` + Discourse client (fixture-tested), week window, chunking, idempotent upsert with cursor and caps, `pnpm ingest`, `POST/GET /ingestions`, seed export and load-on-empty.                                                                                        | `pnpm ingest` fills posts for four weeks. The seed file is committed and a fresh DB loads it. | 1.5 h | ✅     |
 | 2   | **Embed and store.** `Embedder` + bge-small built into the image, embed on boot, chunk repository with cosine search, `GET /weeks`.                                                                                                                                                        | `pnpm run search "export crash"` returns relevant posts from a week.                          | 1 h   | ✅     |
-| 3   | **Retrieve and log.** Facet config, MMR, merge, trend lookup, `retrievals` logging.                                                                                                                                                                                                        | `pnpm retrieve --week 2026-11-02` prints ~40 diverse posts by facet.                          | 1 h   | ⬜     |
+| 3   | **Retrieve and log.** Facet config, MMR, merge, trend lookup, `retrievals` logging.                                                                                                                                                                                                        | `pnpm run retrieve --week 2026-10-26` prints ~40 diverse posts by facet.                      | 1 h   | 🟨     |
 | 4   | **Generate.** `LlmClient` (Anthropic), document schema, prompts, structured output, repair retry, cost accounting. Report view.                                                                                                                                                            | The Report view shows a cited RAG document for the week.                                      | 1.5 h | ⬜     |
 | 5   | **A/B compare.** No-RAG variant, citation checks, rubric and pairwise judge with order swap, `POST/GET /ab-runs` (202 + polling), A/B view, committed sample run.                                                                                                                          | "Run new A/B" → both documents side by side with scores and cost.                             | 1.5 h | ⬜     |
 
@@ -50,6 +50,22 @@ Resolved 2026-11-06 by curling pixls: raw text needs `include_raw=true`, and lon
    `/health` reports `embedder: loading | ready | failed`. Ingestion runs an after-run hook to embed.
 
 `pnpm search` is a pnpm built-in (it runs `npm search`), so the demo is `pnpm run search`.
+
+### Phase 3: agreed test interfaces
+
+1. **`mmr(candidates, { lambda, k })`.** A pure function over `{ id, score, vector }`. Unit tests with
+   hand-placed unit vectors: λ=1 keeps relevance order, a near-duplicate of the top hit drops below a less
+   relevant but different one at λ=0.7, and it keeps at most k.
+2. **`retrieveWeek(week, facets)`.** ~15 candidates per facet, MMR keeps 8, then a merge to ~40 chunks. A
+   chunk found by two facets appears once with both labels. Unit tests with the fake embedder and an
+   in-memory search; an integration test on pgvector.
+3. **`trendLookup(week, themes)`.** For each theme, counts and top examples in the target week and each of
+   the three prior weeks. Themes are an input: phase 4's LLM supplies them, and the demo uses the facets.
+   Integration test with chunks seeded across weeks.
+4. **Logging.** Every returned chunk is written to `retrievals` under a `retrieval_runs` row, with its
+   facet or query, rank and score. Integration test.
+5. **`pnpm run retrieve [--week]`.** The demo prints posts grouped by facet. `--week` defaults to
+   `targetWeek(now)`. No tests of its own.
 
 ## Extras, ranked by demo value per hour
 
