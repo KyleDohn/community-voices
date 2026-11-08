@@ -73,8 +73,8 @@ Model IDs and limits live in config, not in code.
   per call, model IDs, `is_sample` flag.
 - `retrieval_runs`: id, week_start, created_at. One row per retrieval (the CLI demo included); phase 5's
   `ab_runs` points to one.
-- `retrievals`: retrieval_run id, chunk id, facet or query, rank, score. These rows feed the retrieval
-  stats.
+- `retrievals`: retrieval_run id, chunk id (null once re-ingestion drops the chunk), post id, facet or
+  query, rank, score. These rows feed the retrieval stats.
 - `map_points`: chunk id, x, y, corpus version. This is the cached UMAP projection.
 
 ## Ingestion

@@ -100,9 +100,10 @@ export const retrievals = pgTable(
     runId: uuid('run_id')
       .notNull()
       .references(() => retrievalRuns.id, { onDelete: 'cascade' }),
-    chunkId: integer('chunk_id')
-      .notNull()
-      .references(() => chunks.id, { onDelete: 'cascade' }),
+    /** Null once re-ingestion drops the chunk (an edited post got shorter); the history stays. */
+    chunkId: integer('chunk_id').references(() => chunks.id, { onDelete: 'set null' }),
+    /** Discourse post id, the unit citations use; no FK, so the history outlives the chunk. */
+    postId: integer('post_id').notNull(),
     /** The facet id, or the theme text for a trend lookup. */
     query: text('query').notNull(),
     rank: integer('rank').notNull(),

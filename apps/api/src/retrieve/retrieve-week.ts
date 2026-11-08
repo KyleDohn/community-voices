@@ -77,6 +77,6 @@ const mergeByChunk = (entries: RetrievedChunk[]) => {
 
 /** Log rows for a retrieval: a chunk found by two facets was retrieved twice, so it gets two rows. */
 export const toLogEntries = (chunks: RetrievedChunk[]): RetrievalEntry[] =>
-  chunks.flatMap(({ chunkId, facets }) =>
-    facets.map(({ facetId, rank, score }) => ({ chunkId, query: facetId, rank, score })),
+  chunks.flatMap(({ chunkId, postId, facets }) =>
+    facets.map(({ facetId, rank, score }) => ({ chunkId, postId, query: facetId, rank, score })),
   );

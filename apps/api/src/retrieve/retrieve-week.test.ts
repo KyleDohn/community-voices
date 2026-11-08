@@ -79,9 +79,9 @@ describe('toLogEntries', () => {
     ];
 
     expect(toLogEntries(chunks)).toEqual([
-      { chunkId: 1, query: 'releases', rank: 1, score: 0.72 },
-      { chunkId: 2, query: 'releases', rank: 2, score: 0.7 },
-      { chunkId: 2, query: 'help', rank: 1, score: 0.66 },
+      { chunkId: 1, postId: 7, query: 'releases', rank: 1, score: 0.72 },
+      { chunkId: 2, postId: 7, query: 'releases', rank: 2, score: 0.7 },
+      { chunkId: 2, postId: 7, query: 'help', rank: 1, score: 0.66 },
     ]);
   });
 });

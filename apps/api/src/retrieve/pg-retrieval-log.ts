@@ -17,6 +17,7 @@ export const createPgRetrievalLog = (db: Database): RetrievalLog => ({
     db
       .select({
         chunkId: retrievals.chunkId,
+        postId: retrievals.postId,
         query: retrievals.query,
         rank: retrievals.rank,
         score: retrievals.score,
