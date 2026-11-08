@@ -54,4 +54,36 @@ describe('trendLookup', () => {
 
     expect(trend!.weeks.map((w) => w.matches)).toEqual([1, 1, 0]);
   });
+
+  it('counts a week once even when it is listed twice', async () => {
+    const [trend] = await trendLookup(
+      { embedder, search },
+      {
+        week,
+        priorWeeks: [week, '2026-10-19'],
+        themes: ['export crash'],
+        poolSize: 4,
+        examplesPerWeek: 1,
+      },
+    );
+
+    expect(trend!.weeks.map((w) => [w.weekStart, w.matches])).toEqual([
+      ['2026-10-26', 3],
+      ['2026-10-19', 1],
+    ]);
+  });
+
+  it('breaks an exact tie on chunk id, not on which week is listed first', async () => {
+    const tied = createMemoryChunkSearch([
+      { chunkId: 2, week, vector: [1, 0.1] },
+      { chunkId: 1, week: '2026-10-19', vector: [1, 0.1] },
+    ]);
+
+    const [trend] = await trendLookup(
+      { embedder, search: tied },
+      { week, priorWeeks, themes: ['export crash'], poolSize: 1, examplesPerWeek: 1 },
+    );
+
+    expect(trend!.weeks.map((w) => w.matches)).toEqual([0, 1, 0]);
+  });
 });

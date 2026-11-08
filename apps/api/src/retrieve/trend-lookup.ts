@@ -38,22 +38,24 @@ export const trendLookup = (
   Promise.all(
     themes.map(async (theme) => {
       const vector = await embedder.embedQuery(theme);
-      const weeks = [week, ...priorWeeks];
+      const weeks = [...new Set([week, ...priorWeeks])];
       const perWeek = await Promise.all(
         weeks.map((weekStart) =>
           search.search({ model: embedder.model, weekStart, vector, k: poolSize }),
         ),
       );
+      // Ties break on chunk id, so no week wins a tie just by being listed first.
       const pool = new Set(
         perWeek
           .flat()
-          .sort((a: SearchHit, b: SearchHit) => b.score - a.score)
-          .slice(0, poolSize),
+          .sort((a: SearchHit, b: SearchHit) => b.score - a.score || a.chunkId - b.chunkId)
+          .slice(0, poolSize)
+          .map((hit) => hit.chunkId),
       );
       return {
         theme,
         weeks: weeks.map((weekStart, i) => {
-          const matches = perWeek[i]!.filter((hit) => pool.has(hit));
+          const matches = perWeek[i]!.filter((hit) => pool.has(hit.chunkId));
           return {
             weekStart,
             matches: matches.length,

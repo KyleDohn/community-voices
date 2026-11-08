@@ -38,7 +38,8 @@ export const createPgChunkRepository = (db: Database): ChunkRepository => {
       .innerJoin(posts, eq(posts.id, chunks.postId))
       .innerJoin(topics, eq(topics.id, posts.topicId))
       .where(and(eq(chunks.weekStart, weekStart), eq(chunks.embeddingModel, model)))
-      .orderBy(distance)
+      // The id tiebreak keeps equal-distance hits (quoted text) in a stable order.
+      .orderBy(distance, asc(chunks.id))
       .limit(k);
     return rows.map(({ distance, ...hit }) => ({ ...hit, score: 1 - Number(distance) }));
   }
