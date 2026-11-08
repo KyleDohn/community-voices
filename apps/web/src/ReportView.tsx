@@ -1,9 +1,10 @@
 import type { ReportRunResponse, WeekSummary } from '@cv/contracts';
 import { useEffect, useState } from 'react';
-import { ApiError, fetchReport, fetchWeeks, listReports, startReport } from './api';
-import { usd, weekRange } from './format';
+import { fetchReport, fetchWeeks, listReports, messageOf, startReport } from './api';
+import { usd } from './format';
 import { ReportDocumentView } from './ReportDocumentView';
 import { RunReceipt } from './RunReceipt';
+import { WeekPicker } from './WeekPicker';
 
 const POLL_MS = 2_000;
 
@@ -12,13 +13,6 @@ type Shown =
   | { kind: 'none' }
   | { kind: 'run'; run: ReportRunResponse }
   | { kind: 'error'; message: string };
-
-// fetch rejects with a TypeError when the server is down; anything else is a bad response body.
-const messageOf = (error: unknown) => {
-  if (error instanceof ApiError) return error.message;
-  if (error instanceof TypeError) return 'The API could not be reached. Is the server running?';
-  return 'The API sent a response this page could not read. Check the server log.';
-};
 
 /** A run in progress first (so a reload keeps polling it), then the latest success, then any. */
 const latestRun = async (week: string) => {
@@ -29,34 +23,6 @@ const latestRun = async (week: string) => {
     reports[0];
   return pick && fetchReport(pick.id);
 };
-
-const WeekPicker = ({
-  weeks,
-  week,
-  onChange,
-  disabled,
-}: {
-  weeks: WeekSummary[];
-  week: string;
-  onChange: (week: string) => void;
-  disabled: boolean;
-}) => (
-  <label className="flex flex-col gap-1 text-sm">
-    <span className="text-mid">Week</span>
-    <select
-      value={week}
-      onChange={(e) => onChange(e.target.value)}
-      disabled={disabled}
-      className="rounded-md border border-rule bg-panel px-3 py-2 text-ink"
-    >
-      {weeks.map((w) => (
-        <option key={w.weekStart} value={w.weekStart}>
-          {weekRange(w.weekStart)} ({w.posts} posts)
-        </option>
-      ))}
-    </select>
-  </label>
-);
 
 const RunStatus = ({ run }: { run: ReportRunResponse }) => {
   if (run.status === 'running') {
