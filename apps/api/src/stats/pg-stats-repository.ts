@@ -14,6 +14,7 @@ export interface StatsRepository {
 type PostRow = {
   post_id: number;
   topic_title: string | null;
+  post_number: number | null;
   url: string | null;
   week_start: string | null;
   runs: number;
@@ -46,6 +47,7 @@ export const createPgStatsRepository = (db: Database): StatsRepository => ({
     const { rows } = await db.execute<PostRow>(sql`
       select x.post_id,
              t.title as topic_title,
+             p.post_number,
              p.url,
              to_char(date_trunc('week', p.created_at at time zone 'UTC'), 'YYYY-MM-DD') as week_start,
              count(distinct x.run_id)::int as runs,
@@ -56,7 +58,7 @@ export const createPgStatsRepository = (db: Database): StatsRepository => ({
         join retrieval_runs r on r.id = x.run_id
         left join posts p on p.id = x.post_id
         left join topics t on t.id = p.topic_id
-       group by x.post_id, t.title, p.url, p.created_at
+       group by x.post_id, t.title, p.post_number, p.url, p.created_at
        order by runs desc, count(*) desc, last_retrieved_at desc, x.post_id
        limit ${limit}`);
     const [{ total }] = (
@@ -67,6 +69,7 @@ export const createPgStatsRepository = (db: Database): StatsRepository => ({
       posts: rows.map((r) => ({
         postId: r.post_id,
         topicTitle: r.topic_title,
+        postNumber: r.post_number,
         url: r.url,
         weekStart: r.week_start,
         runs: r.runs,

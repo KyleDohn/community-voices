@@ -10,6 +10,7 @@ const retrieved: RetrievalStatsResponse = {
     {
       postId: 463229,
       topicTitle: 'darktable 5.4',
+      postNumber: 8,
       url: 'https://forum.test/p/463229',
       weekStart: '2026-10-26',
       runs: 7,

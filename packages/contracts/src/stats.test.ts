@@ -4,6 +4,7 @@ import { CostStatsResponse, RetrievalStatsResponse } from './stats';
 const post = {
   postId: 463229,
   topicTitle: 'darktable 5.4 released',
+  postNumber: 3,
   url: 'https://discuss.pixls.us/t/darktable-5-4/1/3',
   weekStart: '2026-10-26',
   runs: 7,
@@ -24,7 +25,7 @@ const run = {
 
 describe('RetrievalStatsResponse', () => {
   it('parses posts, including one whose post row is gone', () => {
-    const gone = { ...post, topicTitle: null, url: null, weekStart: null };
+    const gone = { ...post, topicTitle: null, postNumber: null, url: null, weekStart: null };
     const body = { totalRuns: 7, posts: [post, gone] };
     expect(RetrievalStatsResponse.parse(body)).toEqual(body);
   });

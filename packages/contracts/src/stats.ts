@@ -7,6 +7,8 @@ const Count = z.number().int().nonnegative();
 export const RetrievedPost = z.object({
   postId: z.number().int(),
   topicTitle: z.string().nullable(),
+  /** Position in its topic: several posts of one thread share a title. */
+  postNumber: z.number().int().nullable(),
   url: z.string().nullable(),
   weekStart: z.iso.date().nullable(),
   /** Distinct retrieval runs the post appeared in: the ranking key. */

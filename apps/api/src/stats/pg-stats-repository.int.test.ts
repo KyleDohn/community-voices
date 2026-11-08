@@ -91,6 +91,7 @@ describe('mostRetrievedPosts', () => {
     expect(ranked[0]).toEqual({
       postId: 1,
       topicTitle: 'darktable 5.4',
+      postNumber: 1,
       url: 'https://forum.test/p/1',
       weekStart: '2026-10-26',
       runs: 2,
@@ -122,6 +123,7 @@ describe('mostRetrievedPosts', () => {
     expect(ranked.at(-1)).toMatchObject({
       postId: 9,
       topicTitle: null,
+      postNumber: null,
       url: null,
       weekStart: null,
     });
