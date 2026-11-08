@@ -8,24 +8,15 @@ import { loadConfig } from '../config';
 import { connect } from '../db/client';
 import { loadBgeEmbedder } from '../embed/bge-embedder';
 import { createPgChunkRepository } from '../embed/pg-chunk-repository';
-import { targetWeek, weekOf } from '../ingest/week';
+import { WeekArg } from './week-arg';
 
 const { values, positionals } = parseArgs({
   allowPositionals: true,
   options: { week: { type: 'string' }, k: { type: 'string', default: '10' } },
 });
-const isoDay = (d: Date) => d.toISOString().slice(0, 10);
 const Args = z.object({
   query: z.string().trim().min(1),
-  // Chunks are keyed by the Monday that starts their week, so any other day matches nothing.
-  week: z.iso
-    .date()
-    // zod still runs refinements after the date check fails, so guard against an invalid date.
-    .refine((day) => {
-      const date = new Date(day);
-      return !Number.isNaN(date.getTime()) && isoDay(weekOf(date)) === day;
-    }, 'must be a Monday')
-    .default(isoDay(targetWeek(new Date()).start)),
+  week: WeekArg,
   k: z.coerce.number().int().positive(),
 });
 const parsed = Args.safeParse({ query: positionals.join(' '), week: values.week, k: values.k });
