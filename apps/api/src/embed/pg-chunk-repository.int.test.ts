@@ -94,6 +94,21 @@ describe('pg chunk repository: search', () => {
       },
     ]);
   });
+
+  it("adds each hit's stored vector when asked, for reranking", async () => {
+    const hits = await chunks.search({
+      model: 'm',
+      weekStart: week,
+      vector: axis(0),
+      k: 2,
+      withVectors: true,
+    });
+
+    expect(hits.map((h) => h.embedding.map((x) => Number(x.toFixed(5))))).toEqual([
+      axis(0).map((x) => Number(x.toFixed(5))),
+      axis(0, 1).map((x) => Number(x.toFixed(5))),
+    ]);
+  });
 });
 
 describe('pg chunk repository: weeks', () => {

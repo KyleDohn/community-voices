@@ -13,33 +13,15 @@ import {
 } from 'drizzle-orm';
 import type { Database } from '../db/client';
 import { chunks, posts, topics } from '../db/schema';
-import type { ChunkRepository } from './embedding-store';
+import type { ChunkRepository, SearchHit, SearchQuery, VectorHit } from './embedding-store';
 
 const vectorLiteral = (v: number[]) => `[${v.join(',')}]`;
 
-export const createPgChunkRepository = (db: Database): ChunkRepository => ({
-  pendingChunks: (model, limit) =>
-    db
-      .select({ id: chunks.id, text: chunks.text })
-      .from(chunks)
-      .where(or(isNull(chunks.embedding), ne(chunks.embeddingModel, model)))
-      .orderBy(asc(chunks.id))
-      .limit(limit),
-
-  saveEmbeddings: async (model, rows) => {
-    if (rows.length === 0) return;
-    // One UPDATE per batch, joined to a VALUES list, instead of a round-trip per chunk.
-    const values = rows.map(
-      ({ id, embedding }) => sql`(${id}::int, ${vectorLiteral(embedding)}::vector)`,
-    );
-    await db.execute(sql`
-      update ${chunks} set embedding = v.embedding, embedding_model = ${model}
-      from (values ${sql.join(values, sql`, `)}) as v(id, embedding)
-      where ${chunks.id} = v.id`);
-  },
-
+export const createPgChunkRepository = (db: Database): ChunkRepository => {
   // Exact scan, no ANN index: at a few thousand rows it takes milliseconds and never misses.
-  search: async ({ model, weekStart, vector, k }) => {
+  function search(query: SearchQuery & { withVectors: true }): Promise<VectorHit[]>;
+  function search(query: SearchQuery): Promise<SearchHit[]>;
+  async function search({ model, weekStart, vector, k, withVectors }: SearchQuery) {
     const distance = cosineDistance(chunks.embedding, vector);
     const rows = await db
       .select({
@@ -50,6 +32,7 @@ export const createPgChunkRepository = (db: Database): ChunkRepository => ({
         url: posts.url,
         text: chunks.text,
         distance,
+        ...(withVectors && { embedding: chunks.embedding }),
       })
       .from(chunks)
       .innerJoin(posts, eq(posts.id, chunks.postId))
@@ -58,19 +41,44 @@ export const createPgChunkRepository = (db: Database): ChunkRepository => ({
       .orderBy(distance)
       .limit(k);
     return rows.map(({ distance, ...hit }) => ({ ...hit, score: 1 - Number(distance) }));
-  },
+  }
 
-  listWeeks: (model) =>
-    db
-      .select({
-        weekStart: chunks.weekStart,
-        posts: countDistinct(chunks.postId),
-        chunks: count(),
-        embedded: sql<number>`count(*) filter (where ${chunks.embeddingModel} = ${model})`.mapWith(
-          Number,
-        ),
-      })
-      .from(chunks)
-      .groupBy(chunks.weekStart)
-      .orderBy(desc(chunks.weekStart)),
-});
+  return {
+    pendingChunks: (model, limit) =>
+      db
+        .select({ id: chunks.id, text: chunks.text })
+        .from(chunks)
+        .where(or(isNull(chunks.embedding), ne(chunks.embeddingModel, model)))
+        .orderBy(asc(chunks.id))
+        .limit(limit),
+
+    saveEmbeddings: async (model, rows) => {
+      if (rows.length === 0) return;
+      // One UPDATE per batch, joined to a VALUES list, instead of a round-trip per chunk.
+      const values = rows.map(
+        ({ id, embedding }) => sql`(${id}::int, ${vectorLiteral(embedding)}::vector)`,
+      );
+      await db.execute(sql`
+      update ${chunks} set embedding = v.embedding, embedding_model = ${model}
+      from (values ${sql.join(values, sql`, `)}) as v(id, embedding)
+      where ${chunks.id} = v.id`);
+    },
+
+    search,
+
+    listWeeks: (model) =>
+      db
+        .select({
+          weekStart: chunks.weekStart,
+          posts: countDistinct(chunks.postId),
+          chunks: count(),
+          embedded:
+            sql<number>`count(*) filter (where ${chunks.embeddingModel} = ${model})`.mapWith(
+              Number,
+            ),
+        })
+        .from(chunks)
+        .groupBy(chunks.weekStart)
+        .orderBy(desc(chunks.weekStart)),
+  };
+};

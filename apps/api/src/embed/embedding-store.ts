@@ -24,6 +24,8 @@ export interface SearchQuery {
   weekStart: string;
   vector: number[];
   k: number;
+  /** Also return each hit's stored vector, e.g. for MMR; off by default to keep hits small. */
+  withVectors?: boolean;
 }
 
 export interface SearchHit {
@@ -38,8 +40,16 @@ export interface SearchHit {
   score: number;
 }
 
-export interface ChunkRepository extends EmbeddingStore {
+export interface VectorHit extends SearchHit {
+  embedding: number[];
+}
+
+export interface ChunkSearch {
+  search(query: SearchQuery & { withVectors: true }): Promise<VectorHit[]>;
   search(query: SearchQuery): Promise<SearchHit[]>;
+}
+
+export interface ChunkRepository extends EmbeddingStore, ChunkSearch {
   /** Weeks that have chunks, newest first; `embedded` counts only this model's vectors. */
   listWeeks(model: string): Promise<WeekSummary[]>;
 }
