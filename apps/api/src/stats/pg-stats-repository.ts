@@ -20,7 +20,8 @@ type PostRow = {
   runs: number;
   facet_hits: number;
   trend_hits: number;
-  last_retrieved_at: Date;
+  /** drizzle's node-postgres driver returns timestamptz as text. */
+  last_retrieved_at: string;
 };
 
 type CostRow = {
@@ -30,7 +31,7 @@ type CostRow = {
   status: 'running' | 'succeeded' | 'failed';
   is_sample: boolean;
   cost_usd: number;
-  created_at: Date;
+  created_at: string;
 };
 
 const isFacet = (facetIds: string[]) =>
@@ -83,13 +84,13 @@ export const createPgStatsRepository = (db: Database): StatsRepository => ({
   runCosts: async () => {
     // A report an A/B run made is already inside that run's cost (ASSUMPTIONS #34).
     const { rows } = await db.execute<CostRow>(sql`
-      select 'ab' as kind, id, week_start::text, status, is_sample, cost_usd, created_at
+      select 'ab' as kind, id, to_char(week_start, 'YYYY-MM-DD') as week_start, status, is_sample, cost_usd, created_at
         from ab_runs
       union all
-      select 'report', id, week_start::text, status, is_sample, cost_usd, created_at
+      select 'report', id, to_char(week_start, 'YYYY-MM-DD'), status, is_sample, cost_usd, created_at
         from reports
        where not exists (select 1 from ab_runs a where a.report_id = reports.id)
-       order by created_at desc`);
+       order by created_at desc, id`);
     const runs = rows.map((r) => ({
       kind: r.kind,
       id: r.id,

@@ -192,6 +192,14 @@ describe('runCosts', () => {
     expect(runs[1]).toMatchObject({ status: 'failed', isSample: false, weekStart: '2026-10-19' });
   });
 
+  it('returns ISO weeks whatever the session DateStyle', async () => {
+    const runs = await db.transaction(async (tx) => {
+      await tx.execute(sql`set local datestyle = 'SQL, DMY'`);
+      return (await createPgStatsRepository(tx as unknown as typeof db).runCosts()).runs;
+    });
+    expect(runs.map((r) => r.weekStart)).toContain('2026-10-19');
+  });
+
   it('totals each dollar once', async () => {
     const { totalUsd } = await repo.runCosts();
     expect(totalUsd).toBeCloseTo(0.45, 9);
