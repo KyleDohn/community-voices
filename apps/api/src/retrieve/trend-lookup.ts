@@ -1,4 +1,5 @@
 import type { SearchHit } from '../embed/embedding-store';
+import type { RetrievalEntry } from './retrieval-log';
 import type { RetrievalDeps } from './retrieve-week';
 
 export interface TrendOptions {
@@ -64,4 +65,18 @@ export const trendLookup = (
         }),
       };
     }),
+  );
+
+/** Log rows for the trend examples, which reach the LLM as evidence; the theme is the query. */
+export const trendLogEntries = (trends: ThemeTrend[]): RetrievalEntry[] =>
+  trends.flatMap(({ theme, weeks }) =>
+    weeks.flatMap(({ examples }) =>
+      examples.map(({ chunkId, postId, score }, i) => ({
+        chunkId,
+        postId,
+        query: theme,
+        rank: i + 1,
+        score,
+      })),
+    ),
   );

@@ -13,7 +13,7 @@ import { priorWeeks } from '../ingest/week';
 import { FACETS } from '../retrieve/facets';
 import { createPgRetrievalLog } from '../retrieve/pg-retrieval-log';
 import { retrieveWeek, toLogEntries } from '../retrieve/retrieve-week';
-import { trendLookup } from '../retrieve/trend-lookup';
+import { trendLogEntries, trendLookup } from '../retrieve/trend-lookup';
 import { isoDay, WeekArg } from './week-arg';
 
 const { values } = parseArgs({ options: { week: { type: 'string' } } });
@@ -35,28 +35,12 @@ const deps = {
 const { retrieval } = config;
 
 const chunks = await retrieveWeek(deps, { week, facets: FACETS, ...retrieval });
-const runId = await createPgRetrievalLog(db).record(week, toLogEntries(chunks));
-console.log(`Week of ${week}: ${chunks.length} chunks (retrieval run ${runId})\n`);
-
-for (const facet of FACETS) {
-  console.log(`## ${facet.label}`);
-  const found = chunks
-    .map((c) => ({ ...c, match: c.facets.find((f) => f.facetId === facet.id) }))
-    .filter((c) => c.match)
-    .sort((a, b) => a.match!.rank - b.match!.rank);
-  for (const { match, facets, topicTitle, url, text } of found) {
-    const also =
-      facets.length > 1
-        ? `  (also: ${facets
-            .filter((f) => f !== match)
-            .map((f) => f.facetId)
-            .join(', ')})`
-        : '';
-    console.log(
-      `${match!.rank}. ${match!.score.toFixed(3)}  ${topicTitle}${also}\n   ${url}\n   ${text.replace(/\s+/g, ' ').slice(0, 140)}…`,
-    );
-  }
-  console.log();
+if (chunks.length === 0) {
+  console.error(
+    `No embedded chunks in the week of ${week}; nothing logged. GET /api/v1/weeks lists the weeks with data.`,
+  );
+  await pool.end();
+  process.exit(1);
 }
 
 // The demo uses facet queries as themes; phase 4 passes the LLM's themes instead.
@@ -70,11 +54,33 @@ const trends = await trendLookup(deps, {
   poolSize: retrieval.trendPoolSize,
   examplesPerWeek: retrieval.trendExamplesPerWeek,
 });
+
+const entries = [...toLogEntries(chunks), ...trendLogEntries(trends)];
+const runId = await createPgRetrievalLog(db).record(week, entries);
+console.log(
+  `Week of ${week}: ${chunks.length} chunks, ${entries.length} log rows (run ${runId})\n`,
+);
+
+for (const facet of FACETS) {
+  console.log(`## ${facet.label}`);
+  const found = chunks
+    .map((c) => ({ ...c, match: c.facets.find((f) => f.facetId === facet.id)! }))
+    .filter((c) => c.match)
+    .sort((a, b) => a.match.rank - b.match.rank);
+  for (const { match, facets, topicTitle, url, text } of found) {
+    const others = facets.filter((f) => f !== match).map((f) => f.facetId);
+    const also = others.length > 0 ? `  (also: ${others.join(', ')})` : '';
+    const snippet = text.replace(/\s+/g, ' ').slice(0, 140);
+    console.log(
+      `${match.rank}. ${match.score.toFixed(3)}  ${topicTitle}${also}\n   ${url}\n   ${snippet}…`,
+    );
+  }
+  console.log();
+}
+
 console.log(`## Trends: share of each theme's ${retrieval.trendPoolSize} nearest chunks, by week`);
 trends.forEach((trend, i) => {
-  const counts = trend.weeks
-    .map((w) => `${w.weekStart} ${String(w.matches).padStart(2)}`)
-    .join('   ');
-  console.log(`${FACETS[i]!.label.padEnd(38)} ${counts}`);
+  const counts = trend.weeks.map((w) => `${w.weekStart} ${String(w.matches).padStart(2)}`);
+  console.log(`${FACETS[i]!.label.padEnd(38)} ${counts.join('   ')}`);
 });
 await pool.end();

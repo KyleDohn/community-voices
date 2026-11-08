@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createMemoryChunkSearch, scriptedEmbedder } from './testing/memory-chunk-search';
-import { trendLookup } from './trend-lookup';
+import { trendLogEntries, trendLookup } from './trend-lookup';
 
 const week = '2026-10-26';
 const priorWeeks = ['2026-10-19', '2026-10-12'];
@@ -85,5 +85,20 @@ describe('trendLookup', () => {
     );
 
     expect(trend!.weeks.map((w) => w.matches)).toEqual([0, 1, 0]);
+  });
+});
+
+describe('trendLogEntries', () => {
+  it("logs each week's examples under the theme, ranked within the week", async () => {
+    const trends = await trendLookup(
+      { embedder, search },
+      { week, priorWeeks, themes: ['export crash'], poolSize: 4, examplesPerWeek: 2 },
+    );
+
+    expect(trendLogEntries(trends).map((e) => [e.chunkId, e.postId, e.query, e.rank])).toEqual([
+      [1, 1, 'export crash', 1],
+      [2, 2, 'export crash', 2],
+      [4, 4, 'export crash', 1],
+    ]);
   });
 });
