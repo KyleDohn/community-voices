@@ -1,4 +1,12 @@
 import { z } from 'zod';
+import {
+  LlmCall,
+  ReportDocument,
+  ReportError,
+  ReportRunResponse,
+  ReportStatus,
+  WeekStart,
+} from './report';
 
 const PostIds = z.array(z.number().int());
 
@@ -48,3 +56,46 @@ export const PairwiseResult = z.object({
   winner: Verdict,
 });
 export type PairwiseResult = z.infer<typeof PairwiseResult>;
+
+const ByVariant = <T extends z.ZodType>(schema: T) => z.object({ rag: schema, no_rag: schema });
+
+/** `POST /api/v1/ab-runs` body. */
+export const StartAbRunRequest = z.object({ week: WeekStart });
+export type StartAbRunRequest = z.infer<typeof StartAbRunRequest>;
+
+/** `GET /api/v1/ab-runs/:id`. Each result is null until the run gets that far. */
+export const AbRunResponse = z.object({
+  id: z.string(),
+  weekStart: z.iso.date(),
+  status: ReportStatus,
+  createdAt: z.iso.datetime(),
+  finishedAt: z.iso.datetime().nullable(),
+  /** The committed sample run, not live output (ASSUMPTIONS #12). */
+  isSample: z.boolean(),
+  /** Variant B: the RAG report this run generated, stored as a report run. */
+  ragReport: ReportRunResponse.nullable(),
+  /** Variant A. */
+  noRagDocument: ReportDocument.nullable(),
+  checks: ByVariant(CitationChecks).nullable(),
+  rubric: ByVariant(RubricScores).nullable(),
+  pairwise: PairwiseResult.nullable(),
+  /** Every call in the run, the RAG report's included. */
+  calls: z.array(LlmCall),
+  costUsd: z.number(),
+  error: ReportError.nullable(),
+});
+export type AbRunResponse = z.infer<typeof AbRunResponse>;
+
+export const AbRunSummary = AbRunResponse.pick({
+  id: true,
+  weekStart: true,
+  status: true,
+  createdAt: true,
+  costUsd: true,
+  isSample: true,
+});
+export type AbRunSummary = z.infer<typeof AbRunSummary>;
+
+/** `GET /api/v1/ab-runs`: runs, newest first. */
+export const AbRunListResponse = z.object({ abRuns: z.array(AbRunSummary) });
+export type AbRunListResponse = z.infer<typeof AbRunListResponse>;

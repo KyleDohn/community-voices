@@ -1,5 +1,5 @@
 // Tables arrive with the phases that need them (see docs/DESIGN.md "Data model").
-import type { LlmCall, ReportDocument, ReportSource } from '@cv/contracts';
+import type { AbRunResponse, LlmCall, ReportDocument, ReportSource } from '@cv/contracts';
 import { sql } from 'drizzle-orm';
 import {
   date,
@@ -9,6 +9,7 @@ import {
   jsonb,
   pgTable,
   serial,
+  boolean,
   text,
   timestamp,
   unique,
@@ -143,4 +144,30 @@ export const reports = pgTable(
     finishedAt: timestamptz('finished_at'),
   },
   (t) => [index('reports_week_created_idx').on(t.weekStart, t.createdAt)],
+);
+
+/** One A/B run (phase 5); it points to the RAG report it generated. */
+export const abRuns = pgTable(
+  'ab_runs',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    weekStart: date('week_start', { mode: 'string' }).notNull(),
+    status: text('status', { enum: ['running', 'succeeded', 'failed'] }).notNull(),
+    isSample: boolean('is_sample').notNull().default(false),
+    reportId: uuid('report_id').references(() => reports.id, { onDelete: 'set null' }),
+    noRagDocument: jsonb('no_rag_document').$type<ReportDocument>(),
+    checks: jsonb('checks').$type<NonNullable<AbRunResponse['checks']>>(),
+    rubric: jsonb('rubric').$type<NonNullable<AbRunResponse['rubric']>>(),
+    pairwise: jsonb('pairwise').$type<NonNullable<AbRunResponse['pairwise']>>(),
+    calls: jsonb('calls')
+      .$type<LlmCall[]>()
+      .notNull()
+      .default(sql`'[]'::jsonb`),
+    costUsd: doublePrecision('cost_usd').notNull().default(0),
+    errorCode: text('error_code'),
+    errorMessage: text('error_message'),
+    createdAt: timestamptz('created_at').notNull().defaultNow(),
+    finishedAt: timestamptz('finished_at'),
+  },
+  (t) => [index('ab_runs_created_idx').on(t.createdAt)],
 );
