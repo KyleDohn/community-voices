@@ -1,0 +1,972 @@
+{
+  "note": "A real A/B run for the week of 2026-10-26, recorded 2026-11-08T07:16:38.734Z with claude-haiku-5-5, claude-sonnet-5-5, claude-opus-5-5.",
+  "abRun": {
+    "id": "3f44d043-ad4d-4d4a-ba73-b2a956217ef1",
+    "weekStart": "2026-10-26",
+    "status": "succeeded",
+    "createdAt": "2026-11-08T07:16:38.734Z",
+    "finishedAt": "2026-11-08T07:17:14.860Z",
+    "isSample": false,
+    "noRagDocument": {
+      "mood": {
+        "summary": "Insufficient evidence. I have no access to posts from 2026-10-26 to 2026-11-01, so I cannot describe the community's mood for that week.",
+        "citations": []
+      },
+      "themes": [],
+      "predictions": [
+        {
+          "claim": "Insufficient evidence for week-specific predictions; at most, the forum will likely continue its usual mix of darktable, RawTherapee, GIMP and ART help requests and processing-challenge (PlayRaw) threads.",
+          "citations": [],
+          "rationale": "This rests only on the long-standing general character of discuss.pixls.us, not on any observed posts from this week. No specific events, releases or threads are known to me.",
+          "confidence": "low"
+        }
+      ],
+      "notableThreads": []
+    },
+    "checks": {
+      "rag": {
+        "claims": 14,
+        "citations": 55,
+        "notInCorpus": [],
+        "outsideWeek": [],
+        "notRetrieved": [],
+        "uncitedClaims": 0
+      },
+      "no_rag": {
+        "claims": 2,
+        "citations": 0,
+        "notInCorpus": [],
+        "outsideWeek": [],
+        "notRetrieved": [],
+        "uncitedClaims": 2
+      }
+    },
+    "rubric": {
+      "rag": {
+        "coverage": {
+          "score": 4,
+          "reason": "The main threads are covered, but it misses FerrumPix 0.9.71/0.9.75, the Flexi v0.3 merge as a theme, the Siril plate-solve crash, the raw upload Meta thread, the Ricoh takedown and the FOSS UI/UX word-filter post."
+        },
+        "grounding": {
+          "score": 4,
+          "reason": "Most claims match the cited posts, though Safelight 3.1.0 is described as a posted release when post 463237 only says it is coming, and 463268 is loosely stretched to 'build/install management'."
+        },
+        "readability": {
+          "score": 5,
+          "reason": "It is clearly organized and concise, with useful notable threads and a mood summary that moderators can act on."
+        },
+        "specificity": {
+          "score": 4,
+          "reason": "It names concrete software, versions (Greycard 0.9.0, FerrumPix 0.9.73, CalibRaw v1.0.0) and specific problems such as dual-GPU WebGPU crashes and slider crashes, but omits details like the FerrumPix Lighting tool and the Flexi v0.3 / PR 22833 merge."
+        },
+        "predictionPlausibility": {
+          "score": 4,
+          "reason": "The predictions follow directly from the evidence (Greycard's stated 0.10.0 work, active Spektrafilm and Flexi testing), though low confidence for continued Spektrafilm reports seems overly cautious."
+        }
+      },
+      "no_rag": {
+        "coverage": {
+          "score": 1,
+          "reason": "It covers none of the main discussions, including the wave of new FOSS RAW editors, the darktable masking panel work, the Spektrafilm/Negs GPU debugging and the PlayRaw challenges."
+        },
+        "grounding": {
+          "score": 3,
+          "reason": "The report makes no claims about this week's posts, so it invents nothing, but it also cites none of the many available posts."
+        },
+        "readability": {
+          "score": 3,
+          "reason": "It is clear and concise, but it gives moderators almost nothing useful."
+        },
+        "specificity": {
+          "score": 1,
+          "reason": "It names no concrete threads, versions or problems from the week, such as FerrumPix 0.9.75, the Flexi masking panel v0.3 or the Spektrafilm browser crash."
+        },
+        "predictionPlausibility": {
+          "score": 2,
+          "reason": "The single prediction is generic but honestly labeled low confidence, and it ignores strong evidence that could have supported specific forecasts."
+        }
+      }
+    },
+    "pairwise": {
+      "passes": [
+        {
+          "x": "rag",
+          "reason": "Report X is well grounded in the reference posts. It names concrete releases (Greycard 0.9.0, Safelight 3.1.0, FerrumPix 0.9.73, CalibRaw 1.0.0), the Spektrafilm browser GPU crash and fix, the Flexi masking panel issues, and the RAW vs JPG debate, and its citations match. Its predictions are reasonable. Minor gaps: it omits FerrumPix 0.9.75 and the merge of masking panel v0.3. Report Y returns no content and claims it has no access to posts even though posts were provided, so it scores near zero on coverage and specificity.",
+          "winner": "rag"
+        },
+        {
+          "x": "no_rag",
+          "reason": "Report Y is grounded in the reference posts and its citations check out: Greycard 0.9.0, Safelight 3.1.0, FerrumPix 0.9.73, CalibRaw, the Spektrafilm browser crash and fix, Flexi masking panel issues, the RAW vs JPG debate, Play Raw threads and AI skepticism. It covers the main discussions, and its predictions follow from the evidence (for example, Greycard 0.10.0). Report X declares insufficient evidence even though plenty of evidence was available, so it offers no coverage or specificity.",
+          "winner": "rag"
+        }
+      ],
+      "winner": "rag"
+    },
+    "calls": [
+      {
+        "step": "extract",
+        "model": "claude-haiku-5-5",
+        "attempt": 1,
+        "costUsd": 0.0012281000000000002,
+        "inputTokens": 10776,
+        "outputTokens": 301,
+        "cacheReadTokens": 0,
+        "cacheWriteTokens": 0
+      },
+      {
+        "step": "write",
+        "model": "claude-sonnet-5-5",
+        "attempt": 1,
+        "costUsd": 0.058782,
+        "inputTokens": 21956,
+        "outputTokens": 1487,
+        "cacheReadTokens": 0,
+        "cacheWriteTokens": 0
+      },
+      {
+        "step": "write_no_rag",
+        "model": "claude-sonnet-5-5",
+        "attempt": 1,
+        "costUsd": 0.005098,
+        "inputTokens": 1344,
+        "outputTokens": 241,
+        "cacheReadTokens": 0,
+        "cacheWriteTokens": 0
+      },
+      {
+        "step": "judge_rubric",
+        "model": "claude-opus-5-5",
+        "attempt": 1,
+        "costUsd": 0.106521,
+        "inputTokens": 1899,
+        "outputTokens": 899,
+        "cacheReadTokens": 0,
+        "cacheWriteTokens": 16189
+      },
+      {
+        "step": "judge_rubric",
+        "model": "claude-opus-5-5",
+        "attempt": 1,
+        "costUsd": 0.010957799999999998,
+        "inputTokens": 325,
+        "outputTokens": 321,
+        "cacheReadTokens": 16189,
+        "cacheWriteTokens": 0
+      },
+      {
+        "step": "judge_pairwise",
+        "model": "claude-opus-5-5",
+        "attempt": 1,
+        "costUsd": 0.092947,
+        "inputTokens": 2178,
+        "outputTokens": 226,
+        "cacheReadTokens": 0,
+        "cacheWriteTokens": 15943
+      },
+      {
+        "step": "judge_pairwise",
+        "model": "claude-opus-5-5",
+        "attempt": 1,
+        "costUsd": 0.0160206,
+        "inputTokens": 2178,
+        "outputTokens": 206,
+        "cacheReadTokens": 15943,
+        "cacheWriteTokens": 0
+      }
+    ],
+    "costUsd": 0.2915545,
+    "error": null,
+    "ragReport": {
+      "id": "bd8a7015-ca6f-4946-962d-72ea55867446",
+      "weekStart": "2026-10-26",
+      "status": "succeeded",
+      "createdAt": "2026-11-08T07:16:52.229Z",
+      "finishedAt": "2026-11-08T07:16:52.231Z",
+      "retrievalRunId": "c4826cf8-4c1e-4286-ba83-aff4eafd6f77",
+      "themes": [
+        "Users report darktable build, install, or compilation problems on Linux, macOS, and Windows and seek help with nightly or self-compiled versions",
+        "Developers announce new FOSS raw editors and photo management apps (Greycard, Safelight, FerrumPix, CalibRaw) and invite community testing and feedback",
+        "Testers report GPU crashes and rendering failures in browser or accelerated builds such as Spektrafilm WebGPU and the experimental Slang Metal/Vulkan path",
+        "Community members discuss the new darktable masking panel and Flexi module, including UI behaviour, crashes, and documentation",
+        "Members share their own edits in Play Raw threads and critique processing choices like highlight protection, contrast and texture, and luminance masks",
+        "Forum members debate the merits of editing RAW versus JPG and whether camera JPG colour rendering looks more natural or crowd-pleasing"
+      ],
+      "document": {
+        "mood": {
+          "summary": "Mostly constructive and collaborative, with developers responsive to testers. There is mild wariness about AI and a reminder to keep the forum FOSS-focused.",
+          "citations": [
+            464165,
+            463312,
+            463267,
+            463852,
+            463579
+          ]
+        },
+        "themes": [
+          {
+            "title": "New FOSS RAW editors announce releases",
+            "summary": "Developers of newer editors (Greycard 0.9.0, Safelight 3.1.0, FerrumPix 0.9.73, CalibRaw v1.0.0) post release notes and invite feedback. A Lounge thread asks about pipeline bit depth, and a commercial post was removed as off-topic for a FOSS forum.",
+            "citations": [
+              463312,
+              463237,
+              463761,
+              464055,
+              463987,
+              463267
+            ],
+            "approxPostCount": 8
+          },
+          {
+            "title": "Spektrafilm/Negs GPU crashes and fixes",
+            "summary": "The browser version of Spektrafilm hit WebGPU crashes on some dual-GPU setups. The developer pushed a different rendering path after the first crash, and a tester confirmed it restarts and works. A Negs native thread and a darktable Slang GPU test thread (CI builds restored) also appear.",
+            "citations": [
+              464165,
+              464168,
+              463319,
+              464170
+            ],
+            "approxPostCount": 5
+          },
+          {
+            "title": "darktable masking panel (Flexi) and help questions",
+            "summary": "Users test the new masking panel. They report slider crashes, confusion over the invert button versus the docs, and varied option wording because testers run different versions. Separate help threads cover darktable export problems on Mac, OpenCL border artifacts, and build/install management.",
+            "citations": [
+              463907,
+              463199,
+              463025,
+              463876,
+              463738,
+              463660,
+              463268
+            ],
+            "approxPostCount": 8
+          },
+          {
+            "title": "RAW vs JPG and camera colour",
+            "summary": "A long colour-issues thread debates editing RAW versus JPG. Members say they would never edit a JPG when a RAW exists, and that camera JPGs are crowd-pleasing rather than natural.",
+            "citations": [
+              463300,
+              463389,
+              463229,
+              463670
+            ],
+            "approxPostCount": 4
+          },
+          {
+            "title": "Play Raw edits and capture challenge",
+            "summary": "Members share edits and photos: Contrast and Texture jellyfish, highlight protection redo, waterfall XMP, live statue portrait, GIMP luminance mask learning, and autumn colour captures using Spektrafilm and Contrast & Texture.",
+            "citations": [
+              463374,
+              464183,
+              463791,
+              463282,
+              464122,
+              464094,
+              463865,
+              462962,
+              464186
+            ],
+            "approxPostCount": 9
+          },
+          {
+            "title": "AI skepticism and quality of effort",
+            "summary": "Lounge posts question AI: over-smooth AI image restoration, a study of AI slowing developers, and disapproval of pasted AI replies to people who put in effort.",
+            "citations": [
+              463579,
+              463224,
+              463852
+            ],
+            "approxPostCount": 3
+          }
+        ],
+        "predictions": [
+          {
+            "claim": "Greycard will see a 0.10.0 release.",
+            "citations": [
+              463312
+            ],
+            "rationale": "The developer said work on 0.10.0 is next after 0.9.0.",
+            "confidence": "medium"
+          },
+          {
+            "claim": "More Spektrafilm/Negs GPU bug reports and fixes will follow.",
+            "citations": [
+              464165,
+              464168,
+              464086
+            ],
+            "rationale": "Testers keep reporting GPU-specific crashes and the developer is iterating quickly.",
+            "confidence": "low"
+          },
+          {
+            "claim": "Further Flexi masking panel doc revisions and bug reports will appear.",
+            "citations": [
+              463907,
+              463199,
+              463792
+            ],
+            "rationale": "The panel is in active development with testers hitting crashes and doc mismatches.",
+            "confidence": "medium"
+          }
+        ],
+        "notableThreads": [
+          {
+            "why": "A quick bug-report and fix cycle: a tester's GPU crash log led to a new rendering path, and a follow-up confirmed it works.",
+            "title": "Spektrafilm can now run in the Browser",
+            "citations": [
+              464165,
+              464168
+            ]
+          },
+          {
+            "why": "Active debate on RAW versus JPG rendering, with some friction in tone between members.",
+            "title": "Darktable - Colour issues etc. with RAW files",
+            "citations": [
+              463300,
+              463670,
+              463229
+            ]
+          },
+          {
+            "why": "Community reaction to many new editors includes moderation of a non-FOSS promotion, a bit-depth question, and views on AI-pasted replies.",
+            "title": "The whole host of photo editors that have just landed",
+            "citations": [
+              463267,
+              463987,
+              463852
+            ]
+          },
+          {
+            "why": "Testers report crashes and doc mismatches while the panel is under development.",
+            "title": "[New masking panel] [Flexi] Interim user docs",
+            "citations": [
+              463907,
+              463199
+            ]
+          }
+        ]
+      },
+      "sources": [
+        {
+          "url": "https://discuss.pixls.us/t/up-to-date-version-and-ai-and-lua/61781/2",
+          "postId": 463660,
+          "weekStart": "2026-10-26",
+          "topicTitle": "Up to date version and AI and Lua?"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/spektrafilm-can-now-run-in-the-browser/61820/16",
+          "postId": 464165,
+          "weekStart": "2026-10-26",
+          "topicTitle": "Spektrafilm can now run in the Browser"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/greycard-an-open-source-raw-photo-editor/61420/86",
+          "postId": 463312,
+          "weekStart": "2026-10-26",
+          "topicTitle": "Greycard: an open source RAW photo editor"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/original-and-ai-restored/61767/7",
+          "postId": 463579,
+          "weekStart": "2026-10-26",
+          "topicTitle": "Original, and AI restored"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/introducing-safelight-a-free-open-source-raw-editor-built-like-an-ide/58615/270",
+          "postId": 463237,
+          "weekStart": "2026-10-26",
+          "topicTitle": "Introducing Safelight: A Free, Open-Source RAW Editor Built Like an IDE"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/the-whole-host-of-photo-editors-that-have-just-landed/61124/272",
+          "postId": 463987,
+          "weekStart": "2026-10-26",
+          "topicTitle": "The whole host of photo editors that have just landed"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/masks-polls-configuration-options-for-the-new-masking-panel/61675/9",
+          "postId": 463025,
+          "weekStart": "2026-10-26",
+          "topicTitle": "[masks] [polls] Configuration options for the new masking panel"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/ferrumpix-photo-raw-editor-viewer-gallery-immich-and-nextcloud-client-in-one-app/60184/293",
+          "postId": 463761,
+          "weekStart": "2026-10-26",
+          "topicTitle": "FerrumPix: Photo/RAW-Editor, Viewer, Gallery, Immich and Nextcloud Client in one App"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/negs-native-and-gpu-accelerated-spektrafilm-on-macos-windows-and-linux/61485/40",
+          "postId": 463319,
+          "weekStart": "2026-10-26",
+          "topicTitle": "Negs — Native and GPU accelerated Spektrafilm on MacOS, Windows and Linux"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/siril-1-4-4-plate-solve-crashes-in-ubuntu-26-0-4-1/61622/11",
+          "postId": 463037,
+          "weekStart": "2026-10-26",
+          "topicTitle": "Siril 1.4.4 plate solve crashes in Ubuntu 26.0.4.1"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/issue-exporting-from-darktable-on-mac/61808/2",
+          "postId": 463876,
+          "weekStart": "2026-10-26",
+          "topicTitle": "Issue Exporting from Darktable on MAC"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/stupid-questions-thread/56484/277",
+          "postId": 463738,
+          "weekStart": "2026-10-26",
+          "topicTitle": "Stupid questions thread"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/new-masking-panel-flexi-interim-user-docs-subject-to-change/61544/57",
+          "postId": 463907,
+          "weekStart": "2026-10-26",
+          "topicTitle": "[New masking panel] [Flexi] Interim user docs (subject to change)"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/darktable-colour-issues-etc-with-raw-files/61712/17",
+          "postId": 463389,
+          "weekStart": "2026-10-26",
+          "topicTitle": "Darktable - Colour issues etc. with RAW files"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/spektrafilm-can-now-run-in-the-browser/61820/17",
+          "postId": 464168,
+          "weekStart": "2026-10-26",
+          "topicTitle": "Spektrafilm can now run in the Browser"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/testers-wanted-experimental-slang-gpu-path-for-darktable-metal-vulkan/61583/32",
+          "postId": 464170,
+          "weekStart": "2026-10-26",
+          "topicTitle": "Testers wanted: experimental Slang GPU path for darktable (Metal/Vulkan)"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/darktable-colour-issues-etc-with-raw-files/61712/10",
+          "postId": 463300,
+          "weekStart": "2026-10-26",
+          "topicTitle": "Darktable - Colour issues etc. with RAW files"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/is-raw-upload-not-working/61364/3",
+          "postId": 463383,
+          "weekStart": "2026-10-26",
+          "topicTitle": "Is raw upload not working?"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/black-linn-waterfall/61798/2",
+          "postId": 463791,
+          "weekStart": "2026-10-26",
+          "topicTitle": "Black Linn Waterfall"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/portrait-at-a-live-statue-fair/61227/56",
+          "postId": 463282,
+          "weekStart": "2026-10-26",
+          "topicTitle": "Portrait at a live statue fair"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/calibraw-v1-0-0-raw-editor-gpu-accelerated-linux-focused/60692/83",
+          "postId": 464055,
+          "weekStart": "2026-10-26",
+          "topicTitle": "CalibRaw v1.0.0, RAW Editor, GPU accelerated, linux focused"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/protect-the-highlights/61839/17",
+          "postId": 464183,
+          "weekStart": "2026-10-26",
+          "topicTitle": "Protect the highlights!"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/jellyfish-for-the-new-contrast-and-texture-module/61641/16",
+          "postId": 463374,
+          "weekStart": "2026-10-26",
+          "topicTitle": "Jellyfish for the new Contrast and Texture module"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/darktable-colour-issues-etc-with-raw-files/61712/8",
+          "postId": 463229,
+          "weekStart": "2026-10-26",
+          "topicTitle": "Darktable - Colour issues etc. with RAW files"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/capture-challenge-charge-your-battery-and-take-some-photos/31798/6044",
+          "postId": 463865,
+          "weekStart": "2026-10-26",
+          "topicTitle": "[Capture Challenge] Charge your battery and take some photos"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/window-challenge/61653/9",
+          "postId": 462962,
+          "weekStart": "2026-10-26",
+          "topicTitle": "Window Challenge"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/random-thoughts-and-finds/48030/3023",
+          "postId": 463112,
+          "weekStart": "2026-10-26",
+          "topicTitle": "Random thoughts and finds..."
+        },
+        {
+          "url": "https://discuss.pixls.us/t/the-whole-host-of-photo-editors-that-have-just-landed/61124/232",
+          "postId": 463267,
+          "weekStart": "2026-10-26",
+          "topicTitle": "The whole host of photo editors that have just landed"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/capture-challenge-charge-your-battery-and-take-some-photos/31798/6049",
+          "postId": 464094,
+          "weekStart": "2026-10-26",
+          "topicTitle": "[Capture Challenge] Charge your battery and take some photos"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/iceland-2018-reyniskirkja-church/61838/1",
+          "postId": 464122,
+          "weekStart": "2026-10-26",
+          "topicTitle": "Iceland 2018: Reyniskirkja Church"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/darktable-colour-issues-etc-with-raw-files/61712/40",
+          "postId": 463670,
+          "weekStart": "2026-10-26",
+          "topicTitle": "Darktable - Colour issues etc. with RAW files"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/capture-challenge-charge-your-battery-and-take-some-photos/31798/6052",
+          "postId": 464186,
+          "weekStart": "2026-10-26",
+          "topicTitle": "[Capture Challenge] Charge your battery and take some photos"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/outsourcing-thinking/55820/736",
+          "postId": 463224,
+          "weekStart": "2026-10-26",
+          "topicTitle": "Outsourcing thinking"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/is-foss-ui-ux-design-different-that-non-foss-should-it/61694/6",
+          "postId": 463120,
+          "weekStart": "2026-10-26",
+          "topicTitle": "Is FOSS UI/UX Design Different that Non-FOSS? Should it?"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/new-masking-panel-flexi-interim-user-docs-subject-to-change/61544/36",
+          "postId": 463199,
+          "weekStart": "2026-10-26",
+          "topicTitle": "[New masking panel] [Flexi] Interim user docs (subject to change)"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/software-is-over-developing/61153/78",
+          "postId": 463643,
+          "weekStart": "2026-10-26",
+          "topicTitle": "Software is over (developing...)"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/is-it-possible-to-remove-the-right-click-menu-in-explorer/61706/10",
+          "postId": 463268,
+          "weekStart": "2026-10-26",
+          "topicTitle": "Is it possible to remove the right-click menu in Explorer?"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/the-whole-host-of-photo-editors-that-have-just-landed/61124/257",
+          "postId": 463852,
+          "weekStart": "2026-10-26",
+          "topicTitle": "The whole host of photo editors that have just landed"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/issue-exporting-from-darktable-on-mac/61808/1",
+          "postId": 463862,
+          "weekStart": "2026-10-26",
+          "topicTitle": "Issue Exporting from Darktable on MAC"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/stupid-questions-thread/56484/261",
+          "postId": 462384,
+          "weekStart": "2026-10-19",
+          "topicTitle": "Stupid questions thread"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/module-demosaic-has-unknown-version-7-using-default-parameters/61587/4",
+          "postId": 462516,
+          "weekStart": "2026-10-19",
+          "topicTitle": "module 'demosaic' has unknown version 7, using default parameters"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/merged-masking-panel-revamp-and-new-masking-possibilities/59675/518",
+          "postId": 461717,
+          "weekStart": "2026-10-19",
+          "topicTitle": "[Merged] Masking panel revamp and new masking possibilities"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/darktable-5-6-2-on-macos-27/61385/1",
+          "postId": 461121,
+          "weekStart": "2026-10-12",
+          "topicTitle": "Darktable 5.6.2 on macos 27"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/darktable-5-6-2-for-older-macos-versions-intel-10-15-silicon-11-3-and-later/61096/9",
+          "postId": 460591,
+          "weekStart": "2026-10-12",
+          "topicTitle": "darktable 5.6.2 for older macOS versions (intel: 10.15 & silicon: 11.3 and later)"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/a-tutorial-for-darktables-universal-styles-or-a-preset-rant-of-sorts/61280/10",
+          "postId": 460397,
+          "weekStart": "2026-10-12",
+          "topicTitle": "A tutorial for Darktables \"universal\" styles, or a \"preset\" rant of sorts"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/darktable-5-6-2-for-older-macos-versions-intel-10-15-silicon-11-3-and-later/61096/8",
+          "postId": 459739,
+          "weekStart": "2026-10-05",
+          "topicTitle": "darktable 5.6.2 for older macOS versions (intel: 10.15 & silicon: 11.3 and later)"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/build-and-install-darktable-on-linux-with-one-command/61184/1",
+          "postId": 459763,
+          "weekStart": "2026-10-05",
+          "topicTitle": "Build and install darktable on Linux with one command"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/darktable-5-6-2-not-working-on-macos/61095/2",
+          "postId": 459076,
+          "weekStart": "2026-10-05",
+          "topicTitle": "darktable 5.6.2 not working on MacOS"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/ferrumpix-photo-raw-editor-viewer-gallery-immich-and-nextcloud-client-in-one-app/60184/287",
+          "postId": 463040,
+          "weekStart": "2026-10-26",
+          "topicTitle": "FerrumPix: Photo/RAW-Editor, Viewer, Gallery, Immich and Nextcloud Client in one App"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/ferrumpix-photo-raw-editor-viewer-gallery-immich-and-nextcloud-client-in-one-app/60184/312",
+          "postId": 464178,
+          "weekStart": "2026-10-26",
+          "topicTitle": "FerrumPix: Photo/RAW-Editor, Viewer, Gallery, Immich and Nextcloud Client in one App"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/list-your-new-foss-software-here-wiki/61465/18",
+          "postId": 462343,
+          "weekStart": "2026-10-19",
+          "topicTitle": "List your new FOSS software here (Wiki)"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/ferrumpix-photo-raw-editor-viewer-gallery-immich-and-nextcloud-client-in-one-app/60184/259",
+          "postId": 462120,
+          "weekStart": "2026-10-19",
+          "topicTitle": "FerrumPix: Photo/RAW-Editor, Viewer, Gallery, Immich and Nextcloud Client in one App"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/ferrumpix-photo-raw-editor-viewer-gallery-immich-and-nextcloud-client-in-one-app/60184/270",
+          "postId": 462415,
+          "weekStart": "2026-10-19",
+          "topicTitle": "FerrumPix: Photo/RAW-Editor, Viewer, Gallery, Immich and Nextcloud Client in one App"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/greycard-an-open-source-raw-photo-editor/61420/9",
+          "postId": 461427,
+          "weekStart": "2026-10-12",
+          "topicTitle": "Greycard: an open source RAW photo editor"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/greycard-an-open-source-raw-photo-editor/61420/1",
+          "postId": 461369,
+          "weekStart": "2026-10-12",
+          "topicTitle": "Greycard: an open source RAW photo editor"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/ferrumpix-photo-raw-editor-viewer-gallery-immich-and-nextcloud-client-in-one-app/60184/237",
+          "postId": 460417,
+          "weekStart": "2026-10-12",
+          "topicTitle": "FerrumPix: Photo/RAW-Editor, Viewer, Gallery, Immich and Nextcloud Client in one App"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/ferrumpix-photo-raw-editor-viewer-gallery-immich-and-nextcloud-client-in-one-app/60184/222",
+          "postId": 459234,
+          "weekStart": "2026-10-05",
+          "topicTitle": "FerrumPix: Photo/RAW-Editor, Viewer, Gallery, Immich and Nextcloud Client in one App"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/the-whole-host-of-photo-editors-that-have-just-landed/61124/113",
+          "postId": 460273,
+          "weekStart": "2026-10-05",
+          "topicTitle": "The whole host of photo editors that have just landed"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/spektrafilm-can-now-run-in-the-browser/61820/7",
+          "postId": 464086,
+          "weekStart": "2026-10-26",
+          "topicTitle": "Spektrafilm can now run in the Browser"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/spektrafilm-can-now-run-in-the-browser/61820/11",
+          "postId": 464109,
+          "weekStart": "2026-10-26",
+          "topicTitle": "Spektrafilm can now run in the Browser"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/testers-wanted-experimental-slang-gpu-path-for-darktable-metal-vulkan/61583/8",
+          "postId": 462545,
+          "weekStart": "2026-10-19",
+          "topicTitle": "Testers wanted: experimental Slang GPU path for darktable (Metal/Vulkan)"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/testers-wanted-experimental-slang-gpu-path-for-darktable-metal-vulkan/61583/19",
+          "postId": 462853,
+          "weekStart": "2026-10-19",
+          "topicTitle": "Testers wanted: experimental Slang GPU path for darktable (Metal/Vulkan)"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/testers-wanted-experimental-slang-gpu-path-for-darktable-metal-vulkan/61583/17",
+          "postId": 462808,
+          "weekStart": "2026-10-19",
+          "topicTitle": "Testers wanted: experimental Slang GPU path for darktable (Metal/Vulkan)"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/the-dyeworks-gpu-accelerated-windows-port-of-spektrafilm/59447/59",
+          "postId": 460754,
+          "weekStart": "2026-10-12",
+          "topicTitle": "The Dyeworks - GPU accelerated windows port of Spektrafilm!"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/grainy-a-free-editor-and-library-made-for-film-scans-windows-macos-mit/61222/1",
+          "postId": 459971,
+          "weekStart": "2026-10-05",
+          "topicTitle": "Grainy: a free editor and library made for film scans (Windows/macOS, MIT)"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/new-masking-panel-flexi-interim-user-docs-subject-to-change/61544/53",
+          "postId": 463792,
+          "weekStart": "2026-10-26",
+          "topicTitle": "[New masking panel] [Flexi] Interim user docs (subject to change)"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/new-masking-panel-flexi-interim-user-docs-subject-to-change/61544/54",
+          "postId": 463818,
+          "weekStart": "2026-10-26",
+          "topicTitle": "[New masking panel] [Flexi] Interim user docs (subject to change)"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/new-masking-panel-flexi-interim-user-docs-subject-to-change/61544/56",
+          "postId": 463869,
+          "weekStart": "2026-10-26",
+          "topicTitle": "[New masking panel] [Flexi] Interim user docs (subject to change)"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/merged-masking-panel-revamp-and-new-masking-possibilities/59675/562",
+          "postId": 462199,
+          "weekStart": "2026-10-19",
+          "topicTitle": "[Merged] Masking panel revamp and new masking possibilities"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/new-masking-panel-flexi-interim-user-docs-subject-to-change/61544/8",
+          "postId": 462509,
+          "weekStart": "2026-10-19",
+          "topicTitle": "[New masking panel] [Flexi] Interim user docs (subject to change)"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/new-masking-panel-flexi-interim-user-docs-subject-to-change/61544/1",
+          "postId": 462215,
+          "weekStart": "2026-10-19",
+          "topicTitle": "[New masking panel] [Flexi] Interim user docs (subject to change)"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/merged-masking-panel-revamp-and-new-masking-possibilities/59675/461",
+          "postId": 460719,
+          "weekStart": "2026-10-12",
+          "topicTitle": "[Merged] Masking panel revamp and new masking possibilities"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/merged-masking-panel-revamp-and-new-masking-possibilities/59675/462",
+          "postId": 460725,
+          "weekStart": "2026-10-12",
+          "topicTitle": "[Merged] Masking panel revamp and new masking possibilities"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/merged-masking-panel-revamp-and-new-masking-possibilities/59675/479",
+          "postId": 461192,
+          "weekStart": "2026-10-12",
+          "topicTitle": "[Merged] Masking panel revamp and new masking possibilities"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/5-6-2-released/61070/7",
+          "postId": 458923,
+          "weekStart": "2026-10-05",
+          "topicTitle": "5.6.2 released!"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/merged-masking-panel-revamp-and-new-masking-possibilities/59675/438",
+          "postId": 458891,
+          "weekStart": "2026-10-05",
+          "topicTitle": "[Merged] Masking panel revamp and new masking possibilities"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/merged-masking-panel-revamp-and-new-masking-possibilities/59675/448",
+          "postId": 459004,
+          "weekStart": "2026-10-05",
+          "topicTitle": "[Merged] Masking panel revamp and new masking possibilities"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/eery-foggy-scene/61828/4",
+          "postId": 464061,
+          "weekStart": "2026-10-26",
+          "topicTitle": "Eery foggy scene"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/jellyfish-for-the-new-contrast-and-texture-module/61641/25",
+          "postId": 463427,
+          "weekStart": "2026-10-26",
+          "topicTitle": "Jellyfish for the new Contrast and Texture module"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/jellyfish-for-the-new-contrast-and-texture-module/61641/46",
+          "postId": 463628,
+          "weekStart": "2026-10-26",
+          "topicTitle": "Jellyfish for the new Contrast and Texture module"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/my-workflow-with-darktable-it-doesn-t-really-take-that-much/61481/3",
+          "postId": 461797,
+          "weekStart": "2026-10-19",
+          "topicTitle": "My workflow with darktable. It doesn’t really take that much"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/the-whole-host-of-photo-editors-that-have-just-landed/61124/183",
+          "postId": 461855,
+          "weekStart": "2026-10-19",
+          "topicTitle": "The whole host of photo editors that have just landed"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/dt-masking-attempt/61447/6",
+          "postId": 461719,
+          "weekStart": "2026-10-19",
+          "topicTitle": "DT Masking attempt"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/playraw-into-the-fog/10760/82",
+          "postId": 461408,
+          "weekStart": "2026-10-12",
+          "topicTitle": "[PlayRaw] Into the Fog"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/bloodhound-from-hell/60888/7",
+          "postId": 460423,
+          "weekStart": "2026-10-12",
+          "topicTitle": "Bloodhound from hell"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/merged-new-module-contrast-and-texture/59768/256",
+          "postId": 461092,
+          "weekStart": "2026-10-12",
+          "topicTitle": "[Merged] New module Contrast and Texture"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/approach-to-editing-philosophy/61202/22",
+          "postId": 459953,
+          "weekStart": "2026-10-05",
+          "topicTitle": "Approach to Editing - Philosophy"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/approach-to-editing-philosophy/61202/19",
+          "postId": 459937,
+          "weekStart": "2026-10-05",
+          "topicTitle": "Approach to Editing - Philosophy"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/approach-to-editing-philosophy/61202/9",
+          "postId": 459900,
+          "weekStart": "2026-10-05",
+          "topicTitle": "Approach to Editing - Philosophy"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/darktable-colour-issues-etc-with-raw-files/61712/38",
+          "postId": 463653,
+          "weekStart": "2026-10-26",
+          "topicTitle": "Darktable - Colour issues etc. with RAW files"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/greycard-an-open-source-raw-photo-editor/61420/25",
+          "postId": 461631,
+          "weekStart": "2026-10-19",
+          "topicTitle": "Greycard: an open source RAW photo editor"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/the-cameras-systems-lenses-and-gas-thread/56242/1384",
+          "postId": 462484,
+          "weekStart": "2026-10-19",
+          "topicTitle": "The cameras, systems, lenses and GAS thread"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/greycard-an-open-source-raw-photo-editor/61420/63",
+          "postId": 462357,
+          "weekStart": "2026-10-19",
+          "topicTitle": "Greycard: an open source RAW photo editor"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/processed-raw-ends-up-too-yellow-strougling-to-achieve-jpg-colors-files-provided/61259/11",
+          "postId": 460333,
+          "weekStart": "2026-10-12",
+          "topicTitle": "Processed Raw ends up too yellow. Strougling to achieve JPG colors. Files provided."
+        },
+        {
+          "url": "https://discuss.pixls.us/t/processed-raw-ends-up-too-yellow-strougling-to-achieve-jpg-colors-files-provided/61259/10",
+          "postId": 460318,
+          "weekStart": "2026-10-12",
+          "topicTitle": "Processed Raw ends up too yellow. Strougling to achieve JPG colors. Files provided."
+        },
+        {
+          "url": "https://discuss.pixls.us/t/processed-raw-ends-up-too-yellow-strougling-to-achieve-jpg-colors-files-provided/61259/23",
+          "postId": 460736,
+          "weekStart": "2026-10-12",
+          "topicTitle": "Processed Raw ends up too yellow. Strougling to achieve JPG colors. Files provided."
+        },
+        {
+          "url": "https://discuss.pixls.us/t/the-whole-host-of-photo-editors-that-have-just-landed/61124/84",
+          "postId": 459779,
+          "weekStart": "2026-10-05",
+          "topicTitle": "The whole host of photo editors that have just landed"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/hdr-exercise-on-urbanscape/61173/13",
+          "postId": 459771,
+          "weekStart": "2026-10-05",
+          "topicTitle": "HDR exercise on urbanscape"
+        },
+        {
+          "url": "https://discuss.pixls.us/t/approach-to-editing-philosophy/61202/2",
+          "postId": 459843,
+          "weekStart": "2026-10-05",
+          "topicTitle": "Approach to Editing - Philosophy"
+        }
+      ],
+      "calls": [
+        {
+          "step": "extract",
+          "model": "claude-haiku-5-5",
+          "attempt": 1,
+          "costUsd": 0.0012281000000000002,
+          "inputTokens": 10776,
+          "outputTokens": 301,
+          "cacheReadTokens": 0,
+          "cacheWriteTokens": 0
+        },
+        {
+          "step": "write",
+          "model": "claude-sonnet-5-5",
+          "attempt": 1,
+          "costUsd": 0.058782,
+          "inputTokens": 21956,
+          "outputTokens": 1487,
+          "cacheReadTokens": 0,
+          "cacheWriteTokens": 0
+        }
+      ],
+      "costUsd": 0.060010100000000004,
+      "error": null,
+      "isSample": false
+    }
+  }
+}
