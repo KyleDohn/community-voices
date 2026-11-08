@@ -105,7 +105,12 @@ describe('sample A/B run', () => {
     await truncate();
     expect(await loadSampleIfEmpty(db, file)).toBe('loaded');
 
-    expect(await jobs.get(live.id)).toEqual({ ...live, isSample: true });
+    // The report is marked too, so the Report view never shows it as live output either.
+    expect(await jobs.get(live.id)).toEqual({
+      ...live,
+      isSample: true,
+      ragReport: { ...live.ragReport, retrievalRunId: null, isSample: true },
+    });
     expect((await jobs.get(live.id))!.ragReport!.retrievalRunId).toBeNull();
   });
 

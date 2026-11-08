@@ -69,6 +69,7 @@ export const describeReportRepositoryContract = (
         calls: [],
         costUsd: 0,
         error: null,
+        isSample: false,
       });
       expect(await repo.getRun(run.id)).toEqual(run);
     });

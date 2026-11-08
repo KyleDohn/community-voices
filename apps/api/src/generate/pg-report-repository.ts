@@ -23,6 +23,7 @@ const toRun = (row: Row): ReportRun => ({
   calls: row.calls,
   costUsd: row.costUsd,
   error: row.errorCode ? { code: row.errorCode, message: row.errorMessage ?? '' } : null,
+  isSample: row.isSample,
 });
 
 export const createPgReportRepository = (db: Database): ReportRepository => {

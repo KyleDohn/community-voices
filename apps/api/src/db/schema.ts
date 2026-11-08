@@ -137,6 +137,7 @@ export const reports = pgTable(
       .$type<LlmCall[]>()
       .notNull()
       .default(sql`'[]'::jsonb`),
+    isSample: boolean('is_sample').notNull().default(false),
     costUsd: doublePrecision('cost_usd').notNull().default(0),
     errorCode: text('error_code'),
     errorMessage: text('error_message'),

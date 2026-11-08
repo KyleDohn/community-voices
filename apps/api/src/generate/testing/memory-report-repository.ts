@@ -23,6 +23,7 @@ export const createMemoryReportRepository = (): ReportRepository => {
         calls: [],
         costUsd: 0,
         error: null,
+        isSample: false,
       };
       runs.push(run);
       return run;

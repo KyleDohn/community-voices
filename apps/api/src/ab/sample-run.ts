@@ -32,6 +32,7 @@ export const loadSampleIfEmpty = async (db: Database, file = SAMPLE_FILE) => {
         ...report,
         // The seed has no retrieval runs; the report keeps its sources, which carry the posts.
         retrievalRunId: null,
+        isSample: true,
         createdAt: new Date(report.createdAt),
         finishedAt: date(report.finishedAt),
         errorCode: report.error?.code,

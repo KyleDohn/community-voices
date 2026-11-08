@@ -103,6 +103,8 @@ export const ReportRunResponse = z.object({
   calls: z.array(LlmCall),
   costUsd: z.number(),
   error: ReportError.nullable(),
+  /** The RAG half of the committed sample A/B run, not live output (ASSUMPTIONS #12). */
+  isSample: z.boolean(),
 });
 export type ReportRunResponse = z.infer<typeof ReportRunResponse>;
 

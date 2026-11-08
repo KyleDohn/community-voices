@@ -156,6 +156,13 @@ export const ReportView = () => {
               reading and what might come next, each backed by links to the posts.
             </p>
           )}
+          {shownRun?.isSample && (
+            <p className="mb-6 rounded-md border border-accent bg-accent-soft px-4 py-3 font-sans text-sm text-ink">
+              <span className="font-semibold">Sample report.</span> Part of the sample A/B run
+              shipped with the app, so this page works without an API key. Generate a report to see
+              live output.
+            </p>
+          )}
           {shownRun && <RunStatus run={shownRun} />}
           {shownRun?.document && (
             <ReportDocumentView
