@@ -2,10 +2,12 @@ import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import type { LlmConfig } from '../config';
 import { createCaller, GenerationError } from './caller';
+import { testLlmConfig } from './testing/llm-config';
 import { scriptedLlm } from './testing/scripted-llm';
 
 const config: LlmConfig = {
   steps: {
+    ...testLlmConfig.steps,
     extract: { model: 'sonnet', maxTokens: 100, effort: 'low' },
     write: { model: 'sonnet', maxTokens: 100, effort: 'medium' },
   },

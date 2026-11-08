@@ -37,6 +37,9 @@ describe('loadConfig', () => {
         steps: {
           extract: { model: 'claude-haiku-5-5', maxTokens: 2_000, effort: 'low' },
           write: { model: 'claude-sonnet-5-5', maxTokens: 8_000, effort: 'medium' },
+          write_no_rag: { model: 'claude-sonnet-5-5', maxTokens: 8_000, effort: 'medium' },
+          judge_rubric: { model: 'claude-opus-5-5', maxTokens: 6_000, effort: 'medium' },
+          judge_pairwise: { model: 'claude-opus-5-5', maxTokens: 6_000, effort: 'medium' },
         },
         maxRunCostUsd: 0.5,
         prices: {

@@ -51,20 +51,26 @@ const trendSection = (trends: ThemeTrend[], poolSize: number) =>
     })
     .join('\n\n');
 
+const ROLE = `You write a weekly report about ${COMMUNITY}, for the people who run it.`;
+const NO_INVENTION =
+  'If the posts do not support a section, say "Insufficient evidence" in its text, or leave the list ' +
+  'empty. Never invent posts, people, versions or events.';
+const APPROX_COUNT =
+  'approxPostCount is your estimate of how many of the supplied posts discuss the theme.';
+
 const WRITE_SYSTEM = [
-  `You write a weekly report about ${COMMUNITY}, for the people who run it.`,
+  ROLE,
   'Use only the posts in the user message. Do not use outside knowledge about the forum, its software ' +
     'or its members.',
   'Cite the posts behind every theme, notable thread, mood and prediction, as the integer ids from the ' +
     '[post N] labels. Themes, notable threads and mood cite only posts from the target week. ' +
     'Predictions may also cite trend examples from earlier weeks.',
-  'If the posts do not support a section, say "Insufficient evidence" in its text, or leave the list ' +
-    'empty. Never invent posts, people, versions or events.',
+  NO_INVENTION,
   "Trend counts are weak hints. Each is a week's share of the posts nearest to the theme across four " +
     'weeks: small differences mean nothing, and some matches may be off topic, so check the examples. ' +
     'Give a prediction low confidence by default, medium when the examples clearly back it, and high ' +
     'only for something the posts announce outright.',
-  'approxPostCount is your estimate of how many of the supplied posts discuss the theme.',
+  APPROX_COUNT,
 ].join('\n\n');
 
 export const writePrompt = (
@@ -81,6 +87,33 @@ export const writePrompt = (
         `Write the report for the week starting ${week}.\n\n` +
         `## Posts from the target week\n\n${postsSection(chunks)}\n\n` +
         `## Trend evidence: this week against the three before it\n\n${trendSection(trends, poolSize)}`,
+    },
+  ],
+});
+
+// The RAG writer's rules, minus the supplied posts and trends: retrieval is the only difference.
+const NO_RAG_SYSTEM = [
+  ROLE,
+  'Cite the posts behind every theme, notable thread, mood and prediction, as integer forum post ids.',
+  NO_INVENTION,
+  'Give a prediction low confidence by default, medium when evidence clearly backs it, and high only ' +
+    'for something announced outright.',
+  APPROX_COUNT,
+].join('\n\n');
+
+const addDays = (day: string, days: number) => {
+  const date = new Date(`${day}T00:00:00Z`);
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 10);
+};
+
+/** Variant A: only the forum, its description and the dates (ASSUMPTIONS #2). */
+export const noRagPrompt = (week: string): Prompt => ({
+  system: NO_RAG_SYSTEM,
+  messages: [
+    {
+      role: 'user',
+      content: `Write the report for the week from ${week} to ${addDays(week, 6)} (Monday to Sunday, UTC).`,
     },
   ],
 });

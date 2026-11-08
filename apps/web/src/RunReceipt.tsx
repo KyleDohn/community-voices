@@ -1,7 +1,13 @@
-import type { ReportRunResponse } from '@cv/contracts';
+import type { LlmCall, ReportRunResponse } from '@cv/contracts';
 import { tokens, usd } from './format';
 
-const STEP_LABEL = { extract: 'Find themes', write: 'Write report' } as const;
+const STEP_LABEL: Record<LlmCall['step'], string> = {
+  extract: 'Find themes',
+  write: 'Write report',
+  write_no_rag: 'Write without RAG',
+  judge_rubric: 'Judge: rubric',
+  judge_pairwise: 'Judge: pairwise',
+};
 
 /** What the run did and cost, so every number in the report can be traced to a call. */
 export const RunReceipt = ({ run }: { run: ReportRunResponse }) => (

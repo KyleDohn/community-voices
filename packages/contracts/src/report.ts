@@ -59,7 +59,7 @@ export type ReportSource = z.infer<typeof ReportSource>;
 
 /** One LLM call and what it cost; a repair is attempt 2 of its step. */
 export const LlmCall = z.object({
-  step: z.enum(['extract', 'write']),
+  step: z.enum(['extract', 'write', 'write_no_rag', 'judge_rubric', 'judge_pairwise']),
   attempt: z.number().int(),
   model: z.string(),
   inputTokens: z.number().int(),

@@ -8,21 +8,12 @@ import type { ThemeTrend } from '../retrieve/trend-lookup';
 import { createCaller } from './caller';
 import { generateReport, type Retrieval } from './generate-report';
 import { LlmError } from './llm-client';
+import { testLlmConfig } from './testing/llm-config';
 import { scriptedLlm, type ScriptedReply } from './testing/scripted-llm';
 
 const week = '2026-10-26';
 
-const config: LlmConfig = {
-  steps: {
-    extract: { model: 'haiku', maxTokens: 300, effort: 'low' },
-    write: { model: 'sonnet', maxTokens: 4_000, effort: 'medium' },
-  },
-  maxRunCostUsd: 0.5,
-  prices: {
-    haiku: { inputPerMillion: 1, outputPerMillion: 5 },
-    sonnet: { inputPerMillion: 2, outputPerMillion: 10 },
-  },
-};
+const config = testLlmConfig;
 
 const hit = (postId: number) => ({
   chunkId: postId * 10,
