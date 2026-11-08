@@ -2,10 +2,12 @@ import {
   AbRunListResponse,
   AbRunResponse,
   AcceptedResponse,
+  CostStatsResponse,
   ErrorResponse,
   HealthResponse,
   ReportListResponse,
   ReportRunResponse,
+  RetrievalStatsResponse,
   WeeksResponse,
 } from '@cv/contracts';
 
@@ -77,3 +79,8 @@ export const startAbRun = async (week: string) => {
   if (res.status !== 202) throw await parseError(res);
   return AcceptedResponse.parse(await res.json());
 };
+
+export const fetchRetrievalStats = (limit = 20) =>
+  getJson(`/api/v1/stats/retrievals?limit=${limit}`, RetrievalStatsResponse);
+
+export const fetchCostStats = () => getJson('/api/v1/stats/costs', CostStatsResponse);

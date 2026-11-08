@@ -2,15 +2,18 @@ import { useEffect, useState } from 'react';
 import { AbView } from './AbView';
 import { HealthBadge } from './HealthBadge';
 import { ReportView } from './ReportView';
+import { StatsView } from './StatsView';
 
 const VIEWS = [
   { hash: '#report', name: 'Report' },
   { hash: '#ab', name: 'A/B comparison' },
+  { hash: '#stats', name: 'Stats' },
 ] as const;
 type ViewHash = (typeof VIEWS)[number]['hash'];
 
 // The view lives in the URL hash, so a reload or a shared link opens the same one.
-const viewFromHash = (): ViewHash => (window.location.hash === '#ab' ? '#ab' : '#report');
+const viewFromHash = (): ViewHash =>
+  VIEWS.find((v) => v.hash === window.location.hash)?.hash ?? '#report';
 
 export const App = () => {
   const [view, setView] = useState(viewFromHash);
@@ -44,7 +47,9 @@ export const App = () => {
           </a>
         ))}
       </nav>
-      <div className="mt-8">{view === '#ab' ? <AbView /> : <ReportView />}</div>
+      <div className="mt-8">
+        {view === '#ab' ? <AbView /> : view === '#stats' ? <StatsView /> : <ReportView />}
+      </div>
     </main>
   );
 };
