@@ -17,7 +17,7 @@ export const CitationChecks = z.object({
   uncitedClaims: z.number().int(),
   /** Every citation, repeats included. */
   citations: z.number().int(),
-  /** Cited ids that match no post in the corpus: invented. */
+  /** Cited ids with no post in the ingested weeks: invented, or real but older than the corpus. */
   notInCorpus: PostIds,
   /** Real posts from the wrong week; predictions may cite earlier weeks (ASSUMPTIONS #27). */
   outsideWeek: PostIds,

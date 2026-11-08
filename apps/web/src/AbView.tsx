@@ -39,9 +39,10 @@ const CHECKS: { name: string; count: (c: CitationChecks) => number }[] = [
   { name: 'Claims', count: (c) => c.claims },
   { name: 'Claims citing no post', count: (c) => c.uncitedClaims },
   { name: 'Citations', count: (c) => c.citations },
-  { name: 'Cited posts that do not exist', count: (c) => c.notInCorpus.length },
-  { name: 'Cited posts from the wrong week', count: (c) => c.outsideWeek.length },
-  { name: 'Cited posts retrieval never found', count: (c) => c.notRetrieved.length },
+  // The rows below count distinct posts, not citations.
+  { name: 'Posts cited that are not in the ingested weeks', count: (c) => c.notInCorpus.length },
+  { name: 'Posts cited from the wrong week', count: (c) => c.outsideWeek.length },
+  { name: 'Posts cited that retrieval never found', count: (c) => c.notRetrieved.length },
 ];
 
 /** A running run first (so a reload keeps polling it), then the latest success, then any. */
@@ -252,12 +253,15 @@ export const AbView = () => {
   const [starting, setStarting] = useState(false);
 
   useEffect(() => {
-    fetchWeeks()
-      .then(({ weeks }) => {
+    Promise.all([fetchWeeks(), listAbRuns()])
+      .then(([{ weeks }, { abRuns }]) => {
         setWeeks(weeks);
-        const ready = weeks.find((w) => w.embedded > 0)?.weekStart;
-        setWeek(ready);
-        if (!ready) setShown({ kind: 'none' });
+        const ready = weeks.filter((w) => w.embedded > 0).map((w) => w.weekStart);
+        // Open on the newest run's week (the sample's, on a fresh install), else the newest week.
+        const runWeek = abRuns.find((r) => ready.includes(r.weekStart))?.weekStart;
+        const pick = runWeek ?? ready[0];
+        setWeek(pick);
+        if (!pick) setShown({ kind: 'none' });
       })
       .catch((error: unknown) => setShown({ kind: 'error', message: messageOf(error) }));
   }, []);
@@ -276,16 +280,17 @@ export const AbView = () => {
     if (!running) return;
     const timer = setTimeout(() => {
       fetchAbRun(running.id)
-        .then((run) =>
-          setShown((s) => (s.kind === 'run' && s.run.id === run.id ? { kind: 'run', run } : s)),
-        )
-        .catch((error: unknown) =>
+        .then((run) => {
+          setNotice(undefined);
+          setShown((s) => (s.kind === 'run' && s.run.id === run.id ? { kind: 'run', run } : s));
+        })
+        .catch((error: unknown) => {
+          // The run goes on server-side; keep showing it and poll again (a new object re-arms the timer).
+          setNotice(`${messageOf(error)} Retrying…`);
           setShown((s) =>
-            s.kind === 'run' && s.run.id === running.id
-              ? { kind: 'error', message: messageOf(error) }
-              : s,
-          ),
-        );
+            s.kind === 'run' && s.run.id === running.id ? { kind: 'run', run: { ...s.run } } : s,
+          );
+        });
     }, POLL_MS);
     return () => clearTimeout(timer);
   }, [running]);

@@ -230,7 +230,9 @@ chunks already picked)`. Measured on 2026-10-26, distinct topics among the ~39 m
 - **Stretch variant C (paste everything in):** the whole target week in context, with no retrieval.
 - **Scoring**, in three layers:
   1. **Deterministic checks.** Citations must exist in the corpus and fall inside the target week. We
-     also count claims with no citation and citations to posts that weren't retrieved.
+     also count claims with no citation and citations to posts that weren't retrieved. "Not in the
+     corpus" means not in the ingested weeks: an id may be invented, or real but older, and the check
+     can't tell which. The id counts are distinct posts.
   2. **Rubric.** Claude Opus 5.5 (`claude-opus-5-5`) scores each document 1–5 on grounding, specificity,
      coverage, prediction plausibility and readability, with a short reason for each. Each document is
      scored on its own, never named as RAG or no-RAG.
