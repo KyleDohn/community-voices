@@ -7,6 +7,7 @@ import { FACETS } from '../retrieve/facets';
 import { createPgRetrievalLog } from '../retrieve/pg-retrieval-log';
 import { retrieveWeek } from '../retrieve/retrieve-week';
 import { trendLookup } from '../retrieve/trend-lookup';
+import type { Caller } from './caller';
 import { generateReport, type Retrieval } from './generate-report';
 import type { LlmClient } from './llm-client';
 
@@ -44,5 +45,7 @@ export const createReportGenerator = (
     poolSize: options.trendPoolSize,
   };
   const log = createPgRetrievalLog(db);
-  return (week: string) => generateReport({ retrieval, log, llm, config: config.llm }, week);
+  // An A/B run passes its caller, so the report's calls count toward the A/B cap.
+  return (week: string, caller?: Caller) =>
+    generateReport({ retrieval, log, llm, config: config.llm }, week, caller);
 };

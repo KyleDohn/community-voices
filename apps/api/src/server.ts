@@ -7,6 +7,10 @@ import { loadBgeEmbedder } from './embed/bge-embedder';
 import { createEmbeddingWorker } from './embed/embedding-worker';
 import { createPgChunkRepository } from './embed/pg-chunk-repository';
 import { createAnthropicLlmClient } from './generate/anthropic-llm-client';
+import { createAbJobs } from './ab/ab-jobs';
+import { createPgAbRunRepository } from './ab/pg-ab-run-repository';
+import { createPgCorpus } from './ab/pg-corpus';
+import { runAb } from './ab/run-ab';
 import { createPgReportRepository } from './generate/pg-report-repository';
 import { createReportJobs } from './generate/report-jobs';
 import { createReportGenerator } from './generate/wiring';
@@ -59,18 +63,32 @@ const interruptedReports = await reportRepo.failInterruptedRuns();
 if (interruptedReports > 0)
   console.log(`Marked ${interruptedReports} interrupted report run(s) as failed`);
 
+const abRepo = createPgAbRunRepository(db);
+const interruptedAbRuns = await abRepo.failInterruptedRuns();
+if (interruptedAbRuns > 0)
+  console.log(`Marked ${interruptedAbRuns} interrupted A/B run(s) as failed`);
+
 const { anthropicApiKey } = config;
+const llm = anthropicApiKey ? createAnthropicLlmClient({ apiKey: anthropicApiKey }) : undefined;
+const generate = llm && createReportGenerator(config, db, embedding.embedder, llm);
+const noKey = () => Promise.reject(new Error('No ANTHROPIC_API_KEY'));
+
 const reports = createReportJobs({
   repo: reportRepo,
-  canGenerate: anthropicApiKey !== undefined,
-  generate: anthropicApiKey
-    ? createReportGenerator(
-        config,
-        db,
-        embedding.embedder,
-        createAnthropicLlmClient({ apiKey: anthropicApiKey }),
-      )
-    : () => Promise.reject(new Error('No ANTHROPIC_API_KEY')),
+  canGenerate: generate !== undefined,
+  generate: generate ? (week) => generate(week) : noKey,
+});
+
+const corpus = createPgCorpus(db);
+const abRuns = createAbJobs({
+  repo: abRepo,
+  reports: reportRepo,
+  canGenerate: generate !== undefined,
+  run:
+    llm && generate
+      ? (week, options) =>
+          runAb({ llm, config: config.llm, generateReport: generate, corpus }, week, options)
+      : noKey,
 });
 
 const root = new Hono().route(
@@ -81,6 +99,7 @@ const root = new Hono().route(
     ingestions,
     listWeeks: () => chunkRepo.listWeeks(config.embedding.model),
     reports,
+    abRuns,
   }),
 );
 
