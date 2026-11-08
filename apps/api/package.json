@@ -13,6 +13,7 @@
     "retrieve": "tsx --env-file-if-exists=../../.env src/cli/retrieve.ts"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "1.6.0",
     "@cv/contracts": "workspace:*",
     "@hono/node-server": "2.1.6",
     "@huggingface/transformers": "4.3.2",
