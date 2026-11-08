@@ -91,14 +91,18 @@ export const writePrompt = (
   ],
 });
 
-// The RAG writer's rules, minus the supplied posts and trends: retrieval is the only difference.
+// Variant A is a plain LLM: same role, schema and honesty rules, but it writes from what it knows.
+// Telling it to use only supplied posts made it return an empty report (WORKFLOW, phase 5).
 const NO_RAG_SYSTEM = [
   ROLE,
-  'Cite the posts behind every theme, notable thread, mood and prediction, as integer forum post ids.',
-  NO_INVENTION,
-  'Give a prediction low confidence by default, medium when evidence clearly backs it, and high only ' +
+  'You have no access to the posts from this week. Write the report from what you know about the ' +
+    'forum, its community and the software it discusses.',
+  'Cite forum post ids only if you know real ones; otherwise leave the citations empty. Never invent ' +
+    'post ids, people, versions or events. If you cannot say anything about a section, say ' +
+    '"Insufficient evidence" in its text, or leave the list empty.',
+  'Give a prediction low confidence by default, medium when you have clear grounds, and high only ' +
     'for something announced outright.',
-  APPROX_COUNT,
+  'approxPostCount is your estimate of how many posts that week discussed the theme.',
 ].join('\n\n');
 
 export const addDays = (day: string, days: number) => {

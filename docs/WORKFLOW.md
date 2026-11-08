@@ -137,7 +137,14 @@ This file records how the project was built with Claude Code. It is meant to be 
 - Phase 5: the AI's A/B tests labeled the two documents `RAG-THEME` and `NO-RAG-THEME`, so
   "contains RAG-THEME" also matched the no-RAG document. A mutant that judged the wrong document
   survived. The markers are now `THEME-ONE`/`THEME-TWO`, and each assertion also checks the other is
-  absent. The same check caught a cap test whose arithmetic tripped at the wrong step.
+  absent. Separately, the AI caught by hand (before running it) a cap test whose arithmetic tripped at
+  the wrong step.
+- Phase 5, first live A/B run ($0.28): two of the AI's predictions were wrong. It expected the no-RAG
+  writer, given the RAG writer's rules, to invent or omit citations; it returned an empty report ("no
+  forum posts were supplied"), so the A/B compared RAG with nothing. With the user, variant A now writes
+  from its own knowledge under the same honesty rules. It also expected all four judge calls to share
+  one cache entry; the structured-output schema is part of the prefix, so rubric and pairwise each
+  write their own. Measuring a real run before committing the sample caught both.
 
 ## Time log
 

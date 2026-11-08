@@ -222,7 +222,10 @@ chunks already picked)`. Measured on 2026-10-26, distinct topics among the ~39 m
 
 ## A/B comparison
 
-- **Variant A (no RAG):** the community name, a short description and the date range. No posts.
+- **Variant A (no RAG):** the community name, a short description and the date range. No posts. It is
+  told it has no posts and writes from what it knows, with the same schema and honesty rules (cite only
+  real ids it knows, never invent). Given the RAG writer's "use only the supplied posts" rule instead, it
+  returned an empty report, which made the comparison say nothing.
 - **Variant B (RAG):** the retrieval output above.
 - **Stretch variant C (paste everything in):** the whole target week in context, with no retrieval.
 - **Scoring**, in three layers:
@@ -239,10 +242,11 @@ chunks already picked)`. Measured on 2026-10-26, distinct topics among the ~39 m
 - **The judge's evidence.** Every judge call gets the target-week posts the RAG writer read, as `[post N]`
   blocks, as the reference for both documents. Without them "grounding" means "sounds plausible", which
   no-RAG is good at. This favors RAG by construction, because it is RAG's own context; the README says so.
-- **Cost.** The judge's system prompt (instructions plus evidence, about 20k tokens) is the same in all
-  four calls and is prompt-cached: the first call writes it, the next three read it at a fraction of the
-  input price. The whole run shares one spend total under `MAX_AB_RUN_COST_USD` (default $1.50; a run
-  costs about $0.40). The calls run in sequence, so a run takes a few minutes.
+- **Cost.** The judge's system prompt (instructions plus evidence, about 16k tokens) is the same in all
+  four calls and is prompt-cached. The structured-output schema is part of the cached prefix, so the
+  rubric and the pairwise calls each keep their own entry: the first call of each writes it (1.25x), the
+  second reads it (0.05x on Opus 5.5). The whole run shares one spend total under `MAX_AB_RUN_COST_USD`
+  (default $1.50). The first live run cost $0.28 and took under a minute.
 - **Sample run:** one real run, labeled with its model and date, is committed in `seed/`. A reviewer sees a
   full result without an API key.
 

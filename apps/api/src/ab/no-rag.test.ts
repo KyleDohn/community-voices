@@ -24,6 +24,13 @@ describe('noRagPrompt', () => {
     expect(text).not.toContain('[post');
     expect(text).not.toMatch(/trend/i);
   });
+
+  it('says it has no posts and asks for the report from its own knowledge, not an abstention', () => {
+    const { system } = noRagPrompt(week);
+    expect(system).toMatch(/no access to the posts/i);
+    expect(system).toMatch(/what you know/i);
+    expect(system).not.toMatch(/supplied posts|posts in the user message/i);
+  });
 });
 
 describe('writeNoRag', () => {
