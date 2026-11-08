@@ -268,7 +268,8 @@ chunks already picked)`. Measured on 2026-10-26, distinct topics among the ~39 m
 | POST   | `/ab-runs`                 | Start an A/B run for a week → `202 { id }`           |
 | GET    | `/ab-runs`                 | List runs                                            |
 | GET    | `/ab-runs/:id`             | Status, both documents, checks, judge results, cost  |
-| GET    | `/stats/retrievals?limit=` | Most-retrieved chunks                                |
+| GET    | `/stats/retrievals?limit=` | Most-retrieved posts, by distinct retrieval runs     |
+| GET    | `/stats/costs`             | Cost of every A/B run and stand-alone report, total  |
 | GET    | `/embeddings/map?runId=`   | 2D points, optionally marked with a run's retrievals |
 
 Long-running work runs in-process. Status lives in Postgres and the client polls it.
@@ -284,7 +285,10 @@ The app has a week selector, a "Run new A/B" button and four views:
 2. **A/B:** both documents side by side, with checks, rubric scores and judge reasoning.
 3. **Map:** a UMAP scatter on canvas. Points are colored by week. A selected run's retrieved chunks are
    outlined and sized by how often they've been retrieved, and hovering shows the post.
-4. **Stats:** the most-retrieved posts, and the cost of each run.
+4. **Stats:** the most-retrieved posts, and the cost of each run. A post's count is the number of
+   retrieval runs it appeared in, split into facet picks and trend examples: one run logs 40 facet rows
+   but 60–70 trend rows, so raw row counts would mostly measure trend lookups. The cost list shows A/B
+   runs and the reports no A/B run points to, because an A/B run's cost already includes its report.
 
 ## Testing and CI
 

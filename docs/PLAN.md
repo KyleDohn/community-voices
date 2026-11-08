@@ -145,6 +145,30 @@ RAG writer read as evidence for both documents, the A/B run has its own cost cap
    and reasons, both pairwise verdicts, cost per call, a visible "Sample run" label, "Run new A/B".
    Manual check in Chrome at desktop and phone widths.
 
+### Extra 1: agreed test interfaces
+
+Settled 2026-11-08: stats count **posts** (citations use post ids, and `chunk_id` goes null after
+re-ingestion, ASSUMPTIONS #24), ranked by the **number of distinct retrieval runs** a post appeared in,
+and the cost list shows **A/B runs plus the reports no A/B run points to**, so each dollar appears once.
+
+1. **Contracts** (`packages/contracts/src/stats.ts`). `RetrievalStatsResponse`: `totalRuns` and `posts`
+   (post id, topic title, url, week, runs, facet hits, trend hits, last retrieved). `CostStatsResponse`:
+   `runs` (kind `ab` or `report`, id, week, status, `isSample`, cost, created) and `totalUsd`. Schema
+   tests for the shapes.
+2. **`createPgStatsRepository(db)`**, pg-only because it is aggregate SQL (a memory twin would only
+   re-implement it). Integration tests against real pgvector:
+   - `mostRetrievedPosts({ limit, facetIds })` ranks by distinct runs, then total hits, then the latest
+     retrieval; splits hits into facet (query is a facet id) and trend (anything else); still counts a
+     row whose `chunk_id` went null; honours `limit`.
+   - `runCosts()` lists every A/B run and every report that no A/B run points to, newest first, with
+     failed runs included (they spent money); `totalUsd` is their sum, so an A/B run's report is never
+     counted twice.
+3. **Routes.** `GET /stats/retrievals?limit=` (default 20, 1–100, else 400 `invalid_request`) and
+   `GET /stats/costs`. Route tests with a fake repository; every response parses with its contract.
+4. **Stats view** (web, `#stats`). The most-retrieved posts with the facet/trend split and links to the
+   forum, then the cost list with its total and the sample marked. Empty state for a fresh install,
+   where retrieval runs aren't seeded. Manual check in Chrome at desktop and phone widths.
+
 ## Extras, ranked by demo value per hour
 
 | Rank | Phase                                                                                                                                 | Est.   | Status |
