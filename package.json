@@ -22,7 +22,8 @@
     "ingest": "pnpm --filter @cv/api ingest",
     "seed:export": "pnpm --filter @cv/api seed:export",
     "prepare": "node .husky/install.mjs",
-    "search": "pnpm --filter @cv/api search"
+    "search": "pnpm --filter @cv/api search",
+    "retrieve": "pnpm --filter @cv/api retrieve"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",

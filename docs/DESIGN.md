@@ -135,33 +135,37 @@ Model IDs and limits live in config, not in code.
 
 ## Retrieval (RAG side only)
 
-1. **Facet queries:** a configured list of queries, each limited to the target week, takes the top ~15
-   each. The facets are:
-   - new software releases
-   - help requests and bugs
-   - photo edits and critiques (Play Raw)
-   - community events
-   - complaints and frustrations
-2. **MMR:** each facet's results are reranked with maximal marginal relevance (λ≈0.7) to keep ~8, so one
-   big thread can't crowd out the rest.
-3. **Merge:** duplicates are removed, leaving about 40 chunks, each labeled with its post ID for citation.
-4. **Trend lookup:** after a first pass extracts the week's themes, each theme queries the three prior weeks.
-   Prior-week vs current-week counts and examples become evidence for predictions.
-5. **Logging:** every retrieved chunk is written to `retrievals` with its query, rank and score.
-
-## Generation
-
-- **Writer:** Claude Sonnet 5.5 (`claude-sonnet-5-5`) writes both documents.
-- **Output:** a zod schema in `packages/contracts`, sent as a JSON schema:
-  - `themes[]`: title, summary, approximate post count, `citations[]` of post IDs
-  - `notableThreads[]`
-  - `mood`
-  - `predictions[]`: claim, rationale, confidence, `citations[]`
-- **Keeping the model on task:**
-  - The system prompt says to use only the supplied posts, and allows "insufficient evidence" as an answer.
-  - Every call has a `max_tokens` cap.
-  - zod validates the output. On failure there is one repair retry that sends the validation errors back.
-- **Cost:** token usage and dollar cost are recorded per call and shown in the UI.
+1. **Facet queries:** a configured list of facets (`apps/api/src/retrieve/facets.ts`), each with a label for
+   people and a full-sentence query for bge. Each query is limited to the target week and takes the 15
+   nearest chunks. The facets are new software releases, help requests and bugs, photo edits and
+   critiques (Play Raw), community events, and complaints and frustrations.
+   - **Wording, measured on the week of 2026-10-26:** a query should describe the _kind of post_, not the
+     products in it. "A new version of darktable, RawTherapee, GIMP…" returned 6 topics in 8 chunks, 3 of
+     them from a darktable colour-issues thread that only mentioned the tools. "Announcing a new release:
+     version 2.0 is out, with new features, a changelog and download links" returned 8 topics, mostly
+     real release threads. For events, a "community photo challenge" query found a second challenge
+     thread the generic "meetup, workshop, conference…" query missed. pixls has few real events, so
+     that facet is thin in most weeks. A "rant" wording for frustrations did worse (3 topics), so the
+     first wording stayed.
+2. **MMR:** each facet's 15 candidates are reranked with maximal marginal relevance to keep 8, so one big
+   thread can't crowd out the rest. Each pick maximizes `λ·relevance − (1−λ)·(max similarity to the
+chunks already picked)`. Measured on 2026-10-26, distinct topics among the ~39 merged chunks: 20 at
+   λ=1 (no MMR), 27 at λ=0.7, 28 at 0.5 and 0.3. We use 0.7. Lower values barely help, because MMR can
+   only choose among the 15 candidates.
+3. **Merge:** a chunk found by several facets appears once and keeps every facet label, leaving about 40
+   chunks, each labeled with its post ID for citation.
+4. **Trend lookup:** each theme (from the LLM's first pass in phase 4; the CLI demo uses the facet
+   queries) is matched against the target week and the three prior weeks. A "match" is rank-based, since
+   bge scores are too bunched for a threshold: the 40 chunks nearest the theme across all four weeks are
+   pooled, and each week's count is its share of them, with its top 3 as examples. What the numbers can
+   support: "this theme is more concentrated in this week than before", as a hint for a prediction. What
+   they can't: absolute volume (a week with more chunks wins more of the pool; our four weeks hold 733–928 chunks, so
+   the skew is small), significance (a 40-chunk
+   pool is noisy, so a 12 vs 9 split means nothing), or that the matches are on topic (the examples are
+   there to check). Wording alone moves the numbers: rewording the release query changed its split from
+   23/6/7/4 to 8/11/3/18, because the first wording was really tracking darktable discussion.
+5. **Logging:** each retrieval creates a `retrieval_runs` row, and every retrieved chunk is written to
+   `retrievals` with the facet (or theme), rank and score. A chunk found by two facets gets two rows.
 
 ## A/B comparison
 
