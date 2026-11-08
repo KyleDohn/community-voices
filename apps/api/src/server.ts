@@ -19,7 +19,9 @@ import { createApp } from './http/app';
 import { createIngestionJobs } from './ingest/ingestion-jobs';
 import { createPgIngestionRepository } from './ingest/pg-ingestion-repository';
 import { ingestionWindow } from './ingest/week';
+import { FACETS } from './retrieve/facets';
 import { latestSeedFile, seedIfEmpty } from './seed/seed';
+import { createPgStatsRepository } from './stats/pg-stats-repository';
 import { createIngestion } from './ingest/wiring';
 
 const config = loadConfig(process.env);
@@ -93,6 +95,9 @@ const abRuns = createAbJobs({
       : noKey,
 });
 
+const statsRepo = createPgStatsRepository(db);
+const facetIds = FACETS.map((f) => f.id);
+
 const root = new Hono().route(
   '/',
   createApp({
@@ -102,6 +107,10 @@ const root = new Hono().route(
     listWeeks: () => chunkRepo.listWeeks(config.embedding.model),
     reports,
     abRuns,
+    stats: {
+      retrievals: (limit) => statsRepo.mostRetrievedPosts({ limit, facetIds }),
+      costs: statsRepo.runCosts,
+    },
   }),
 );
 

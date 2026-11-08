@@ -7,6 +7,7 @@ import { abRunRoutes } from './ab-runs';
 import { healthRoutes } from './health';
 import { ingestionRoutes } from './ingestions';
 import { reportRoutes } from './reports';
+import { type StatsSource, statsRoutes } from './stats';
 import { weekRoutes } from './weeks';
 
 export interface AppDependencies {
@@ -18,6 +19,7 @@ export interface AppDependencies {
   listWeeks: () => Promise<WeekSummary[]>;
   reports: ReportJobs;
   abRuns: AbJobs;
+  stats: StatsSource;
 }
 
 export const API_PREFIX = '/api/v1';
@@ -33,6 +35,7 @@ export const createApp = (deps: AppDependencies) =>
     .route('/weeks', weekRoutes(deps.listWeeks))
     .route('/reports', reportRoutes(deps.reports))
     .route('/ab-runs', abRunRoutes(deps.abRuns))
+    .route('/stats', statsRoutes(deps.stats))
     // Catch-all so unknown API paths never fall through to the web app's index.html.
     .all('/*', (c) => c.json(notFound, 404))
     // Non-2xx bodies are always ErrorResponse; details go to the log, not the client.
