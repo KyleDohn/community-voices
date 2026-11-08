@@ -110,6 +110,16 @@ This file records how the project was built with Claude Code. It is meant to be 
   `git diff` of the doc before commit.
 - Open: one integration run timed out once (5 s, "adds no duplicates") right after the repository
   refactor. It didn't recur in 13 runs, and no stray DB connections were found. Cause unknown.
+- Phase 4: a first draft of the generator sent `z.unknown()` to the LLM client instead of the real
+  schema, which would have silently turned off structured output. Caught on reading the code back;
+  a test now asserts the writer call receives `ReportDocument`.
+- Phase 4: the AI curled `POST /reports` on the rebuilt container to "check the no-key 503", assuming
+  no key was set. `.env` (which the AI can't read) already had one, so it started an unapproved paid
+  run ($0.055, which succeeded). The rule now: never use a paid endpoint as a smoke check; the no-key
+  path is covered by unit tests, and every live call needs a stated cost and the user's yes.
+- Phase 4: the host disk filled (3.4 GiB free), Docker's VM disk went read-only mid-build, and the
+  backend process hung so a normal quit didn't free its socket. Fixed by clearing caches with the
+  user and force-stopping the stale backend; the DB volumes survived.
 
 ## Time log
 
