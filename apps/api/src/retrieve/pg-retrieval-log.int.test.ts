@@ -43,4 +43,16 @@ describe('pg retrieval log', () => {
     expect(first).not.toEqual(second);
     expect((await log.entriesFor(second)).map((e) => e.chunkId)).toEqual([2]);
   });
+
+  it('stores nothing when an entry fails, so no run is left without its rows', async () => {
+    await expect(
+      log.record(week, [
+        { chunkId: 1, query: 'releases', rank: 1, score: 0.7 },
+        { chunkId: 999, query: 'releases', rank: 2, score: 0.6 },
+      ]),
+    ).rejects.toThrow();
+
+    const runs = await db.execute(sql`select count(*)::int as n from retrieval_runs`);
+    expect(runs.rows[0]).toEqual({ n: 0 });
+  });
 });

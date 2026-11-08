@@ -39,4 +39,16 @@ describe('mmr', () => {
     expect(mmr(candidates, { lambda: 0.7, k: 2 })).toHaveLength(2);
     expect(mmr(candidates, { lambda: 0.7, k: 5 })).toHaveLength(3);
   });
+
+  it('penalizes a candidate for its closest earlier pick, not the farthest', () => {
+    // C is new next to A but nearly duplicates B, so D (less relevant, new to both) goes third.
+    const candidates = [
+      candidate(1, 0.9, [1, 0, 0]), // A
+      candidate(2, 0.8, [0, 1, 0]), // B
+      candidate(3, 0.79, [0, 1, 0.05]), // C
+      candidate(4, 0.6, [0, 0, 1]), // D
+    ];
+
+    expect(mmr(candidates, { lambda: 0.7, k: 3 }).map((c) => c.id)).toEqual([1, 2, 4]);
+  });
 });

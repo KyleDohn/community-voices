@@ -39,4 +39,19 @@ describe('trendLookup', () => {
 
     expect(trend!.weeks.map((w) => w.examples.map((e) => e.chunkId))).toEqual([[1, 2], [4], []]);
   });
+
+  it('pools the nearest chunks across weeks, not the first weeks listed', async () => {
+    const pooled = createMemoryChunkSearch([
+      { chunkId: 1, week, vector: [1, 0.1] },
+      { chunkId: 2, week, vector: [1, 0.5] },
+      { chunkId: 3, week: '2026-10-19', vector: [1, 0.2] },
+    ]);
+
+    const [trend] = await trendLookup(
+      { embedder, search: pooled },
+      { week, priorWeeks, themes: ['export crash'], poolSize: 2, examplesPerWeek: 2 },
+    );
+
+    expect(trend!.weeks.map((w) => w.matches)).toEqual([1, 1, 0]);
+  });
 });
