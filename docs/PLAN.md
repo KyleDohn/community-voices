@@ -14,7 +14,7 @@ Status: ⬜ not started · 🟨 in progress · ✅ done
 | 1   | **Ingest.** `ForumSource` + Discourse client (fixture-tested), week window, chunking, idempotent upsert with cursor and caps, `pnpm ingest`, `POST/GET /ingestions`, seed export and load-on-empty.                                                                                        | `pnpm ingest` fills posts for four weeks. The seed file is committed and a fresh DB loads it. | 1.5 h | ✅     |
 | 2   | **Embed and store.** `Embedder` + bge-small built into the image, embed on boot, chunk repository with cosine search, `GET /weeks`.                                                                                                                                                        | `pnpm run search "export crash"` returns relevant posts from a week.                          | 1 h   | ✅     |
 | 3   | **Retrieve and log.** Facet config, MMR, merge, trend lookup, `retrievals` logging.                                                                                                                                                                                                        | `pnpm run retrieve --week 2026-10-26` prints ~40 diverse posts by facet.                      | 1 h   | ✅     |
-| 4   | **Generate.** `LlmClient` (Anthropic), document schema, prompts, structured output, repair retry, cost accounting. Report view.                                                                                                                                                            | The Report view shows a cited RAG document for the week.                                      | 1.5 h | 🟨     |
+| 4   | **Generate.** `LlmClient` (Anthropic), document schema, prompts, structured output, repair retry, cost accounting. Report view.                                                                                                                                                            | The Report view shows a cited RAG document for the week.                                      | 1.5 h | ✅     |
 | 5   | **A/B compare.** No-RAG variant, citation checks, rubric and pairwise judge with order swap, `POST/GET /ab-runs` (202 + polling), A/B view, committed sample run.                                                                                                                          | "Run new A/B" → both documents side by side with scores and cost.                             | 1.5 h | ⬜     |
 
 ### Phase 1: agreed test interfaces
@@ -75,7 +75,7 @@ citations split by section, and a $0.50 per-run cost cap. Details are in DESIGN,
 1. **`ReportDocument`** (`packages/contracts`). `themes[]`, `notableThreads[]`, `mood`, `predictions[]`,
    each with `citations[]` of post ids. Empty citations are allowed, because phase 5's no-RAG variant
    uses the same schema. Unit tests: a valid document parses; a non-integer id or a bad confidence fails.
-2. **`LlmClient`.** `generate({ purpose, model, system, messages, schema, maxTokens, effort })` returns
+2. **`LlmClient`.** `generate({ model, system, messages, schema, maxTokens, effort })` returns
    `{ text, stopReason, usage: { inputTokens, outputTokens }, model }`. The caller parses and validates,
    so repair logic is testable with a scripted fake. The Anthropic implementation sends the schema as
    structured output and maps spend-limit errors (interface 7). A real-API test is a `*.model.test.ts`.
@@ -94,12 +94,14 @@ citations split by section, and a $0.50 per-run cost cap. Details are in DESIGN,
    `GET /reports?week=` lists runs newest first. Contract, route and integration tests, following the
    `/ingestions` pattern.
 7. **Cost guards.** Unit tests with the scripted LLM:
-   - Every call carries the `max_tokens` cap from config for its purpose (extract, write, repair).
+   - Every call carries the `max_tokens` cap from config for its step (extract, write); a repair reuses
+     its step's cap.
    - Per-run cap (`MAX_RUN_COST_USD`, default $0.50): before each call the run checks spent + that call's
      worst case (estimated input + `max_tokens` at output price). Crossing it stops with
      `cost_cap_exceeded` and the amount spent, before the call is made.
    - Spend-limit errors (the 400 "API usage limits" and the 429 `enforced_spend_limit_reached`) stop the
-     run as `spend_limit_reached` with no repair or retry.
+     run as `spend_limit_reached` with no repair. The SDK may retry the 429 once (`maxRetries: 1`); a
+     rejected request is free.
 8. **Report view** (web). Week selector, "Generate report", polling, then themes, threads, mood and
    predictions, with each citation linking to the forum post and the cost per call. It parses every
    response with the contract schema. Manual check in the browser; no component tests.

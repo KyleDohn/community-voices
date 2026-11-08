@@ -176,10 +176,12 @@ chunks already picked)`. Measured on 2026-10-26, distinct topics among the ~39 m
 - **A RAG report is two calls** (`generateReport`):
   1. **Extract themes.** Claude Haiku 5.5 (`claude-haiku-5-5`, effort `low`) reads the ~40 retrieved
      chunks and names 4–6 themes, each as one sentence that works as a search query.
-  2. **Trend lookup** (Retrieval step 4) runs each theme over the target week and the three before it.
+  2. **Trend lookup** (Retrieval step 4) runs each theme over the target week and the three before it,
+     and the retrieval run is logged (facet picks plus trend examples). Logging comes before the write,
+     so stats count what was retrieved even when writing fails.
   3. **Write.** Sonnet 5.5 (effort `medium`) gets the chunks, each labeled `[post 12345]`, plus each
      theme's weekly counts with its example posts, and returns the document.
-  4. **Validate**, repair once if needed, then log the retrieval run (facet picks plus trend examples).
+  4. **Validate**, and repair once if needed.
 - **Output:** a zod schema in `packages/contracts` (`ReportDocument`), sent as structured output
   (`output_config.format` via the SDK's `zodOutputFormat`). The API guarantees the JSON shape; limits it
   can't enforce (min/max) are stripped by the SDK and checked on our side.
@@ -202,8 +204,10 @@ chunks already picked)`. Measured on 2026-10-26, distinct topics among the ~39 m
     errors back. A second failure fails the run: it usually means a prompt problem, and looping would
     multiply cost. A refusal stops the run with no repair.
 - **Cost guards:**
-  - Every call has a `max_tokens` cap from config, sized per purpose (extract, write, repair). It covers
-    thinking tokens too.
+  - Every call has a `max_tokens` cap from config, sized per step (extract 2,000, write 8,000); a repair
+    reuses its step's cap. It covers thinking tokens too, so a reply can stop with no text at all.
+  - A failure after a paid call (a crash, a refusal, a cap) still stores the calls already made, so a
+    failed run shows what it cost.
   - **Per-run cap** (`MAX_RUN_COST_USD`, default $0.50; a report run costs about $0.03–0.08). Before each
     call, the run adds its spend so far to that call's worst case (estimated input plus `max_tokens` at
     the output price). If that exceeds the cap, the run stops as `cost_cap_exceeded` before the call.

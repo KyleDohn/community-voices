@@ -35,6 +35,13 @@ This file records how the project was built with Claude Code. It is meant to be 
      loop, run about 14 times by now, became the project skill `.claude/skills/mutant-check` (written with
      `writing-for-agents`), with a script that refuses to count an unapplied mutant. A review subagent
      checked the phase diff against DESIGN and the Clean Code bar.
+   - Phase 4 (generate): five open questions from the handoff were settled with the developer first
+     (AskUserQuestion, a recommendation on each). `claude-api` was loaded before any LLM code, and the
+     SDK's own type definitions were read to confirm `zodOutputFormat` and the typed `errorCode`, rather
+     than trusting memory. The Anthropic client is tested by driving the real SDK through a fake
+     `fetch`; the report repository has one contract suite run against the in-memory fake and Postgres.
+     The view was designed with `frontend-design` and checked in Chrome at desktop and phone widths,
+     which caught a cramped cost panel. A review subagent found 13 issues (below).
 
 ## Where the AI was wrong or needed correcting
 
@@ -120,13 +127,21 @@ This file records how the project was built with Claude Code. It is meant to be 
 - Phase 4: the host disk filled (3.4 GiB free), Docker's VM disk went read-only mid-build, and the
   backend process hung so a normal quit didn't free its socket. Fixed by clearing caches with the
   user and force-stopping the stale backend; the DB volumes survived.
+- Phase 4 review (subagent): two real generator bugs that every test had passed. A crash after a paid
+  call stored the run with no calls ($0.00 spent shown), and a reply that was all thinking sent an
+  empty assistant turn into the repair, which the API rejects. Both were fixed red → green with
+  mutants killed. Four React state bugs (a reload during a run showed the old report, a week switch
+  could strand a starting run, first boot stuck on Loading, a stale poll error) were fixed without
+  component tests, as agreed. Three doc mismatches and four clean-ups were fixed. Known gap left on
+  purpose: the Report view has no automated tests.
 
 ## Time log
 
-| Step                | Approx. time                                      |
-| ------------------- | ------------------------------------------------- |
-| Research + planning | 1 h                                               |
-| Phase 0 scaffold    | 0.5 h                                             |
-| Phase 1 ingest      | 0.5 h (incl. an 8-minute live ingest)             |
-| Phase 2 embed       | 0.5 h (incl. two 2–3 minute embed runs)           |
-| Phase 3 retrieve    | 0.5 h (incl. facet measurements and review fixes) |
+| Step                | Approx. time                                           |
+| ------------------- | ------------------------------------------------------ |
+| Research + planning | 1 h                                                    |
+| Phase 0 scaffold    | 0.5 h                                                  |
+| Phase 1 ingest      | 0.5 h (incl. an 8-minute live ingest)                  |
+| Phase 2 embed       | 0.5 h (incl. two 2–3 minute embed runs)                |
+| Phase 3 retrieve    | 0.5 h (incl. facet measurements and review fixes)      |
+| Phase 4 generate    | 2 h (incl. ~30 min recovering Docker from a full disk) |
