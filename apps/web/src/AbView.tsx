@@ -87,7 +87,7 @@ const Verdict = ({ run }: { run: AbRunResponse }) => {
 const Rubric = ({ rubric }: { rubric: NonNullable<AbRunResponse['rubric']> }) => (
   <section className="mt-8">
     <h2 className="text-sm font-semibold text-mid">Rubric scores, each report judged alone</h2>
-    <div className="mt-3 overflow-x-auto">
+    <div className="mt-3 max-w-3xl overflow-x-auto">
       <table className="w-full min-w-[34rem] text-left text-sm">
         <thead className="text-xs text-mid">
           <tr>
@@ -164,15 +164,14 @@ const Reasoning = ({ pairwise }: { pairwise: PairwiseResult }) => (
     <h2 className="text-sm font-semibold text-mid">The judge’s comparison, asked twice</h2>
     <ul className="mt-3 space-y-3 text-sm">
       {pairwise.passes.map((p) => {
-        const first = VARIANTS.find((v) => v.key === p.x)!.name.toLowerCase();
-        const pick =
-          p.winner === 'tie'
-            ? 'a tie'
-            : VARIANTS.find((v) => v.key === p.winner)!.name.toLowerCase();
+        const name = (v: Variant) => VARIANTS.find((x) => x.key === v)!.name.toLowerCase();
+        const second: Variant = p.x === 'rag' ? 'no_rag' : 'rag';
+        const pick = p.winner === 'tie' ? 'called it a tie' : `picked the report ${name(p.winner)}`;
         return (
           <li key={p.x}>
+            {/* The judge's reason says X and Y; this line says which report each one was. */}
             <p className="font-medium">
-              Shown the report {first} first, it picked {pick}.
+              X was the report {name(p.x)}, Y the report {name(second)}. The judge {pick}.
             </p>
             <p className="mt-1 text-mid">{p.reason}</p>
           </li>
@@ -335,7 +334,7 @@ export const AbView = () => {
       </div>
       <p className="mt-2 max-w-prose text-xs text-mid">
         Writes the week’s report twice, with and without the forum’s posts, then has a judge model
-        score both without telling it which is which. A run costs about $0.40.
+        score both without telling it which is which. A run costs about $0.30.
       </p>
       {notice && (
         <p className="mt-3 text-sm text-warn" role="alert">
