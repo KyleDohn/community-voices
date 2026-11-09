@@ -80,7 +80,8 @@ Model IDs and limits live in config, not in code.
 - `retrievals`: retrieval_run id, chunk id (null once re-ingestion drops the chunk), post id, facet or
   query, rank, score. These rows feed the retrieval stats.
 - `map_points`: chunk id, x, y, corpus version. This is the cached UMAP projection (umap-js, fixed
-  seed). The corpus version is a hash of the embedding model and the embedded chunk ids. Boot and each
+  seed). The corpus version is a hash of the embedding model and the embedded chunks' ids and
+  vectors (an edited post re-embeds under the same ids). Boot and each
   ingestion recompute it in the background after embedding, only when the version changed, and replace
   every row in one transaction.
 

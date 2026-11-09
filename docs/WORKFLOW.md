@@ -161,6 +161,26 @@ This file records how the project was built with Claude Code. It is meant to be 
   It found that `week_start::text` follows the session DateStyle (fixed red → green with a
   `set local datestyle` test), row types that claimed `Date` where the driver returns text, and an
   undercount if an A/B run crashes after linking its report (recorded in ASSUMPTIONS #34).
+- Extra 2, embeddings map: measuring before deciding paid off three times. The plan sized each
+  report's outlines by how often a run retrieved the post, but within one run that count is 1 in the
+  median case (max 3), so size uses all-time distinct runs. The plan also assumed a retrieval run id
+  was needed to highlight anything, but every report's sources equal its run's retrieved posts, so
+  highlighting by report works for the seeded sample too. Finally, the payload estimate (548 KB) left
+  out the slugged urls added later; the real response was 948 KB, which led to gzip (145 KB).
+- Extra 2, tests that were wrong: a "concatenated ids" collision test used `[1, 23]` vs `[12, 3]`,
+  which sort apart and never collide, so its mutant survived; `[1, 2, 3]` fixed it. A vector
+  round-trip test expected float32 noise, but pgvector prints the shortest form (`0.3`). An ordering
+  test passed with the ORDER BY removed, because three fresh rows come back in heap order; an UPDATE
+  that moves a row to the end of the heap made it fail as it should.
+- Extra 2, Map view: the hover ring was drawn in ink, the same as a report outline, so a post that
+  was not in the report looked as if it were. It is now drawn in the accent color.
+- Extra 2 review (subagent): two real bugs that every test had passed. The light-mode week colors
+  were never emitted, because Tailwind drops `@theme` variables that only template strings reach,
+  so in light mode every dot would have been black (the Chrome check ran in dark mode only). And an
+  edited post kept its old map position: re-ingestion re-embeds under the same chunk id, and the
+  corpus version hashed ids only. Both were fixed (the version now hashes the vectors, red → green
+  with mutants killed). Also fixed: a failed refresh hid valid stored points, a no-op refresh
+  flipped the map to "computing", and the tooltip assumed a fixed height.
 
 ## Time log
 
@@ -174,3 +194,4 @@ This file records how the project was built with Claude Code. It is meant to be 
 | Phase 4 generate    | 2 h (incl. ~30 min recovering Docker from a full disk) |
 | Phase 5 A/B compare | 1.25 h (incl. two live A/B runs, $0.57)                |
 | Extra 1 stats       | 0.75 h (incl. review fixes)                            |
+| Extra 2 map         | 1.5 h (incl. library benchmark and review fixes)       |

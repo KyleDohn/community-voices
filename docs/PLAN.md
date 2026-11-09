@@ -179,10 +179,10 @@ retrieval runs** (within-run counts are almost all 1). Weeks are colored **seque
 
 1. **Contracts** (`packages/contracts/src/map.ts`). `MapResponse`: `status` (`computing`, `ready`,
    `failed`), `points` (chunk id, post id, x, y, week, topic title, post number, url, runs) and
-   `highlightPostIds` (the selected report's sources, else empty). `points` is empty unless `ready`.
+   `highlightPostIds` (the selected report's sources, else empty). `points` is empty while `computing`; `failed` keeps the previous points.
    Schema tests.
-2. **`corpusVersion(model, chunkIds)`** (unit): the same for any id order, different when an id or the
-   model changes.
+2. **`corpusVersion(model, chunks)`** (unit): the same for any order, different when an id, a vector
+   or the model changes.
 3. **`projectVectors(vectors, { seed })`** (unit, real umap-js): one finite `{x, y}` per vector,
    identical for the same seed, two well-separated clusters stay apart, and 0, 1 or 2 vectors work
    (`nNeighbors` is clamped below n). It yields to the event loop between epochs.
@@ -208,7 +208,7 @@ retrieval runs** (within-run counts are almost all 1). Weeks are colored **seque
 | Rank | Phase                                                                                                                                 | Est.   | Status |
 | ---- | ------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------ |
 | 1    | **Retrieval stats.** `GET /stats/retrievals`, Stats view with most-retrieved posts and cost per run.                                  | 0.5 h  | ✅     |
-| 2    | **Embeddings map.** UMAP on the server, cached `map_points`, `GET /embeddings/map`, canvas scatter with retrieved chunks highlighted. | 1.5 h  | ⬜     |
+| 2    | **Embeddings map.** UMAP on the server, cached `map_points`, `GET /embeddings/map`, canvas scatter with retrieved chunks highlighted. | 1.5 h  | ✅     |
 | —    | **✂️ Cut line.** Everything below is built only if time allows.                                                                       |        |        |
 | 3    | Variant C: the whole week in context, as a third A/B column.                                                                          | 0.75 h | ⬜     |
 | 4    | Markdown export of a document.                                                                                                        | 0.3 h  | ⬜     |
