@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
 import { AbView } from './AbView';
 import { HealthBadge } from './HealthBadge';
+import { MapView } from './MapView';
 import { ReportView } from './ReportView';
 import { StatsView } from './StatsView';
 
 const VIEWS = [
   { hash: '#report', name: 'Report' },
   { hash: '#ab', name: 'A/B comparison' },
+  { hash: '#map', name: 'Map' },
   { hash: '#stats', name: 'Stats' },
 ] as const;
 type ViewHash = (typeof VIEWS)[number]['hash'];
@@ -48,7 +50,15 @@ export const App = () => {
         ))}
       </nav>
       <div className="mt-8">
-        {view === '#ab' ? <AbView /> : view === '#stats' ? <StatsView /> : <ReportView />}
+        {view === '#ab' ? (
+          <AbView />
+        ) : view === '#map' ? (
+          <MapView />
+        ) : view === '#stats' ? (
+          <StatsView />
+        ) : (
+          <ReportView />
+        )}
       </div>
     </main>
   );

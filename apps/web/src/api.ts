@@ -5,6 +5,7 @@ import {
   CostStatsResponse,
   ErrorResponse,
   HealthResponse,
+  MapResponse,
   ReportListResponse,
   ReportRunResponse,
   RetrievalStatsResponse,
@@ -84,3 +85,9 @@ export const fetchRetrievalStats = (limit = 20) =>
   getJson(`/api/v1/stats/retrievals?limit=${limit}`, RetrievalStatsResponse);
 
 export const fetchCostStats = () => getJson('/api/v1/stats/costs', CostStatsResponse);
+
+export const fetchMap = (reportId?: string) =>
+  getJson(
+    `/api/v1/embeddings/map${reportId ? `?reportId=${encodeURIComponent(reportId)}` : ''}`,
+    MapResponse,
+  );

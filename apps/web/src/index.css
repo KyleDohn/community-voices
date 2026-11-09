@@ -10,6 +10,11 @@
   --color-accent: #1f6f8b;
   --color-accent-soft: #d7e7ec;
   --color-warn: #8a4b14;
+  /* Map weeks, oldest to newest: one blue ramp, validated as ordinal on the panel (dataviz). */
+  --color-week-0: #6da7ec;
+  --color-week-1: #2a78d6;
+  --color-week-2: #1c5cab;
+  --color-week-3: #0d366b;
   --font-serif: 'Literata', Georgia, serif;
   --font-sans: 'Instrument Sans', system-ui, sans-serif;
 }
@@ -24,6 +29,11 @@
     --color-accent: #6fb6cf;
     --color-accent-soft: #1d3a45;
     --color-warn: #e0a56a;
+    /* On dark the newest week is the lightest, so it still reads strongest. */
+    --color-week-0: #256abf;
+    --color-week-1: #3987e5;
+    --color-week-2: #6da7ec;
+    --color-week-3: #b7d3f6;
   }
 }
 
