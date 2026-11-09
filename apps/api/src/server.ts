@@ -23,6 +23,9 @@ import { FACETS } from './retrieve/facets';
 import { latestSeedFile, seedIfEmpty } from './seed/seed';
 import { createPgStatsRepository } from './stats/pg-stats-repository';
 import { createIngestion } from './ingest/wiring';
+import { createMapProjector } from './map/map-projector';
+import { createPgMapStore } from './map/pg-map-store';
+import { projectVectors } from './map/project-vectors';
 
 const config = loadConfig(process.env);
 const { db } = connect(config.databaseUrl);
@@ -43,10 +46,25 @@ const chunkRepo = createPgChunkRepository(db);
 const embedding = createEmbeddingWorker(() => loadBgeEmbedder(config.embedding), chunkRepo, {
   batchSize: config.embedding.batchSize,
 });
+const mapProjector = createMapProjector({
+  store: createPgMapStore(db),
+  project: projectVectors,
+  model: config.embedding.model,
+});
+const refreshMap = async () => {
+  const started = Date.now();
+  await mapProjector.refresh();
+  console.log(`Embeddings map ready in ${Date.now() - started} ms`);
+};
+// The map follows the embedded corpus, so it refreshes after every pass, even a failed one.
 const embedPending = async () => {
   const started = Date.now();
-  const { embedded } = await embedding.embedPending();
-  if (embedded > 0) console.log(`Embedded ${embedded} chunk(s) in ${Date.now() - started} ms`);
+  try {
+    const { embedded } = await embedding.embedPending();
+    if (embedded > 0) console.log(`Embedded ${embedded} chunk(s) in ${Date.now() - started} ms`);
+  } finally {
+    refreshMap().catch((error: unknown) => console.error('Embeddings map failed', error));
+  }
 };
 embedPending().catch((error: unknown) => console.error('Embedding failed', error));
 
@@ -110,6 +128,11 @@ const root = new Hono().route(
     stats: {
       retrievals: (limit) => statsRepo.mostRetrievedPosts({ limit, facetIds }),
       costs: statsRepo.runCosts,
+    },
+    map: {
+      status: mapProjector.status,
+      points: mapProjector.points,
+      reportPostIds: async (id) => (await reportRepo.getRun(id))?.sources.map((s) => s.postId),
     },
   }),
 );
