@@ -17,10 +17,10 @@ const point: MapPoint = {
 };
 const reportId = '3f44d043-ad4d-4d4a-ba73-b2a956217ef1';
 
-const appWith = (status: MapStatus = 'ready') => {
+const appWith = (status: MapStatus = 'ready', points = [point]) => {
   const map: MapSource = {
     status: () => status,
-    points: async () => [point],
+    points: async () => points,
     reportPostIds: async (id) => (id === reportId ? [463229, 470001] : undefined),
   };
   return createApp(testDependencies({ map }));
@@ -51,6 +51,14 @@ describe('GET /embeddings/map', () => {
     const { res, body } = await get('', status);
     expect(res.status).toBe(200);
     expect(MapResponse.parse(body)).toEqual({ status, points: [], highlightPostIds: [] });
+  });
+
+  it('gzips a large response for a client that accepts it', async () => {
+    const many = Array.from({ length: 100 }, (_, i) => ({ ...point, chunkId: i }));
+    const res = await appWith('ready', many).request('/api/v1/embeddings/map', {
+      headers: { 'Accept-Encoding': 'gzip' },
+    });
+    expect(res.headers.get('Content-Encoding')).toBe('gzip');
   });
 
   it('rejects a reportId that is not a uuid', async () => {

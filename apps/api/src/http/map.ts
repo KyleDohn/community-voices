@@ -1,5 +1,6 @@
 import type { ErrorResponse, MapPoint, MapResponse, MapStatus, PostId } from '@cv/contracts';
 import { Hono } from 'hono';
+import { compress } from 'hono/compress';
 import { z } from 'zod';
 
 export interface MapSource {
@@ -13,7 +14,8 @@ const ReportId = z.uuid().optional();
 const unknownReport: ErrorResponse = { error: 'report_not_found', message: 'No such report run' };
 
 export const mapRoutes = (map: MapSource) =>
-  new Hono().get('/map', async (c) => {
+  // Every point carries its title and url: about 950 KB of JSON, 145 KB gzipped (ASSUMPTIONS #37).
+  new Hono().get('/map', compress(), async (c) => {
     const reportId = ReportId.safeParse(c.req.query('reportId'));
     if (!reportId.success) {
       const error: ErrorResponse = {
