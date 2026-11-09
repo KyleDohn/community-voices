@@ -6,6 +6,8 @@ import {
   ErrorResponse,
   HealthResponse,
   MapResponse,
+  MAX_MEDIA_IDS,
+  PostMediaResponse,
   ReportListResponse,
   ReportRunResponse,
   RetrievalStatsResponse,
@@ -42,6 +44,10 @@ export const fetchHealth = async (): Promise<HealthResponse> => {
 };
 
 export const fetchWeeks = () => getJson('/api/v1/weeks', WeeksResponse);
+
+/** Author and images for up to MAX_MEDIA_IDS posts; the rest are dropped, not an error. */
+export const fetchPostMedia = (ids: number[]) =>
+  getJson(`/api/v1/posts/media?ids=${ids.slice(0, MAX_MEDIA_IDS).join(',')}`, PostMediaResponse);
 
 export const listReports = (week: string) =>
   getJson(`/api/v1/reports?week=${encodeURIComponent(week)}`, ReportListResponse);

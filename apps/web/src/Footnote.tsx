@@ -1,4 +1,4 @@
-import type { ReportSource } from '@cv/contracts';
+import type { PostMedia, ReportSource } from '@cv/contracts';
 import { useEffect, useId, useRef, useState } from 'react';
 import { footnoteLabel } from './footnotes';
 import { weekRange } from './format';
@@ -7,11 +7,12 @@ interface FootnoteProps {
   ids: number[];
   numbers: Map<number, number>;
   sources: Map<number, ReportSource>;
+  media: Map<number, PostMedia>;
   week: string;
 }
 
 /** One superscript per paragraph; the card names each post, since the schema cites per section. */
-export const Footnote = ({ ids, numbers, sources, week }: FootnoteProps) => {
+export const Footnote = ({ ids, numbers, sources, media, week }: FootnoteProps) => {
   const [open, setOpen] = useState(false);
   const [alignRight, setAlignRight] = useState(false);
   const ref = useRef<HTMLSpanElement>(null);
@@ -65,7 +66,14 @@ export const Footnote = ({ ids, numbers, sources, week }: FootnoteProps) => {
           className={`absolute top-full z-20 mt-2 block max-h-96 w-[min(22rem,calc(100vw-2rem))] overflow-y-auto rounded-lg border whitespace-normal border-rule bg-panel py-1 text-left font-sans text-sm leading-normal font-normal tracking-normal text-ink shadow-xl ${alignRight ? 'right-0' : 'left-0'}`}
         >
           {unique.map((id) => (
-            <SourceRow key={id} id={id} n={numbers.get(id)!} source={sources.get(id)} week={week} />
+            <SourceRow
+              key={id}
+              id={id}
+              n={numbers.get(id)!}
+              source={sources.get(id)}
+              author={media.get(id)?.username}
+              week={week}
+            />
           ))}
         </span>
       )}
@@ -74,17 +82,19 @@ export const Footnote = ({ ids, numbers, sources, week }: FootnoteProps) => {
 };
 
 interface RowProps {
+  author: string | undefined;
   id: number;
   n: number;
   source: ReportSource | undefined;
   week: string;
 }
 
-const SourceRow = ({ id, n, source, week }: RowProps) => (
+const SourceRow = ({ id, n, source, author, week }: RowProps) => (
   <span className="block border-b border-rule px-4 py-3 last:border-b-0">
     <span className="exif flex justify-between gap-3">
       <span>
         <span className="text-accent">{n}</span> #{id}
+        {author && <span className="normal-case"> · {author}</span>}
       </span>
       {source && (
         <span>{source.weekStart === week ? 'this week' : weekRange(source.weekStart)}</span>

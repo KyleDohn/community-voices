@@ -1,5 +1,6 @@
 import type { Confidence, ReportDocument, ReportSource } from '@cv/contracts';
 import type { ReactNode } from 'react';
+import { ContactSheet, usePostMedia } from './ContactSheet';
 import { Footnote } from './Footnote';
 import { numberSources } from './footnotes';
 import { weekRange } from './format';
@@ -58,6 +59,7 @@ export const ReportDocumentView = ({ document, sources, week }: Props) => {
     ...document.notableThreads.map((t) => t.citations),
     ...document.predictions.map((p) => p.citations),
   ]);
+  const media = usePostMedia([...numbers.keys()]);
   // The last word and its footnote never part across a line break.
   const withFootnote = (text: string, ids: number[]) => {
     const cut = text.trimEnd().lastIndexOf(' ') + 1;
@@ -66,7 +68,7 @@ export const ReportDocumentView = ({ document, sources, week }: Props) => {
         {text.slice(0, cut)}
         <span className="whitespace-nowrap">
           {text.slice(cut).trimEnd()}
-          <Footnote ids={ids} numbers={numbers} sources={byId} week={week} />
+          <Footnote ids={ids} numbers={numbers} sources={byId} media={media} week={week} />
         </span>
       </>
     );
@@ -94,6 +96,7 @@ export const ReportDocumentView = ({ document, sources, week }: Props) => {
                   ≈{t.approxPostCount} posts · {cited(t.citations)} cited
                 </p>
                 <p className="mt-3 text-[17px] leading-7">{withFootnote(t.summary, t.citations)}</p>
+                <ContactSheet ids={t.citations} media={media} numbers={numbers} sources={byId} />
               </Frame>
             ))}
           </ol>

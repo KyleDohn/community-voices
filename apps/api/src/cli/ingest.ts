@@ -1,6 +1,7 @@
 /**
  * `pnpm ingest` fetches four weeks of the configured Discourse forum into Postgres, then embeds it.
  * `pnpm ingest --resume <run-id>` continues a capped or failed run from its cursor.
+ * `pnpm ingest --week <Monday>` ends the window with that week, to refresh an existing corpus.
  */
 import { parseArgs } from 'node:util';
 import { loadConfig } from '../config';
@@ -11,8 +12,10 @@ import { createPgChunkRepository } from '../embed/pg-chunk-repository';
 import type { ForumSource } from '../ingest/forum-source';
 import { ingestionWindow } from '../ingest/week';
 import { createIngestion } from '../ingest/wiring';
+import { WeekArg } from './week-arg';
 
-const { values } = parseArgs({ options: { resume: { type: 'string' } } });
+const { values } = parseArgs({ options: { resume: { type: 'string' }, week: { type: 'string' } } });
+const week = WeekArg.parse(values.week);
 const config = loadConfig(process.env);
 const { pool, db } = connect(config.databaseUrl);
 await runMigrations(db);
@@ -40,7 +43,11 @@ const runId =
   values.resume ??
   (
     await service.start({
-      window: ingestionWindow(new Date(), config.ingest.historyWeeks),
+      // The instant the target week ends, so that week is the latest complete one.
+      window: ingestionWindow(
+        new Date(Date.parse(`${week}T00:00:00Z`) + 7 * 86_400_000),
+        config.ingest.historyWeeks,
+      ),
       ...caps,
     })
   ).id;
