@@ -1,0 +1,1 @@
+ALTER TABLE "posts" ADD COLUMN "images" jsonb DEFAULT '[]'::jsonb NOT NULL;

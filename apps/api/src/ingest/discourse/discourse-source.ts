@@ -1,3 +1,4 @@
+import { imagesFromCooked } from './images';
 import { z } from 'zod';
 import {
   type ForumPost,
@@ -146,6 +147,7 @@ export const createDiscourseSource = ({
         postNumber: p.post_number,
         username: p.username,
         raw: p.raw,
+        images: imagesFromCooked(p.cooked ?? ''),
         createdAt: new Date(p.created_at),
         url: `${url}/${p.post_number}`,
       }))

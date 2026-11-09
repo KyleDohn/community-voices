@@ -134,3 +134,26 @@ describe('chunk upserts', () => {
     expect(await stored()).toEqual([{ chunk_index: 0, has_embedding: true }]);
   });
 });
+
+describe('post images', () => {
+  const {
+    topic,
+    posts: [post],
+  } = scriptedTopic(9, [reply]);
+  const image = (alt: string) => ({
+    url: `https://cdn.example/${alt}.jpeg`,
+    alt,
+    width: 690,
+    height: 455,
+    dominantColor: '#756A55',
+  });
+  const storedImages = async () => (await repo.exportCorpus()).posts.map((p) => p.images);
+
+  it('stores the images and replaces them when the post is ingested again', async () => {
+    await repo.saveTopic(topic, [{ ...post!, images: [image('first')] }], []);
+    expect(await storedImages()).toEqual([[image('first')]]);
+
+    await repo.saveTopic(topic, [{ ...post!, images: [image('edited')] }], []);
+    expect(await storedImages()).toEqual([[image('edited')]]);
+  });
+});

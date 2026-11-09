@@ -1,5 +1,11 @@
 // Tables arrive with the phases that need them (see docs/DESIGN.md "Data model").
-import type { AbRunResponse, LlmCall, ReportDocument, ReportSource } from '@cv/contracts';
+import type {
+  AbRunResponse,
+  LlmCall,
+  PostImage,
+  ReportDocument,
+  ReportSource,
+} from '@cv/contracts';
 import { sql } from 'drizzle-orm';
 import {
   date,
@@ -40,6 +46,7 @@ export const posts = pgTable(
     postNumber: integer('post_number').notNull(),
     username: text('username').notNull(),
     raw: text('raw').notNull(),
+    images: jsonb('images').$type<PostImage[]>().notNull().default([]),
     createdAt: timestamptz('created_at').notNull(),
     url: text('url').notNull(),
   },

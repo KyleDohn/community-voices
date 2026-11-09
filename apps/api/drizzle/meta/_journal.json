@@ -57,6 +57,13 @@
       "when": 1794184666113,
       "tag": "0007_map-points",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1794188923587,
+      "tag": "0008_post-images",
+      "breakpoints": true
     }
   ]
 }

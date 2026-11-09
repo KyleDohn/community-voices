@@ -48,6 +48,7 @@ export const scriptedTopic = (
     postNumber: i + 1,
     username: `user${i}`,
     raw,
+    images: [],
     createdAt: new Date(new Date(createdAt).getTime() + i * 3_600_000),
     url: `${topic.url}/${i + 1}`,
   }));

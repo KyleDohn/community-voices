@@ -31,6 +31,8 @@ export const PostSchema = z.object({
   username: z.string(),
   /** Absent on posts the community flagged and hid. */
   raw: z.string().optional(),
+  /** Rendered HTML; only read for its uploaded images. */
+  cooked: z.string().optional(),
   hidden: z.boolean().default(false),
   created_at: z.iso.datetime(),
 });

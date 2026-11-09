@@ -1,6 +1,7 @@
 import { readdir, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { PostImage } from '@cv/contracts';
 import { z } from 'zod';
 import { type ChunkOptions, chunkTopic } from '../ingest/chunk';
 import type { TimeWindow } from '../ingest/forum-source';
@@ -24,6 +25,8 @@ const SeedFileSchema = z.object({
       postNumber: z.number(),
       username: z.string(),
       raw: z.string(),
+      // Seeds exported before images were ingested have none.
+      images: z.array(PostImage).default([]),
       createdAt: IsoDateTime,
       url: z.string(),
     }),

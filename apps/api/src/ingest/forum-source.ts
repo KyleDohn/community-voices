@@ -1,3 +1,5 @@
+import type { PostImage } from '@cv/contracts';
+
 /** A topic that had activity, as cheaply listed before fetching its posts. */
 export interface TopicActivity {
   id: number;
@@ -20,6 +22,8 @@ export interface ForumPost {
   username: string;
   /** Markdown as the author wrote it. */
   raw: string;
+  /** Uploaded images, downsized by the forum. */
+  images: PostImage[];
   createdAt: Date;
   url: string;
 }

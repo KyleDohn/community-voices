@@ -41,7 +41,12 @@ const writeTopic = async (
     .values(topicPosts)
     .onConflictDoUpdate({
       target: posts.id,
-      set: { raw: sql`excluded.raw`, username: sql`excluded.username`, url: sql`excluded.url` },
+      set: {
+        raw: sql`excluded.raw`,
+        images: sql`excluded.images`,
+        username: sql`excluded.username`,
+        url: sql`excluded.url`,
+      },
     });
   if (topicChunks.length > 0) {
     await tx

@@ -24,6 +24,7 @@ export const seedChunks = (repo: IngestionRepository, seeds: ChunkSeed[]) =>
             postNumber: 1,
             username: 'user',
             raw: text,
+            images: [],
             createdAt,
             url: `${url}/1`,
           },

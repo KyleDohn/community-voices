@@ -118,6 +118,24 @@ describe('DiscourseSource.fetchTopic', () => {
     expect(posts.map((p) => p.postNumber)).toEqual([1]);
   });
 
+  it('reads uploaded images from the rendered HTML, and none when it is absent', async () => {
+    const { default: short } = await import('./__fixtures__/topic-62066.json');
+    const [original] = short.post_stream.posts;
+    const cooked =
+      '<img src="https://cdn.example/optimized/3X/a_2_690x455.jpeg" alt="frame13" ' +
+      'data-base62-sha1="a" width="690" height="455" data-dominant-color="756A55">';
+    const pictured = { ...original!, id: 2, post_number: 2, cooked };
+    const withPicture = {
+      ...short,
+      post_stream: { posts: [original, pictured], stream: [original!.id, 2] },
+    };
+    const { source } = setup({ overrides: { '/t/62066.json': withPicture } });
+
+    const { posts } = await source.fetchTopic(62066, novemberWeek);
+
+    expect(posts.map((p) => p.images.map((i) => i.alt))).toEqual([[], ['frame13']]);
+  });
+
   it('drops posts the community flagged and hid, which come without raw text', async () => {
     const { default: short } = await import('./__fixtures__/topic-62066.json');
     const [original] = short.post_stream.posts;

@@ -14,6 +14,7 @@ const post = (raw: string, postNumber = 2): ForumPost => ({
   id: 100 + postNumber,
   topicId: topic.id,
   postNumber,
+  images: [],
   username: 'someone',
   raw,
   createdAt: new Date('2026-11-03T12:00:00Z'),
