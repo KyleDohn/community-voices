@@ -181,6 +181,14 @@ This file records how the project was built with Claude Code. It is meant to be 
   corpus version hashed ids only. Both were fixed (the version now hashes the vectors, red → green
   with mutants killed). Also fixed: a failed refresh hid valid stored points, a no-op refresh
   flipped the map to "computing", and the tooltip assumed a fixed height.
+- Phase F, fresh-clone check (subagent following only the README, no key): the Docker path and every
+  number in the README matched. `pnpm dev` on a fresh clone did not: the embedder failed with "Unable
+  to get model file path or buffer". `@hono/node-server` replaces the global `Response`, so
+  transformers.js's `instanceof Response` check rejected the downloaded weights and never cached them.
+  Docker bakes the weights in and the dev machine had them cached since phase 2, so no earlier check
+  could see it. Fixed red → green (`overrideGlobalObjects: false`, with a model test that starts the
+  server and loads into a cold cache). A browser pass also caught two README labels written from
+  memory instead of from the UI ("Sample report", "Generate a new report").
 
 ## Time log
 
@@ -195,3 +203,4 @@ This file records how the project was built with Claude Code. It is meant to be 
 | Phase 5 A/B compare | 1.25 h (incl. two live A/B runs, $0.57)                |
 | Extra 1 stats       | 0.75 h (incl. review fixes)                            |
 | Extra 2 map         | 1.5 h (incl. library benchmark and review fixes)       |
+| Phase F README      | 1 h (incl. fresh-clone check and the dev embedder fix) |

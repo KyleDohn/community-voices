@@ -219,4 +219,4 @@ retrieval runs** (within-run counts are almost all 1). Weeks are colored **seque
 
 | #   | Phase                                                                                                                                                                                   | Est.   | Status |
 | --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------ |
-| F   | **README polish and fresh-clone check.** Install/run steps, architecture, A/B findings, cost, licenses. A subagent follows the README from a clean clone, and we fix whatever it finds. | 0.75 h | ⬜     |
+| F   | **README polish and fresh-clone check.** Install/run steps, architecture, A/B findings, cost, licenses. A subagent follows the README from a clean clone, and we fix whatever it finds. | 0.75 h | ✅     |

@@ -23,8 +23,9 @@ Open <http://localhost:3000>.
   four weeks of posts) and embeds it locally. That takes about 160 s in Docker on an M-series Mac. The
   page works meanwhile: Report and A/B show the sample run right away, and the Map tab shows
   "computing" until embedding and the 2D projection finish, then draws itself.
-- Without a key you see one real A/B run committed in `seed/`, labeled "Sample run" everywhere it
-  appears. "Generate report" and "Run new A/B" answer that no key is set. Nothing is charged.
+- Without a key you see one real A/B run committed in `seed/`, labeled "Sample report" on the Report
+  tab and "Sample run" on the A/B tab. "Generate a new report" and "Run new A/B" answer that no key is
+  set. Nothing is charged.
 - To run live reports, copy `.env.example` to `.env` and set `ANTHROPIC_API_KEY`. It's the only
   variable you need; the others have defaults and are listed in `.env.example`. Then run
   `docker compose up` again. A report costs about $0.03 to $0.08 and an A/B run about $0.29 (see [Cost](#cost)).
@@ -137,7 +138,9 @@ docker compose up -d db      # Postgres + pgvector on :5433
 pnpm dev                     # API on :3000 (tsx watch), web on :5173 (Vite, proxies /api)
 ```
 
-Open <http://localhost:5173>. The API reads `.env` from the repo root if present.
+Open <http://localhost:5173>. The API reads `.env` from the repo root if present. The first run
+downloads the embedding model (34 MB) from Hugging Face; Docker has it baked in. Vite may log a proxy
+error (`ECONNREFUSED`) until the API is listening.
 
 | Command                                    | What it does                                                                                            |
 | ------------------------------------------ | ------------------------------------------------------------------------------------------------------- |
@@ -165,7 +168,7 @@ build and the Docker build.
 
 ## How it was built
 
-Built with Claude Code over about 9 hours, test-first, phase by phase.
+Built with Claude Code over about 9.5 hours, test-first, phase by phase.
 
 - [`docs/PLAN.md`](docs/PLAN.md): phases, estimates and status.
 - [`docs/DESIGN.md`](docs/DESIGN.md): the agreed design, with the measurements behind each choice.
