@@ -3,3 +3,4 @@ dist
 coverage
 apps/api/drizzle/meta
 seed
+docs/insights.html

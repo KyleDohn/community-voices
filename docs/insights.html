@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Claude Code Insights</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: #f8fafc; color: #334155; line-height: 1.65; padding: 48px 24px; }
+    .container { max-width: 800px; margin: 0 auto; }
+    h1 { font-size: 32px; font-weight: 700; color: #0f172a; margin-bottom: 8px; }
+    h2 { font-size: 20px; font-weight: 600; color: #0f172a; margin-top: 48px; margin-bottom: 16px; }
+    .subtitle { color: #64748b; font-size: 15px; margin-bottom: 32px; }
+    .nav-toc { display: flex; flex-wrap: wrap; gap: 8px; margin: 24px 0 32px 0; padding: 16px; background: white; border-radius: 8px; border: 1px solid #e2e8f0; }
+    .nav-toc a { font-size: 12px; color: #64748b; text-decoration: none; padding: 6px 12px; border-radius: 6px; background: #f1f5f9; transition: all 0.15s; }
+    .nav-toc a:hover { background: #e2e8f0; color: #334155; }
+    .stats-row { display: flex; gap: 24px; margin-bottom: 40px; padding: 20px 0; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; flex-wrap: wrap; }
+    .stat { text-align: center; }
+    .stat-value { font-size: 24px; font-weight: 700; color: #0f172a; }
+    .stat-label { font-size: 11px; color: #64748b; text-transform: uppercase; }
+    .at-a-glance { background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border: 1px solid #f59e0b; border-radius: 12px; padding: 20px 24px; margin-bottom: 32px; }
+    .glance-title { font-size: 16px; font-weight: 700; color: #92400e; margin-bottom: 16px; }
+    .glance-sections { display: flex; flex-direction: column; gap: 12px; }
+    .glance-section { font-size: 14px; color: #78350f; line-height: 1.6; }
+    .glance-section strong { color: #92400e; }
+    .see-more { color: #b45309; text-decoration: none; font-size: 13px; white-space: nowrap; }
+    .see-more:hover { text-decoration: underline; }
+    .auto-mode-card { background: linear-gradient(135deg, #eff6ff 0%, #e0f2fe 100%); border: 1px solid #60a5fa; border-radius: 12px; padding: 20px 24px; margin-bottom: 32px; }
+    .auto-mode-title { font-size: 16px; font-weight: 700; color: #1e40af; margin-bottom: 10px; }
+    .auto-mode-desc { font-size: 14px; color: #1e3a8a; line-height: 1.6; }
+    .auto-mode-desc code { background: rgba(255,255,255,0.7); padding: 1px 6px; border-radius: 4px; font-size: 13px; }
+    .auto-mode-note { font-size: 13px; color: #1e3a8a; background: rgba(255,255,255,0.6); padding: 8px 12px; border-radius: 6px; margin-top: 10px; }
+    .auto-mode-fineprint { font-size: 11px; color: #3b82f6; margin-top: 10px; }
+    .project-areas { display: flex; flex-direction: column; gap: 12px; margin-bottom: 32px; }
+    .project-area { background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; }
+    .area-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .area-name { font-weight: 600; font-size: 15px; color: #0f172a; }
+    .area-count { font-size: 12px; color: #64748b; background: #f1f5f9; padding: 2px 8px; border-radius: 4px; }
+    .area-desc { font-size: 14px; color: #475569; line-height: 1.5; }
+    .narrative { background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; margin-bottom: 24px; }
+    .narrative p { margin-bottom: 12px; font-size: 14px; color: #475569; line-height: 1.7; }
+    .key-insight { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 12px 16px; margin-top: 12px; font-size: 14px; color: #166534; }
+    .section-intro { font-size: 14px; color: #64748b; margin-bottom: 16px; }
+    .big-wins { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
+    .big-win { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 16px; }
+    .big-win-title { font-weight: 600; font-size: 15px; color: #166534; margin-bottom: 8px; }
+    .big-win-desc { font-size: 14px; color: #15803d; line-height: 1.5; }
+    .friction-categories { display: flex; flex-direction: column; gap: 16px; margin-bottom: 24px; }
+    .friction-category { background: #fef2f2; border: 1px solid #fca5a5; border-radius: 8px; padding: 16px; }
+    .friction-title { font-weight: 600; font-size: 15px; color: #991b1b; margin-bottom: 6px; }
+    .friction-desc { font-size: 13px; color: #7f1d1d; margin-bottom: 10px; }
+    .friction-examples { margin: 0 0 0 20px; font-size: 13px; color: #334155; }
+    .friction-examples li { margin-bottom: 4px; }
+    .claude-md-section { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 16px; margin-bottom: 20px; }
+    .claude-md-section h3 { font-size: 14px; font-weight: 600; color: #1e40af; margin: 0 0 12px 0; }
+    .claude-md-actions { margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #dbeafe; }
+    .copy-all-btn { background: #2563eb; color: white; border: none; border-radius: 4px; padding: 6px 12px; font-size: 12px; cursor: pointer; font-weight: 500; transition: all 0.2s; }
+    .copy-all-btn:hover { background: #1d4ed8; }
+    .copy-all-btn.copied { background: #16a34a; }
+    .claude-md-item { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 8px; padding: 10px 0; border-bottom: 1px solid #dbeafe; }
+    .claude-md-item:last-child { border-bottom: none; }
+    .cmd-checkbox { margin-top: 2px; }
+    .cmd-code { background: white; padding: 8px 12px; border-radius: 4px; font-size: 12px; color: #1e40af; border: 1px solid #bfdbfe; font-family: monospace; display: block; white-space: pre-wrap; word-break: break-word; flex: 1; }
+    .cmd-why { font-size: 12px; color: #64748b; width: 100%; padding-left: 24px; margin-top: 4px; }
+    .features-section, .patterns-section { display: flex; flex-direction: column; gap: 12px; margin: 16px 0; }
+    .feature-card { background: #f0fdf4; border: 1px solid #86efac; border-radius: 8px; padding: 16px; }
+    .pattern-card { background: #f0f9ff; border: 1px solid #7dd3fc; border-radius: 8px; padding: 16px; }
+    .feature-title, .pattern-title { font-weight: 600; font-size: 15px; color: #0f172a; margin-bottom: 6px; }
+    .feature-oneliner { font-size: 14px; color: #475569; margin-bottom: 8px; }
+    .pattern-summary { font-size: 14px; color: #475569; margin-bottom: 8px; }
+    .feature-why, .pattern-detail { font-size: 13px; color: #334155; line-height: 1.5; }
+    .feature-examples { margin-top: 12px; }
+    .feature-example { padding: 8px 0; border-top: 1px solid #d1fae5; }
+    .feature-example:first-child { border-top: none; }
+    .example-code-row { display: flex; align-items: flex-start; gap: 8px; }
+    .example-code { flex: 1; background: #f1f5f9; padding: 8px 12px; border-radius: 4px; font-family: monospace; font-size: 12px; color: #334155; overflow-x: auto; white-space: pre-wrap; }
+    .copyable-prompt-section { margin-top: 12px; padding-top: 12px; border-top: 1px solid #e2e8f0; }
+    .copyable-prompt-row { display: flex; align-items: flex-start; gap: 8px; }
+    .copyable-prompt { flex: 1; background: #f8fafc; padding: 10px 12px; border-radius: 4px; font-family: monospace; font-size: 12px; color: #334155; border: 1px solid #e2e8f0; white-space: pre-wrap; line-height: 1.5; }
+    .pattern-prompt { background: #f8fafc; padding: 12px; border-radius: 6px; margin-top: 12px; border: 1px solid #e2e8f0; }
+    .pattern-prompt code { font-family: monospace; font-size: 12px; color: #334155; display: block; white-space: pre-wrap; margin-bottom: 8px; }
+    .prompt-label { font-size: 11px; font-weight: 600; text-transform: uppercase; color: #64748b; margin-bottom: 6px; }
+    .copy-btn { background: #e2e8f0; border: none; border-radius: 4px; padding: 4px 8px; font-size: 11px; cursor: pointer; color: #475569; flex-shrink: 0; }
+    .copy-btn:hover { background: #cbd5e1; }
+    .charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin: 24px 0; }
+    .chart-card { background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; }
+    .chart-title { font-size: 12px; font-weight: 600; color: #64748b; text-transform: uppercase; margin-bottom: 12px; }
+    .bar-row { display: flex; align-items: center; margin-bottom: 6px; }
+    .bar-label { width: 100px; font-size: 11px; color: #475569; flex-shrink: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .bar-track { flex: 1; height: 6px; background: #f1f5f9; border-radius: 3px; margin: 0 8px; }
+    .bar-fill { height: 100%; border-radius: 3px; }
+    .bar-value { width: 28px; font-size: 11px; font-weight: 500; color: #64748b; text-align: right; }
+    .empty { color: #94a3b8; font-size: 13px; }
+    .horizon-section { display: flex; flex-direction: column; gap: 16px; }
+    .horizon-card { background: linear-gradient(135deg, #faf5ff 0%, #f5f3ff 100%); border: 1px solid #c4b5fd; border-radius: 8px; padding: 16px; }
+    .horizon-title { font-weight: 600; font-size: 15px; color: #5b21b6; margin-bottom: 8px; }
+    .horizon-possible { font-size: 14px; color: #334155; margin-bottom: 10px; line-height: 1.5; }
+    .horizon-tip { font-size: 13px; color: #6b21a8; background: rgba(255,255,255,0.6); padding: 8px 12px; border-radius: 4px; }
+    .feedback-header { margin-top: 48px; color: #64748b; font-size: 16px; }
+    .feedback-intro { font-size: 13px; color: #94a3b8; margin-bottom: 16px; }
+    .feedback-card { background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin-bottom: 12px; }
+    .feedback-card.team-card { background: #eff6ff; border-color: #bfdbfe; }
+    .feedback-card.model-card { background: #faf5ff; border-color: #e9d5ff; }
+    .feedback-title { font-weight: 600; font-size: 14px; color: #0f172a; margin-bottom: 6px; }
+    .feedback-detail { font-size: 13px; color: #475569; line-height: 1.5; }
+    .feedback-evidence { font-size: 12px; color: #64748b; margin-top: 8px; }
+    .fun-ending { background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border: 1px solid #fbbf24; border-radius: 12px; padding: 24px; margin-top: 40px; text-align: center; }
+    .fun-headline { font-size: 18px; font-weight: 600; color: #78350f; margin-bottom: 8px; }
+    .fun-detail { font-size: 14px; color: #92400e; }
+    .collapsible-section { margin-top: 16px; }
+    .collapsible-header { display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 12px 0; border-bottom: 1px solid #e2e8f0; }
+    .collapsible-header h3 { margin: 0; font-size: 14px; font-weight: 600; color: #475569; }
+    .collapsible-arrow { font-size: 12px; color: #94a3b8; transition: transform 0.2s; }
+    .collapsible-content { display: none; padding-top: 16px; }
+    .collapsible-content.open { display: block; }
+    .collapsible-header.open .collapsible-arrow { transform: rotate(90deg); }
+    @media (max-width: 640px) { .charts-row { grid-template-columns: 1fr; } .stats-row { justify-content: center; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Claude Code Insights</h1>
+    <p class="subtitle">124 messages across 10 sessions (12 total) | 2026-11-06 to 2026-11-09</p>
+
+    
+    <div class="at-a-glance">
+      <div class="glance-title">At a Glance</div>
+      <div class="glance-sections">
+        <div class="glance-section"><strong>What's working:</strong> You run projects like a disciplined engineering lead. You break the work into clear phases and end each session with a handoff document, so the next fresh session can pick up without losing the design. You also insist on test-first development, review passes and real ship-readiness checks before calling anything done. The fresh-clone check that caught a cold-cache embedder bug before you published is a good example of that rigor paying off. <a href="#section-wins" class="see-more">Impressive Things You Did →</a></div>
+        <div class="glance-section"><strong>What's hindering you:</strong> On Claude&apos;s side, the first version of the code often had bugs that only a review pass caught, such as wrong test assertions and pgvector formatting slips. Claude also occasionally acted on its own reading of your intent, most notably the unapproved paid API call while verifying a container. On your side, the local environment caused a lot of the friction: Docker not running, a full disk wedging containers, stale Vite modules and a GitHub billing lock. A short instruction like &apos;can you start it&apos; also left Claude guessing what you meant. <a href="#section-friction" class="see-more">Where Things Go Wrong →</a></div>
+        <div class="glance-section"><strong>Quick wins to try:</strong> Turn your handoff routine into Custom Skills, such as a /handoff that writes the next-phase doc and a /kickoff that reads it and names the first action. Use Hooks to run an environment preflight at session start (Docker up, free disk space, clean caches) and to block Bash calls that hit paid endpoints or use rm -rf. Put those hard rules in CLAUDE.md as well, so every new session inherits them. <a href="#section-features" class="see-more">Features to Try →</a></div>
+        <div class="glance-section"><strong>Ambitious workflows:</strong> Your handoff docs are already close to executable specs. Soon Claude should be able to take one and run a whole phase on its own: implement test-first, review with a subagent, fix the findings, repeat until every check passes, then write the next handoff. For feature batches like your UI redesign, expect parallel agents working in separate git worktrees, each verifying its feature in the browser, with an integrator agent merging the results. Starting to write handoffs as explicit acceptance criteria and guardrails now will make that transition easy. <a href="#section-horizon" class="see-more">On the Horizon →</a></div>
+      </div>
+    </div>
+    
+
+    
+
+    <nav class="nav-toc">
+      <a href="#section-work">What You Work On</a>
+      <a href="#section-usage">How You Use CC</a>
+      <a href="#section-wins">Impressive Things</a>
+      <a href="#section-friction">Where Things Go Wrong</a>
+      <a href="#section-features">Features to Try</a>
+      <a href="#section-patterns">New Usage Patterns</a>
+      <a href="#section-horizon">On the Horizon</a>
+      <a href="#section-feedback">Team Feedback</a>
+    </nav>
+
+    <div class="stats-row">
+      <div class="stat"><div class="stat-value">124</div><div class="stat-label">Messages</div></div>
+      <div class="stat"><div class="stat-value">+4,935/-26</div><div class="stat-label">Lines</div></div>
+      <div class="stat"><div class="stat-value">79</div><div class="stat-label">Files</div></div>
+      <div class="stat"><div class="stat-value">4</div><div class="stat-label">Days</div></div>
+      <div class="stat"><div class="stat-value">31</div><div class="stat-label">Msgs/Day</div></div>
+    </div>
+
+    
+    <h2 id="section-work">What You Work On</h2>
+    <div class="project-areas">
+      
+        <div class="project-area">
+          <div class="area-header">
+            <span class="area-name">Phased Take-Home Project Build (Phases 0–4)</span>
+            <span class="area-count">~5 sessions</span>
+          </div>
+          <div class="area-desc">The user built a take-home project phase by phase, from research, design and a Docker/CI scaffold in phase 0 through phase 4. Claude Code implemented each phase test-first across many commits, ran subagent reviews and fixed the bugs they found. It also recovered from environment problems such as a wedged Docker caused by a full disk. Bash was the dominant tool, used for tests, typechecks, lint and git operations.</div>
+        </div>
+      
+        <div class="project-area">
+          <div class="area-header">
+            <span class="area-name">Session Handoff Documentation</span>
+            <span class="area-count">~7 sessions</span>
+          </div>
+          <div class="area-desc">Most sessions ended with Claude writing a Markdown handoff file so the next session could pick up cleanly. These covered the phase 2–5 handoffs, the Extra 2 and phase F handoffs, and cost-guard guidance added as a new interface. Claude also answered setup questions about env variables, API keys and spend limits as part of this work.</div>
+        </div>
+      
+        <div class="project-area">
+          <div class="area-header">
+            <span class="area-name">Retrieval Stats &amp; Embeddings Map Extras</span>
+            <span class="area-count">~2 sessions</span>
+          </div>
+          <div class="area-desc">Claude built optional extra features in TypeScript. These were a retrieval stats API with repository, routes and a view, and an embeddings map visualization delivered across 14 commits. The work used red-green TDD and was checked in the browser with the Claude-in-Chrome tools. Claude fixed issues the review found, including pgvector float formatting and a stale Vite module.</div>
+        </div>
+      
+        <div class="project-area">
+          <div class="area-header">
+            <span class="area-name">UI Visual Redesign</span>
+            <span class="area-count">~1 sessions</span>
+          </div>
+          <div class="area-desc">The user asked for visual improvement ideas and mockups, then had Claude implement them. The changes were a darkroom palette, footnote citations, EXIF-style metadata, an A/B before/after control and photo contact sheets. Claude made the multi-file HTML/CSS/TypeScript changes, fixed layout and stale-media glitches, then merged to main and pushed with CI passing.</div>
+        </div>
+      
+        <div class="project-area">
+          <div class="area-header">
+            <span class="area-name">Release Readiness &amp; Public Publishing</span>
+            <span class="area-count">~2 sessions</span>
+          </div>
+          <div class="area-desc">Claude wrote the README and LICENSE and ran a fresh-clone check that uncovered a cold-cache embedder bug, which it fixed. It then published the public repo with CI passing, after a first CI failure caused by GitHub billing rather than the code. Claude also did a pre-submission red-flag audit covering lint, tests, CI status, secrets in git history and leftover debug markers.</div>
+        </div>
+      
+    </div>
+    
+
+    <div class="charts-row">
+      <div class="chart-card">
+        <div class="chart-title">What You Wanted</div>
+        <div class="bar-row">
+        <div class="bar-label">Git Merge And Push</div>
+        <div class="bar-track"><div class="bar-fill" style="width:100%;background:#2563eb"></div></div>
+        <div class="bar-value">3</div>
+      </div>
+<div class="bar-row">
+        <div class="bar-label">Implement Feature From Handoff</div>
+        <div class="bar-track"><div class="bar-fill" style="width:100%;background:#2563eb"></div></div>
+        <div class="bar-value">3</div>
+      </div>
+<div class="bar-row">
+        <div class="bar-label">Create Handoff Document</div>
+        <div class="bar-track"><div class="bar-fill" style="width:100%;background:#2563eb"></div></div>
+        <div class="bar-value">3</div>
+      </div>
+<div class="bar-row">
+        <div class="bar-label">Explain Concept</div>
+        <div class="bar-track"><div class="bar-fill" style="width:100%;background:#2563eb"></div></div>
+        <div class="bar-value">3</div>
+      </div>
+<div class="bar-row">
+        <div class="bar-label">Implement Ui Changes</div>
+        <div class="bar-track"><div class="bar-fill" style="width:66.66666666666666%;background:#2563eb"></div></div>
+        <div class="bar-value">2</div>
+      </div>
+<div class="bar-row">
+        <div class="bar-label">Git Commit</div>
+        <div class="bar-track"><div class="bar-fill" style="width:66.66666666666666%;background:#2563eb"></div></div>
+        <div class="bar-value">2</div>
+      </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Top Tools Used</div>
+        <div class="bar-row">
+        <div class="bar-label">Bash</div>
+        <div class="bar-track"><div class="bar-fill" style="width:100%;background:#0891b2"></div></div>
+        <div class="bar-value">687</div>
+      </div>
+<div class="bar-row">
+        <div class="bar-label">Write</div>
+        <div class="bar-track"><div class="bar-fill" style="width:10.334788937409025%;background:#0891b2"></div></div>
+        <div class="bar-value">71</div>
+      </div>
+<div class="bar-row">
+        <div class="bar-label">Read</div>
+        <div class="bar-track"><div class="bar-fill" style="width:3.2023289665211063%;background:#0891b2"></div></div>
+        <div class="bar-value">22</div>
+      </div>
+<div class="bar-row">
+        <div class="bar-label">Edit</div>
+        <div class="bar-track"><div class="bar-fill" style="width:3.2023289665211063%;background:#0891b2"></div></div>
+        <div class="bar-value">22</div>
+      </div>
+<div class="bar-row">
+        <div class="bar-label">Mcp  Claude-In-Chrome  Computer</div>
+        <div class="bar-track"><div class="bar-fill" style="width:3.056768558951965%;background:#0891b2"></div></div>
+        <div class="bar-value">21</div>
+      </div>
+<div class="bar-row">
+        <div class="bar-label">Skill</div>
+        <div class="bar-track"><div class="bar-fill" style="width:2.7656477438136826%;background:#0891b2"></div></div>
+        <div class="bar-value">19</div>
+      </div>
+      </div>
+    </div>
+
+    <div class="charts-row">
+      <div class="chart-card">
+        <div class="chart-title">Languages</div>
+        <div class="bar-row">
+        <div class="bar-label">TypeScript</div>
+        <div class="bar-track"><div class="bar-fill" style="width:100%;background:#10b981"></div></div>
+        <div class="bar-value">63</div>
+      </div>
+<div class="bar-row">
+        <div class="bar-label">Markdown</div>
+        <div class="bar-track"><div class="bar-fill" style="width:58.730158730158735%;background:#10b981"></div></div>
+        <div class="bar-value">37</div>
+      </div>
+<div class="bar-row">
+        <div class="bar-label">JSON</div>
+        <div class="bar-track"><div class="bar-fill" style="width:6.349206349206349%;background:#10b981"></div></div>
+        <div class="bar-value">4</div>
+      </div>
+<div class="bar-row">
+        <div class="bar-label">HTML</div>
+        <div class="bar-track"><div class="bar-fill" style="width:4.761904761904762%;background:#10b981"></div></div>
+        <div class="bar-value">3</div>
+      </div>
+<div class="bar-row">
+        <div class="bar-label">YAML</div>
+        <div class="bar-track"><div class="bar-fill" style="width:3.1746031746031744%;background:#10b981"></div></div>
+        <div class="bar-value">2</div>
+      </div>
+<div class="bar-row">
+        <div class="bar-label">CSS</div>
+        <div class="bar-track"><div class="bar-fill" style="width:3.1746031746031744%;background:#10b981"></div></div>
+        <div class="bar-value">2</div>
+      </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Session Types</div>
+        <div class="bar-row">
+        <div class="bar-label">Multi Task</div>
+        <div class="bar-track"><div class="bar-fill" style="width:100%;background:#8b5cf6"></div></div>
+        <div class="bar-value">8</div>
+      </div>
+<div class="bar-row">
+        <div class="bar-label">Single Task</div>
+        <div class="bar-track"><div class="bar-fill" style="width:12.5%;background:#8b5cf6"></div></div>
+        <div class="bar-value">1</div>
+      </div>
+<div class="bar-row">
+        <div class="bar-label">Iterative Refinement</div>
+        <div class="bar-track"><div class="bar-fill" style="width:12.5%;background:#8b5cf6"></div></div>
+        <div class="bar-value">1</div>
+      </div>
+      </div>
+    </div>
+
+    
+    <h2 id="section-usage">How You Use Claude Code</h2>
+    <div class="narrative">
+      <p>You work with Claude Code in a <strong>phase-based, handoff-driven workflow</strong>. Each session picks up from a handoff document written at the end of the previous one, and each ends by writing the next. You started with phase 0, where Claude researched, designed and scaffolded a take-home project with Docker, CI and hooks. From there you moved through phases 1 to 4, then Extra 1, Extra 2 and phase F, with the same rhythm each time: &quot;continue from the handoff, finish the phase, review it, write the next handoff.&quot; This treats each session as a bounded sprint with a clean context. It&apos;s a deliberate way to manage long-running work across many sessions, and it shows. Ten sessions produced <strong>94 commits in about four days</strong>, and eight of the ten were fully achieved.</p>
+<p>You send <strong>few messages</strong> (124 across 47 hours) and give Claude a lot of room to work. The heavy Bash usage (687 calls) reflects Claude running tests, lint, typecheck, Docker and git on its own while you mostly stay out of the way. You set high-level quality expectations rather than step-by-step instructions. You asked for TDD, red-green tests, subagent review passes, browser verification and cost-guard guidance. One session produced <strong>21 commits test-first</strong>, and review passes repeatedly caught real bugs, including 13 in the phase-4 code. You also set clear guardrails: rm -rf commands were denied, and you cared about paid API spend. Claude made one accidental $0.055 call and had to disclose it itself.</p>
+<p>Between bursts of building, you <strong>pause to learn and check in</strong>. You asked Claude to explain env variables, API keys and spend limits, to walk you through the finished project, and to run a final red-flag review before submission. Your prompts can be terse. &quot;Can you start it&quot; was ambiguous between starting Docker and starting phase 3. But the handoff docs usually carry enough context that this rarely causes trouble. Most friction came from small bugs that Claude caught itself, plus environment issues like a full disk and a GitHub billing lock, rather than from misunderstandings.</p>
+      <div class="key-insight"><strong>Key pattern:</strong> You run long projects as a chain of self-contained sessions linked by handoff documents. You give Claude a high-level goal plus quality rules like TDD and review passes, then let it work largely on its own until it commits, pushes and writes the next handoff.</div>
+    </div>
+    
+
+    <!-- Response Time Distribution -->
+    <div class="chart-card" style="margin: 24px 0;">
+      <div class="chart-title">User Response Time Distribution</div>
+      <div class="bar-row">
+        <div class="bar-label">2-10s</div>
+        <div class="bar-track"><div class="bar-fill" style="width:100%;background:#6366f1"></div></div>
+        <div class="bar-value">16</div>
+      </div>
+<div class="bar-row">
+        <div class="bar-label">10-30s</div>
+        <div class="bar-track"><div class="bar-fill" style="width:68.75%;background:#6366f1"></div></div>
+        <div class="bar-value">11</div>
+      </div>
+<div class="bar-row">
+        <div class="bar-label">30s-1m</div>
+        <div class="bar-track"><div class="bar-fill" style="width:68.75%;background:#6366f1"></div></div>
+        <div class="bar-value">11</div>
+      </div>
+<div class="bar-row">
+        <div class="bar-label">1-2m</div>
+        <div class="bar-track"><div class="bar-fill" style="width:100%;background:#6366f1"></div></div>
+        <div class="bar-value">16</div>
+      </div>
+<div class="bar-row">
+        <div class="bar-label">2-5m</div>
+        <div class="bar-track"><div class="bar-fill" style="width:62.5%;background:#6366f1"></div></div>
+        <div class="bar-value">10</div>
+      </div>
+<div class="bar-row">
+        <div class="bar-label">5-15m</div>
+        <div class="bar-track"><div class="bar-fill" style="width:43.75%;background:#6366f1"></div></div>
+        <div class="bar-value">7</div>
+      </div>
+<div class="bar-row">
+        <div class="bar-label">>15m</div>
+        <div class="bar-track"><div class="bar-fill" style="width:37.5%;background:#6366f1"></div></div>
+        <div class="bar-value">6</div>
+      </div>
+      <div style="font-size: 12px; color: #64748b; margin-top: 8px;">
+        Median: 63.4s &bull; Average: 254.3s
+      </div>
+    </div>
+
+    <!-- Multi-clauding Section (matching Python reference) -->
+    <div class="chart-card" style="margin: 24px 0;">
+      <div class="chart-title">Multi-Clauding (Parallel Sessions)</div>
+      
+        <div style="display: flex; gap: 24px; margin: 12px 0;">
+          <div style="text-align: center;">
+            <div style="font-size: 24px; font-weight: 700; color: #7c3aed;">1</div>
+            <div style="font-size: 11px; color: #64748b; text-transform: uppercase;">Overlap Events</div>
+          </div>
+          <div style="text-align: center;">
+            <div style="font-size: 24px; font-weight: 700; color: #7c3aed;">2</div>
+            <div style="font-size: 11px; color: #64748b; text-transform: uppercase;">Sessions Involved</div>
+          </div>
+          <div style="text-align: center;">
+            <div style="font-size: 24px; font-weight: 700; color: #7c3aed;">2%</div>
+            <div style="font-size: 11px; color: #64748b; text-transform: uppercase;">Of Messages</div>
+          </div>
+        </div>
+        <p style="font-size: 13px; color: #475569; margin-top: 12px;">
+          You run multiple Claude Code sessions simultaneously. Multi-clauding is detected when sessions
+          overlap in time, suggesting parallel workflows.
+        </p>
+      
+    </div>
+
+    <!-- Time of Day & Tool Errors -->
+    <div class="charts-row">
+      <div class="chart-card">
+        <div class="chart-title" style="display: flex; align-items: center; gap: 12px;">
+          User Messages by Time of Day
+          <select id="timezone-select" style="font-size: 12px; padding: 4px 8px; border-radius: 4px; border: 1px solid #e2e8f0;">
+            <option value="0">PT (UTC-8)</option>
+            <option value="3">ET (UTC-5)</option>
+            <option value="8">London (UTC)</option>
+            <option value="9">CET (UTC+1)</option>
+            <option value="17">Tokyo (UTC+9)</option>
+            <option value="custom">Custom offset...</option>
+          </select>
+          <input type="number" id="custom-offset" placeholder="UTC offset" style="display: none; width: 80px; font-size: 12px; padding: 4px; border-radius: 4px; border: 1px solid #e2e8f0;">
+        </div>
+        <div id="hour-histogram">
+      <div class="bar-row">
+        <div class="bar-label">Morning (6-12)</div>
+        <div class="bar-track"><div class="bar-fill" style="width:0%;background:#8b5cf6"></div></div>
+        <div class="bar-value">0</div>
+      </div>
+
+      <div class="bar-row">
+        <div class="bar-label">Afternoon (12-18)</div>
+        <div class="bar-track"><div class="bar-fill" style="width:5.263157894736842%;background:#8b5cf6"></div></div>
+        <div class="bar-value">5</div>
+      </div>
+
+      <div class="bar-row">
+        <div class="bar-label">Evening (18-24)</div>
+        <div class="bar-track"><div class="bar-fill" style="width:100%;background:#8b5cf6"></div></div>
+        <div class="bar-value">95</div>
+      </div>
+
+      <div class="bar-row">
+        <div class="bar-label">Night (0-6)</div>
+        <div class="bar-track"><div class="bar-fill" style="width:25.263157894736842%;background:#8b5cf6"></div></div>
+        <div class="bar-value">24</div>
+      </div></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Tool Errors Encountered</div>
+        <div class="bar-row">
+        <div class="bar-label">Other</div>
+        <div class="bar-track"><div class="bar-fill" style="width:100%;background:#dc2626"></div></div>
+        <div class="bar-value">12</div>
+      </div>
+<div class="bar-row">
+        <div class="bar-label">Command Failed</div>
+        <div class="bar-track"><div class="bar-fill" style="width:58.333333333333336%;background:#dc2626"></div></div>
+        <div class="bar-value">7</div>
+      </div>
+      </div>
+    </div>
+
+    
+    <h2 id="section-wins">Impressive Things You Did</h2>
+    <p class="section-intro">Across 10 sessions and 94 commits over four days, you took a TypeScript take-home project from research and scaffolding (phase 0) to a polished public repo, finishing 8 of 10 sessions fully achieved.</p>
+    <div class="big-wins">
+      
+        <div class="big-win">
+          <div class="big-win-title">Handoff-Driven Phased Development</div>
+          <div class="big-win-desc">You broke the project into phases (0 through F, plus extras) and ended almost every session by having Claude write a handoff document that the next session picked up. This kept each session focused and gave you continuity across fresh contexts. It&apos;s a big part of why so many sessions reached full completion without losing track of the design.</div>
+        </div>
+      
+        <div class="big-win">
+          <div class="big-win-title">Test-First with Review Passes</div>
+          <div class="big-win-desc">You consistently asked for TDD and red-green tests, then ran a review pass, often with a subagent, before closing a phase. Those reviews found real bugs, including 13 in the phase-4 code, and they were fixed before you moved on. Pre-commit hooks for lint, typecheck and Prettier caught smaller problems like zod typing errors and unused variables early.</div>
+        </div>
+      
+        <div class="big-win">
+          <div class="big-win-title">Rigorous Ship-Readiness Verification</div>
+          <div class="big-win-desc">Before going public, you had Claude do a fresh-clone check, which surfaced a cold-cache embedder bug that would otherwise have reached users. You also asked for a pre-submission red-flag sweep covering format, lint, tests, CI, secrets scanning and leftover debug markers. Combined with browser-verified UI work and cost guards built into the design, this gave you a publish process that was careful and well thought through.</div>
+        </div>
+      
+    </div>
+    
+
+    <div class="charts-row">
+      <div class="chart-card">
+        <div class="chart-title">What Helped Most (Claude's Capabilities)</div>
+        <div class="bar-row">
+        <div class="bar-label">Multi-file Changes</div>
+        <div class="bar-track"><div class="bar-fill" style="width:100%;background:#16a34a"></div></div>
+        <div class="bar-value">8</div>
+      </div>
+<div class="bar-row">
+        <div class="bar-label">Fast/Accurate Search</div>
+        <div class="bar-track"><div class="bar-fill" style="width:12.5%;background:#16a34a"></div></div>
+        <div class="bar-value">1</div>
+      </div>
+<div class="bar-row">
+        <div class="bar-label">Good Debugging</div>
+        <div class="bar-track"><div class="bar-fill" style="width:12.5%;background:#16a34a"></div></div>
+        <div class="bar-value">1</div>
+      </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Outcomes</div>
+        <div class="bar-row">
+        <div class="bar-label">Mostly Achieved</div>
+        <div class="bar-track"><div class="bar-fill" style="width:25%;background:#8b5cf6"></div></div>
+        <div class="bar-value">2</div>
+      </div>
+<div class="bar-row">
+        <div class="bar-label">Fully Achieved</div>
+        <div class="bar-track"><div class="bar-fill" style="width:100%;background:#8b5cf6"></div></div>
+        <div class="bar-value">8</div>
+      </div>
+      </div>
+    </div>
+
+    
+    <h2 id="section-friction">Where Things Go Wrong</h2>
+    <p class="section-intro">Your sessions almost all succeeded, but the friction kept coming from three places: buggy first-pass code that reviews then had to catch, a fragile local Docker and tooling setup, and a few actions that ran without clear authorization, including one paid API call.</p>
+    <div class="friction-categories">
+      
+        <div class="friction-category">
+          <div class="friction-title">First-pass code needing review-driven fixes</div>
+          <div class="friction-desc">Buggy code was your most common friction type. Test-first work and review subagents caught most of it before merge, but whole phases still shipped with real bugs that needed a fix-up round. You could ask Claude to run a self-review or mutation check before declaring a phase done, and include known pitfalls in each handoff (pgvector float formatting, Prettier line wrapping, macOS sed quirks) so the next session avoids them.</div>
+          <ul class="friction-examples"><li>A review subagent found 13 bugs in the phase-4 code, which meant an extra fix cycle before you could close the phase.</li><li>Two test assertions were wrong at first (the concatenation collision case and pgvector float formatting), and a mutation substitution silently failed because Prettier had wrapped the target line.</li></ul>
+        </div>
+      
+        <div class="friction-category">
+          <div class="friction-title">Fragile local environment and Docker state</div>
+          <div class="friction-desc">Several sessions lost time to environment problems rather than code: Docker not running, a full disk, stale dev-server modules, and CI billing locks. A short preflight checklist in your handoff template would catch most of these up front. It could cover Docker running, free disk space, a clean Vite cache, and GitHub billing status.</div>
+          <ul class="friction-examples"><li>A full disk wedged Docker during phase 4, and recovery took several manual kill/restart rounds.</li><li>Your first public CI run failed because of a GitHub billing lock rather than a code problem, and Vite served a stale contract module that broke the page until a reload.</li></ul>
+        </div>
+      
+        <div class="friction-category">
+          <div class="friction-title">Unapproved or ambiguous actions</div>
+          <div class="friction-desc">A few times Claude acted on its own reading of your intent: once with real cost, once on an ambiguous request, and once with destructive commands you denied. You could spell out hard rules in CLAUDE.md, such as &apos;never hit paid endpoints without explicit approval&apos; and &apos;avoid rm -rf; use a fresh directory instead&apos;. When a request could mean two things, phrasing it precisely (&apos;start phase 3&apos; vs. &apos;start Docker&apos;) also helps.</div>
+          <ul class="friction-examples"><li>While verifying a rebuilt container, Claude sent an unapproved request that ran a real paid report ($0.055). It disclosed this itself, but the spend had already happened.</li><li>Claude read your &apos;can you start it&apos; as starting Docker rather than beginning phase 3, and the session ended before the intent was clarified.</li></ul>
+        </div>
+      
+    </div>
+    
+
+    <div class="charts-row">
+      <div class="chart-card">
+        <div class="chart-title">Primary Friction Types</div>
+        <div class="bar-row">
+        <div class="bar-label">Buggy Code</div>
+        <div class="bar-track"><div class="bar-fill" style="width:100%;background:#dc2626"></div></div>
+        <div class="bar-value">10</div>
+      </div>
+<div class="bar-row">
+        <div class="bar-label">Wrong Approach</div>
+        <div class="bar-track"><div class="bar-fill" style="width:20%;background:#dc2626"></div></div>
+        <div class="bar-value">2</div>
+      </div>
+<div class="bar-row">
+        <div class="bar-label">User Rejected Action</div>
+        <div class="bar-track"><div class="bar-fill" style="width:20%;background:#dc2626"></div></div>
+        <div class="bar-value">2</div>
+      </div>
+<div class="bar-row">
+        <div class="bar-label">Environment Issue</div>
+        <div class="bar-track"><div class="bar-fill" style="width:20%;background:#dc2626"></div></div>
+        <div class="bar-value">2</div>
+      </div>
+<div class="bar-row">
+        <div class="bar-label">Misunderstood Request</div>
+        <div class="bar-track"><div class="bar-fill" style="width:10%;background:#dc2626"></div></div>
+        <div class="bar-value">1</div>
+      </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Inferred Satisfaction (model-estimated)</div>
+        <div class="bar-row">
+        <div class="bar-label">Likely Satisfied</div>
+        <div class="bar-track"><div class="bar-fill" style="width:100%;background:#eab308"></div></div>
+        <div class="bar-value">36</div>
+      </div>
+<div class="bar-row">
+        <div class="bar-label">Satisfied</div>
+        <div class="bar-track"><div class="bar-fill" style="width:16.666666666666664%;background:#eab308"></div></div>
+        <div class="bar-value">6</div>
+      </div>
+      </div>
+    </div>
+
+    
+    
+    <h2 id="section-features">Existing CC Features to Try</h2>
+    <div class="claude-md-section">
+      <h3>Suggested CLAUDE.md Additions</h3>
+      <p style="font-size: 12px; color: #64748b; margin-bottom: 12px;">Just copy this into Claude Code to add it to your CLAUDE.md.</p>
+      <div class="claude-md-actions">
+        <button class="copy-all-btn" onclick="copyAllCheckedClaudeMd()">Copy All Checked</button>
+      </div>
+      
+        <div class="claude-md-item">
+          <input type="checkbox" id="cmd-0" class="cmd-checkbox" checked data-text="Add as a top-level ## Paid API Safety section near the top of CLAUDE.md so it is read before any verification step.\n\n## Paid API Safety
+NEVER send requests that call paid external APIs (LLM/embedding providers) without explicit user approval in the current turn, even during verification. Use mocks, fixtures or the cost-guard dry-run path. If a paid call is unavoidable, state the estimated cost and ask first.">
+          <label for="cmd-0">
+            <code class="cmd-code">## Paid API Safety
+NEVER send requests that call paid external APIs (LLM/embedding providers) without explicit user approval in the current turn, even during verification. Use mocks, fixtures or the cost-guard dry-run path. If a paid call is unavoidable, state the estimated cost and ask first.</code>
+            <button class="copy-btn" onclick="copyCmdItem(0)">Copy</button>
+          </label>
+          <div class="cmd-why">In the phase-4 session Claude ran a real paid report ($0.055) without approval while verifying a rebuilt container, and the project already treats cost guards as a first-class interface.</div>
+        </div>
+      
+        <div class="claude-md-item">
+          <input type="checkbox" id="cmd-1" class="cmd-checkbox" checked data-text="Add under a new ## Workflow section, after any project overview.\n\n## Handoff Workflow
+Each phase/extra ends with a handoff doc in docs/handoffs/. A handoff must include: what was completed (with commit range), open review findings, the exact next steps, interfaces/contracts touched, env/Docker prerequisites, and cost-guard notes. Before writing a handoff, diff DESIGN.md against main and confirm no sections were removed by accident.">
+          <label for="cmd-1">
+            <code class="cmd-code">## Handoff Workflow
+Each phase/extra ends with a handoff doc in docs/handoffs/. A handoff must include: what was completed (with commit range), open review findings, the exact next steps, interfaces/contracts touched, env/Docker prerequisites, and cost-guard notes. Before writing a handoff, diff DESIGN.md against main and confirm no sections were removed by accident.</code>
+            <button class="copy-btn" onclick="copyCmdItem(1)">Copy</button>
+          </label>
+          <div class="cmd-why">Handoff creation and implementation from a handoff each appeared 3 times, and one session accidentally deleted the DESIGN Generation section and only restored it while writing the handoff.</div>
+        </div>
+      
+        <div class="claude-md-item">
+          <input type="checkbox" id="cmd-2" class="cmd-checkbox" checked data-text="Add under a ## Environment section next to the Docker/dev setup instructions.\n\n## Environment Gotchas
+- Check `docker info` before running integration tests; start Docker if it is down.
+- If Docker wedges, check disk space first (`df -h`, `docker system df`) before kill/restart loops.
+- This is macOS: use `perl -pi -e` instead of `sed` for word-boundary (\b) renames.
+- `rm -rf` is denied; use a fresh build directory or ask the user to clean up.
+- After changing shared contract modules, restart Vite or hard-reload, because it can serve stale modules.">
+          <label for="cmd-2">
+            <code class="cmd-code">## Environment Gotchas
+- Check `docker info` before running integration tests; start Docker if it is down.
+- If Docker wedges, check disk space first (`df -h`, `docker system df`) before kill/restart loops.
+- This is macOS: use `perl -pi -e` instead of `sed` for word-boundary (\b) renames.
+- `rm -rf` is denied; use a fresh build directory or ask the user to clean up.
+- After changing shared contract modules, restart Vite or hard-reload, because it can serve stale modules.</code>
+            <button class="copy-btn" onclick="copyCmdItem(2)">Copy</button>
+          </label>
+          <div class="cmd-why">Docker-not-running, a full-disk Docker wedge, macOS sed \b failures, denied rm -rf, and stale Vite modules each caused avoidable retries across several sessions.</div>
+        </div>
+      
+    </div>
+    
+    
+    <p style="font-size: 13px; color: #64748b; margin-bottom: 12px;">Just copy this into Claude Code and it'll set it up for you.</p>
+    <div class="features-section">
+      
+        <div class="feature-card">
+          <div class="feature-title">Custom Skills</div>
+          <div class="feature-oneliner">Turn repeated multi-step workflows into a single /command.</div>
+          <div class="feature-why"><strong>Why for you:</strong> You repeat the same workflows in almost every session: write a phase handoff, continue from a handoff, merge and push with CI checks, and run a pre-submission review. A skill makes each one consistent and saves you from re-explaining it.</div>
+          
+          <div class="feature-examples">
+            <div class="feature-example">
+              <div class="example-code-row">
+                <code class="example-code">mkdir -p .claude/skills/handoff &amp;&amp; cat &gt; .claude/skills/handoff/SKILL.md &lt;&lt;&apos;EOF&apos;
+---
+name: handoff
+description: Write the end-of-phase handoff document
+---
+1. Run format, lint, typecheck, unit + integration tests; stop if anything fails.
+2. Summarize commits since the last handoff (git log).
+3. List unresolved review findings and known gotchas.
+4. Diff DESIGN.md vs main; flag any removed sections.
+5. Write docs/handoffs/&lt;next-phase&gt;.md with: Completed, Open Issues, Next Steps, Interfaces Touched, Env Prereqs, Cost Guards.
+6. Commit with message &apos;docs: handoff for &lt;next-phase&gt;&apos;.
+EOF</code>
+                <button class="copy-btn" onclick="copyText(this)">Copy</button>
+              </div>
+            </div>
+          </div>
+          
+        </div>
+      
+        <div class="feature-card">
+          <div class="feature-title">Hooks</div>
+          <div class="feature-oneliner">Auto-run shell commands at lifecycle events, such as before a Bash call or after an edit.</div>
+          <div class="feature-why"><strong>Why for you:</strong> A PreToolUse hook can block curl/HTTP calls to paid API endpoints, which prevents a repeat of the $0.055 accident. A PostToolUse typecheck catches zod and unused-variable errors before pre-commit does.</div>
+          
+          <div class="feature-examples">
+            <div class="feature-example">
+              <div class="example-code-row">
+                <code class="example-code">{
+  &quot;hooks&quot;: {
+    &quot;PreToolUse&quot;: [
+      {&quot;matcher&quot;: &quot;Bash&quot;, &quot;hooks&quot;: [{&quot;type&quot;: &quot;command&quot;, &quot;command&quot;: &quot;jq -r &apos;.tool_input.command&apos; | grep -qE &apos;api\\.(openai|anthropic)\\.com|/reports&apos; &amp;&amp; { echo &apos;Blocked: possible paid API call, ask the user first&apos; &gt;&amp;2; exit 2; } || exit 0&quot;}]}
+    ],
+    &quot;PostToolUse&quot;: [
+      {&quot;matcher&quot;: &quot;Edit|Write&quot;, &quot;hooks&quot;: [{&quot;type&quot;: &quot;command&quot;, &quot;command&quot;: &quot;npx tsc --noEmit -p . 2&gt;&amp;1 | head -20&quot;}]}
+    ]
+  }
+}</code>
+                <button class="copy-btn" onclick="copyText(this)">Copy</button>
+              </div>
+            </div>
+          </div>
+          
+        </div>
+      
+        <div class="feature-card">
+          <div class="feature-title">Task Agents</div>
+          <div class="feature-oneliner">Spawn focused subagents for parallel review or exploration.</div>
+          <div class="feature-why"><strong>Why for you:</strong> Subagent reviews already found real bugs (13 in phase 4, plus others in extras). Running a review agent after each sub-milestone, not only at phase end, would catch these earlier and shrink the fix-up rounds.</div>
+          
+          <div class="feature-examples">
+            <div class="feature-example">
+              <div class="example-code-row">
+                <code class="example-code">Use a subagent to review the diff since the last commit tagged phase-4-start. Focus on error handling, cost-guard bypasses, SQL/pgvector correctness and test gaps. Report findings ranked by severity before I continue.</code>
+                <button class="copy-btn" onclick="copyText(this)">Copy</button>
+              </div>
+            </div>
+          </div>
+          
+        </div>
+      
+    </div>
+    
+    
+    <h2 id="section-patterns">New Ways to Use Claude Code</h2>
+    <p style="font-size: 13px; color: #64748b; margin-bottom: 12px;">Just copy this into Claude Code and it'll walk you through it.</p>
+    <div class="patterns-section">
+      
+        <div class="pattern-card">
+          <div class="pattern-title">Ask for the verification plan before running it</div>
+          <div class="pattern-summary">Before Claude verifies a running container or a live endpoint, have it list every request it will make and mark any that cost money.</div>
+          <div class="pattern-detail">Your only serious incident was an unapproved paid call during routine verification. Your project has real spend attached (LLM reports and embeddings), so verification should default to dry-run or mocked paths. A quick plan to approve costs you one message and removes the risk. It also fits the cost-guard interface you already designed.</div>
+          
+          <div class="copyable-prompt-section">
+            <div class="prompt-label">Paste into Claude Code:</div>
+            <div class="copyable-prompt-row">
+              <code class="copyable-prompt">Before verifying, list every command and HTTP request you plan to run, mark any that hit a paid API, and wait for my approval. Use the dry-run/mock path wherever possible.</code>
+              <button class="copy-btn" onclick="copyText(this)">Copy</button>
+            </div>
+          </div>
+          
+        </div>
+      
+        <div class="pattern-card">
+          <div class="pattern-title">Use unambiguous handoff kickoffs</div>
+          <div class="pattern-summary">Open each new phase with a standard prompt naming the handoff file and the first action, so instructions like &apos;can you start it&apos; don&apos;t get misread.</div>
+          <div class="pattern-detail">Your sessions follow a strict phase → handoff → new session rhythm, which works very well: 8 of 10 sessions were fully achieved. The one misunderstanding came from a vague &apos;start it&apos;, which Claude read as starting Docker instead of starting phase 3. A fixed kickoff prompt makes the intent clear and makes Claude check the environment first.</div>
+          
+          <div class="copyable-prompt-section">
+            <div class="prompt-label">Paste into Claude Code:</div>
+            <div class="copyable-prompt-row">
+              <code class="copyable-prompt">Read docs/handoffs/&lt;phase&gt;.md. First confirm Docker is running and all tests pass on main. Then summarize the plan in 5 bullets and begin implementation test-first. Don&apos;t stop for approval unless a step would call a paid API or delete files.</code>
+              <button class="copy-btn" onclick="copyText(this)">Copy</button>
+            </div>
+          </div>
+          
+        </div>
+      
+        <div class="pattern-card">
+          <div class="pattern-title">Reduce buggy-code friction with red-green discipline</div>
+          <div class="pattern-summary">Buggy code was your top friction (10 instances). Ask Claude to run the failing test and confirm the failure reason before writing the implementation.</div>
+          <div class="pattern-detail">Several bugs came from wrong test assertions (concatenation collision, pgvector float formatting) or from mutations silently not applying because Prettier rewrapped the line. Confirming that each red test fails for the right reason catches broken tests early. Re-reading the file after an automated substitution catches the Prettier case.</div>
+          
+          <div class="copyable-prompt-section">
+            <div class="prompt-label">Paste into Claude Code:</div>
+            <div class="copyable-prompt-row">
+              <code class="copyable-prompt">For each new test: run it, show me the failure message, and confirm it fails for the intended reason before implementing. After any sed or mutation edit, re-read the changed lines to confirm the edit actually applied.</code>
+              <button class="copy-btn" onclick="copyText(this)">Copy</button>
+            </div>
+          </div>
+          
+        </div>
+      
+    </div>
+    
+    
+
+    
+    <h2 id="section-horizon">On the Horizon</h2>
+    <p class="section-intro">Your phase-by-phase handoff workflow already turns Claude into a reliable multi-session builder, and the next step is letting it run whole phases on its own: parallel agents, review loops gated by tests, and safety rails that make running without supervision safe.</p>
+    <div class="horizon-section">
+      
+        <div class="horizon-card">
+          <div class="horizon-title">Autonomous phase execution with review loops</div>
+          <div class="horizon-possible">Your handoff document could become an executable spec. Claude would read it, break the work into tasks, implement each one test-first, run a review subagent, fix what the review finds, and repeat until format, lint, typecheck, unit and integration tests all pass. It would then write the next phase&apos;s handoff without you stepping in. Your review subagents found real bugs (13 in phase 4), so making the review-and-fix cycle automatic and repeated would catch those before you ever look at the code.</div>
+          <div class="horizon-tip"><strong>Getting started:</strong> Run Claude Code in headless mode (`claude -p`) with a custom slash command or Skill that holds the build, review and fix loop. Use the Task tool to start independent reviewer subagents with fresh context.</div>
+          <div class="pattern-prompt"><div class="prompt-label">Paste into Claude Code:</div><code>Read HANDOFF.md and implement the entire phase autonomously. Process: (1) Break the handoff into a numbered task list and save it to docs/phase-plan.md. (2) For each task, write failing tests first, implement until green, run format/lint/typecheck/unit/integration, and commit with a descriptive message. (3) After all tasks, spawn 2 independent review subagents: one focused on correctness and edge cases, one on contracts/types and security. Have each produce a findings list. (4) Fix every finding with a regression test, then re-run the reviewers. Repeat until a review pass returns no high or medium findings, with a maximum of 3 rounds. (5) Run the full pre-submission red-flag check (secrets, debug markers, CI status). (6) Write the next phase&apos;s HANDOFF.md with interfaces, open risks and cost-guard notes. Never make network calls to paid APIs. Use mocks or recorded fixtures, and stop and ask if a real paid call seems required. Report a summary table of tasks, commits, review findings and their fixes at the end.</code><button class="copy-btn" onclick="copyText(this)">Copy</button></div>
+        </div>
+      
+        <div class="horizon-card">
+          <div class="horizon-title">Parallel agents across worktrees for features</div>
+          <div class="horizon-possible">Your UI session shipped five independent features one after another: palette, footnotes, EXIF metadata, A/B control and contact sheets. These could run as parallel agents, each in its own git worktree on its own branch, each verifying its feature in the browser and against tests. An integrator agent would then merge them in order and resolve conflicts. That could turn a long session into roughly the length of its slowest feature.</div>
+          <div class="horizon-tip"><strong>Getting started:</strong> Use `git worktree add` for each feature with parallel Task subagents, or run several headless Claude instances. Give each agent the claude-in-chrome MCP for screenshot-based checks.</div>
+          <div class="pattern-prompt"><div class="prompt-label">Paste into Claude Code:</div><code>I want these features built in parallel: [LIST FEATURES]. For each feature: create a git worktree at ../wt-&lt;feature&gt; on branch feat/&lt;feature&gt; and spawn a subagent that works only in that worktree. Each subagent should write tests first, implement, run lint/typecheck/tests, start the dev server on a unique port, and verify the UI with the browser tool, taking before and after screenshots. It should then commit and report back with the screenshots and test output. When all subagents finish, act as integrator. Merge branches into main one at a time in the least-conflicting order, re-run the full test suite after each merge, fix any integration breakage, clean up the worktrees with git worktree remove (not rm -rf), and push only after CI passes. Give me a final report comparing each feature&apos;s screenshots and listing any conflicts you resolved.</code><button class="copy-btn" onclick="copyText(this)">Copy</button></div>
+        </div>
+      
+        <div class="horizon-card">
+          <div class="horizon-title">Self-healing environment and cost guardrails</div>
+          <div class="horizon-possible">Much of your friction came from the environment rather than the code: Docker not running, a full disk wedging containers, stale Vite modules, a GitHub billing lock, and an accidental paid API call. A preflight-and-guard agent could check Docker health, free disk space, ports and caches before every session. It could block real paid requests unless you explicitly allow them, and recover from common failures on its own. That would let long autonomous runs keep going without you needing to step in.</div>
+          <div class="horizon-tip"><strong>Getting started:</strong> Add Claude Code hooks: a PreToolUse hook on Bash to block calls to paid endpoints and dangerous commands, and a SessionStart hook that runs a preflight script. Add a Skill that tells Claude how to fix each type of environment failure.</div>
+          <div class="pattern-prompt"><div class="prompt-label">Paste into Claude Code:</div><code>Build a self-healing dev environment for this repo. (1) Write scripts/preflight.sh, which checks that Docker is running and starts it if not. It should also check free disk space (warn under 10GB and offer `docker system prune` for dangling images and build cache only), required ports, the containers&apos; health status and a Vite cache reset. It should exit non-zero with clear messages. (2) Add a SessionStart hook in .claude/settings.json that runs preflight. (3) Add a PreToolUse hook script for Bash that blocks any curl/fetch to the paid LLM API host unless ALLOW_PAID=1 is set, and that blocks rm -rf outside ./tmp and build dirs. Log blocked attempts to .claude/blocked.log. (4) Add a recorded-fixture mode so integration and verification runs replay saved API responses by default. (5) Create a Skill called env-recovery that documents the recovery steps for: Docker wedged by disk, stale Vite modules, db-test container restart, and CI failures that aren&apos;t code-related, such as billing locks. (6) Test every hook by deliberately triggering it, and show me the output.</code><button class="copy-btn" onclick="copyText(this)">Copy</button></div>
+        </div>
+      
+    </div>
+    
+
+    
+    <div class="fun-ending">
+      <div class="fun-headline">"While checking a rebuilt container, Claude sent one unapproved request that ran a real paid report. It cost $0.055, and Claude told the user about it right away without being asked."</div>
+      <div class="fun-detail">This was during phase 4 of a multi-phase take-home project, in the same session where a full disk wedged Docker and took several rounds of manual kill-and-restart to recover. This was the phase after the user had asked for cost guards, which were written into the handoff as &apos;interface 7&apos;.</div>
+    </div>
+    
+
+    
+  </div>
+  <script>
+    function toggleCollapsible(header) {
+      header.classList.toggle('open');
+      const content = header.nextElementSibling;
+      content.classList.toggle('open');
+    }
+    function copyText(btn) {
+      const code = btn.previousElementSibling;
+      navigator.clipboard.writeText(code.textContent).then(() => {
+        btn.textContent = 'Copied!';
+        setTimeout(() => { btn.textContent = 'Copy'; }, 2000);
+      });
+    }
+    function copyCmdItem(idx) {
+      const checkbox = document.getElementById('cmd-' + idx);
+      if (checkbox) {
+        const text = checkbox.dataset.text;
+        navigator.clipboard.writeText(text).then(() => {
+          const btn = checkbox.nextElementSibling.querySelector('.copy-btn');
+          if (btn) { btn.textContent = 'Copied!'; setTimeout(() => { btn.textContent = 'Copy'; }, 2000); }
+        });
+      }
+    }
+    function copyAllCheckedClaudeMd() {
+      const checkboxes = document.querySelectorAll('.cmd-checkbox:checked');
+      const texts = [];
+      checkboxes.forEach(cb => {
+        if (cb.dataset.text) { texts.push(cb.dataset.text); }
+      });
+      const combined = texts.join('\n');
+      const btn = document.querySelector('.copy-all-btn');
+      if (btn) {
+        navigator.clipboard.writeText(combined).then(() => {
+          btn.textContent = 'Copied ' + texts.length + ' items!';
+          btn.classList.add('copied');
+          setTimeout(() => { btn.textContent = 'Copy All Checked'; btn.classList.remove('copied'); }, 2000);
+        });
+      }
+    }
+    // Timezone selector for time of day chart (data is from our own analytics, not user input)
+    const rawHourCounts = {"0":17,"1":3,"3":2,"4":2,"17":5,"18":16,"19":11,"20":23,"21":11,"22":23,"23":11};
+    function updateHourHistogram(offsetFromPT) {
+      const periods = [
+        { label: "Morning (6-12)", range: [6,7,8,9,10,11] },
+        { label: "Afternoon (12-18)", range: [12,13,14,15,16,17] },
+        { label: "Evening (18-24)", range: [18,19,20,21,22,23] },
+        { label: "Night (0-6)", range: [0,1,2,3,4,5] }
+      ];
+      const adjustedCounts = {};
+      for (const [hour, count] of Object.entries(rawHourCounts)) {
+        const newHour = (parseInt(hour) + offsetFromPT + 24) % 24;
+        adjustedCounts[newHour] = (adjustedCounts[newHour] || 0) + count;
+      }
+      const periodCounts = periods.map(p => ({
+        label: p.label,
+        count: p.range.reduce((sum, h) => sum + (adjustedCounts[h] || 0), 0)
+      }));
+      const maxCount = Math.max(...periodCounts.map(p => p.count)) || 1;
+      const container = document.getElementById('hour-histogram');
+      container.textContent = '';
+      periodCounts.forEach(p => {
+        const row = document.createElement('div');
+        row.className = 'bar-row';
+        const label = document.createElement('div');
+        label.className = 'bar-label';
+        label.textContent = p.label;
+        const track = document.createElement('div');
+        track.className = 'bar-track';
+        const fill = document.createElement('div');
+        fill.className = 'bar-fill';
+        fill.style.width = (p.count / maxCount) * 100 + '%';
+        fill.style.background = '#8b5cf6';
+        track.appendChild(fill);
+        const value = document.createElement('div');
+        value.className = 'bar-value';
+        value.textContent = p.count;
+        row.appendChild(label);
+        row.appendChild(track);
+        row.appendChild(value);
+        container.appendChild(row);
+      });
+    }
+    document.getElementById('timezone-select').addEventListener('change', function() {
+      const customInput = document.getElementById('custom-offset');
+      if (this.value === 'custom') {
+        customInput.style.display = 'inline-block';
+        customInput.focus();
+      } else {
+        customInput.style.display = 'none';
+        updateHourHistogram(parseInt(this.value));
+      }
+    });
+    document.getElementById('custom-offset').addEventListener('change', function() {
+      const parsed = parseInt(this.value, 10);
+      if (isNaN(parsed)) return;
+      updateHourHistogram(parsed + 8);
+    });
+  </script>
+</body>
+</html>

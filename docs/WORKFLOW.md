@@ -1,6 +1,7 @@
 # Workflow
 
-This file records how the project was built with Claude Code. It is meant to be read alongside `/insights`.
+This file records how the project was built with Claude Code. It is meant to be read alongside the `/insights` report in
+[`insights.html`](insights.html), which covers this project's sessions only.
 
 ## Process
 

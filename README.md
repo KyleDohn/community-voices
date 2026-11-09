@@ -179,6 +179,8 @@ Built with Claude Code over about 9.5 hours, test-first, phase by phase.
   to revisit it.
 - [`docs/WORKFLOW.md`](docs/WORKFLOW.md): how the AI was used, every place it was wrong and got
   corrected, and the time log.
+- [`docs/insights.html`](docs/insights.html): the Claude Code `/insights` report for this project's
+  sessions only. GitHub shows it as source, so download it or open it from your clone.
 - [`docs/research/`](docs/research/): source research on the forum's API and the stack.
 
 ## License
