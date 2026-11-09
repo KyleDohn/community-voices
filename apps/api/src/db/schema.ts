@@ -172,3 +172,14 @@ export const abRuns = pgTable(
   },
   (t) => [index('ab_runs_created_idx').on(t.createdAt)],
 );
+
+/** The cached UMAP projection, one version at a time (extra 2). */
+export const mapPoints = pgTable('map_points', {
+  chunkId: integer('chunk_id')
+    .primaryKey()
+    .references(() => chunks.id, { onDelete: 'cascade' }),
+  x: doublePrecision('x').notNull(),
+  y: doublePrecision('y').notNull(),
+  /** `corpusVersion()` of the corpus these points were projected from. */
+  corpusVersion: text('corpus_version').notNull(),
+});
