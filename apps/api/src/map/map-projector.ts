@@ -32,14 +32,12 @@ export const createMapProjector = ({ store, project, model }: MapProjectorDeps) 
   let queue: Promise<unknown> = Promise.resolve();
 
   const projectIfChanged = async () => {
-    status = 'computing';
     try {
       const vectors = await store.embeddedVectors(model);
-      const version = corpusVersion(
-        model,
-        vectors.map((v) => v.id),
-      );
+      const version = corpusVersion(model, vectors);
       if ((await store.storedVersion()) !== version) {
+        // Only a real re-projection hides the map; a no-op refresh keeps serving it.
+        status = 'computing';
         const points = await project(
           vectors.map((v) => v.embedding),
           { seed: SEED },

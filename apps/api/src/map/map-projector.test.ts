@@ -5,15 +5,16 @@ import { createMapProjector, type MapStore, type StoredPoint } from './map-proje
 import type { Point2d } from './project-vectors';
 
 const model = 'bge';
+const initialVectors = () => [
+  { id: 1, embedding: [0, 1] },
+  { id: 2, embedding: [1, 0] },
+];
 
 const fakeStore = (storedVersion?: string) => {
   const state = {
     version: storedVersion,
     points: [] as StoredPoint[],
-    vectors: [
-      { id: 1, embedding: [0, 1] },
-      { id: 2, embedding: [1, 0] },
-    ],
+    vectors: initialVectors(),
   };
   const store: MapStore = {
     embeddedVectors: async () => state.vectors,
@@ -49,7 +50,7 @@ describe('createMapProjector', () => {
       { seed: expect.any(Number) },
     );
     expect(state).toMatchObject({
-      version: corpusVersion(model, [1, 2]),
+      version: corpusVersion(model, initialVectors()),
       points: [
         { chunkId: 1, x: 0, y: -0 },
         { chunkId: 2, x: 1, y: -1 },
@@ -59,11 +60,24 @@ describe('createMapProjector', () => {
   });
 
   it('skips the projection when the stored version matches', async () => {
-    const { store } = fakeStore(corpusVersion(model, [1, 2]));
+    const { store } = fakeStore(corpusVersion(model, initialVectors()));
     const project = fakeProject();
     const projector = createMapProjector({ store, project, model });
     await projector.refresh();
     expect(project).not.toHaveBeenCalled();
+    expect(projector.status()).toBe('ready');
+  });
+
+  it('stays ready through a refresh that finds the corpus unchanged', async () => {
+    const { store } = fakeStore();
+    const project = fakeProject();
+    const projector = createMapProjector({ store, project, model });
+    await projector.refresh();
+    const seen: string[] = [];
+    const storedVersion = store.storedVersion;
+    store.storedVersion = async () => (seen.push(projector.status()), storedVersion());
+    await projector.refresh();
+    expect(seen).toEqual(['ready']);
     expect(projector.status()).toBe('ready');
   });
 
