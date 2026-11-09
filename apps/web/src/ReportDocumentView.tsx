@@ -1,12 +1,14 @@
 import type { Confidence, ReportDocument, ReportSource } from '@cv/contracts';
 import type { ReactNode } from 'react';
-import { Citations } from './Citations';
+import { Footnote } from './Footnote';
+import { numberSources } from './footnotes';
+import { weekRange } from './format';
 
 const LEVELS: Confidence[] = ['low', 'medium', 'high'];
 
 /** Three stops, like an exposure scale: how far the evidence carries the claim. */
 const ConfidenceScale = ({ level }: { level: Confidence }) => (
-  <span className="inline-flex items-center gap-2 font-sans text-xs text-mid">
+  <span className="exif inline-flex items-center gap-2">
     <span className="flex gap-0.5" aria-hidden>
       {LEVELS.map((l, i) => (
         <span
@@ -20,13 +22,27 @@ const ConfidenceScale = ({ level }: { level: Confidence }) => (
 );
 
 const Section = ({ title, children }: { title: string; children: ReactNode }) => (
-  <section className="mt-10">
-    <h2 className="font-sans text-sm font-semibold text-mid">{title}</h2>
-    <div className="mt-3">{children}</div>
+  <section className="mt-12">
+    <h2 className="exif font-medium">{title}</h2>
+    <div className="mt-2">{children}</div>
   </section>
 );
 
-const Empty = () => <p className="text-mid italic">Nothing the posts could support.</p>;
+const Empty = () => (
+  <p className="border-t border-rule pt-4 text-mid italic">Nothing the posts could support.</p>
+);
+
+/** A ruled row with a margin marker, like a frame on a contact sheet. */
+const Frame = ({ marker, children }: { marker: string; children: ReactNode }) => (
+  <li className="grid grid-cols-[2.5rem_minmax(0,1fr)] gap-x-3 border-t border-rule py-6">
+    <span className="pt-1.5 font-mono text-xs text-accent" aria-hidden>
+      {marker}
+    </span>
+    <div>{children}</div>
+  </li>
+);
+
+const frame = (i: number) => String(i + 1).padStart(2, '0');
 
 interface Props {
   document: ReportDocument;
@@ -36,27 +52,51 @@ interface Props {
 
 export const ReportDocumentView = ({ document, sources, week }: Props) => {
   const byId = new Map(sources.map((s) => [s.postId, s]));
-  const cite = (ids: number[]) => <Citations ids={ids} sources={byId} week={week} />;
+  const numbers = numberSources([
+    document.mood.citations,
+    ...document.themes.map((t) => t.citations),
+    ...document.notableThreads.map((t) => t.citations),
+    ...document.predictions.map((p) => p.citations),
+  ]);
+  // The last word and its footnote never part across a line break.
+  const withFootnote = (text: string, ids: number[]) => {
+    const cut = text.trimEnd().lastIndexOf(' ') + 1;
+    return (
+      <>
+        {text.slice(0, cut)}
+        <span className="whitespace-nowrap">
+          {text.slice(cut).trimEnd()}
+          <Footnote ids={ids} numbers={numbers} sources={byId} week={week} />
+        </span>
+      </>
+    );
+  };
+  const cited = (ids: number[]) => new Set(ids).size;
 
   return (
     <article className="font-serif">
-      <p className="text-xl leading-relaxed text-pretty">{document.mood.summary}</p>
-      <div className="mt-3">{cite(document.mood.citations)}</div>
+      <p className="exif">
+        {weekRange(week)} · {numbers.size} posts cited
+      </p>
+      <p className="mt-3 text-2xl leading-snug text-pretty">
+        {withFootnote(document.mood.summary, document.mood.citations)}
+      </p>
 
       <Section title="What people talked about">
         {document.themes.length === 0 ? (
           <Empty />
         ) : (
-          <ul className="space-y-6">
+          <ol>
             {document.themes.map((t, i) => (
-              <li key={i}>
-                <h3 className="text-lg font-semibold text-balance">{t.title}</h3>
-                <p className="mt-1 font-sans text-xs text-mid">about {t.approxPostCount} posts</p>
-                <p className="mt-2 leading-7">{t.summary}</p>
-                <div className="mt-2">{cite(t.citations)}</div>
-              </li>
+              <Frame key={i} marker={frame(i)}>
+                <h3 className="text-xl font-semibold text-balance">{t.title}</h3>
+                <p className="exif mt-1.5">
+                  ≈{t.approxPostCount} posts · {cited(t.citations)} cited
+                </p>
+                <p className="mt-3 text-[17px] leading-7">{withFootnote(t.summary, t.citations)}</p>
+              </Frame>
             ))}
-          </ul>
+          </ol>
         )}
       </Section>
 
@@ -64,13 +104,12 @@ export const ReportDocumentView = ({ document, sources, week }: Props) => {
         {document.notableThreads.length === 0 ? (
           <Empty />
         ) : (
-          <ul className="space-y-5">
+          <ul>
             {document.notableThreads.map((t, i) => (
-              <li key={i} className="border-l-2 border-rule pl-4">
-                <h3 className="font-semibold">{t.title}</h3>
-                <p className="mt-1 leading-7">{t.why}</p>
-                <div className="mt-2">{cite(t.citations)}</div>
-              </li>
+              <Frame key={i} marker="→">
+                <h3 className="text-lg font-semibold text-balance">{t.title}</h3>
+                <p className="mt-1.5 leading-7">{withFootnote(t.why, t.citations)}</p>
+              </Frame>
             ))}
           </ul>
         )}
@@ -80,18 +119,17 @@ export const ReportDocumentView = ({ document, sources, week }: Props) => {
         {document.predictions.length === 0 ? (
           <Empty />
         ) : (
-          <ul className="space-y-6">
+          <ol>
             {document.predictions.map((p, i) => (
-              <li key={i}>
+              <Frame key={i} marker={frame(i)}>
                 <h3 className="text-lg font-semibold text-balance">{p.claim}</h3>
-                <div className="mt-1">
+                <div className="mt-1.5">
                   <ConfidenceScale level={p.confidence} />
                 </div>
-                <p className="mt-2 leading-7">{p.rationale}</p>
-                <div className="mt-2">{cite(p.citations)}</div>
-              </li>
+                <p className="mt-3 leading-7">{withFootnote(p.rationale, p.citations)}</p>
+              </Frame>
             ))}
-          </ul>
+          </ol>
         )}
       </Section>
     </article>

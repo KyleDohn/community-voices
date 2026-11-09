@@ -24,9 +24,11 @@ export const HealthBadge = () => {
   }, []);
 
   return (
-    <span
-      className={`rounded-full px-3 py-1 text-sm ${isHealthy(health) ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}
-    >
+    <span className="exif flex items-center gap-2" role="status">
+      <span
+        aria-hidden
+        className={`size-2 rounded-full ${isHealthy(health) ? 'bg-[#4fae6a]' : 'bg-warn'}`}
+      />
       {label(health)}
     </span>
   );

@@ -298,6 +298,14 @@ The app has a week selector, a "Run new A/B" button and four views:
    but 60–70 trend rows, so raw row counts would mostly measure trend lookups. The cost list shows A/B
    runs and the reports no A/B run points to, because an A/B run's cost already includes its report.
 
+**Look.** The UI uses darkroom-neutral colours: untinted greys like a photo editor's, so nothing biases
+the reader's sense of colour, plus one safelight-amber accent for links and citations. Metadata such as
+dates, counts and costs is set in small-caps IBM Plex Mono, like an EXIF readout. Prose stays in
+Literata. Citations are superscript footnotes, numbered across the document by first citation, and a
+run of three or more collapses to a range (`24–32`). Selecting one opens a card that lists each post's
+number, thread, week and forum link. The run's cost sits in a collapsed "Run info" strip under the
+report, so it never outranks the content.
+
 ## Testing and CI
 
 - **Unit (Vitest, pre-commit):** chunking, the week window, MMR, citation checks, cost math, prompt

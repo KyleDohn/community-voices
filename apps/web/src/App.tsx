@@ -28,21 +28,28 @@ export const App = () => {
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-8 sm:px-8">
-      <header className="flex flex-wrap items-baseline justify-between gap-3 border-b border-rule pb-6">
+      <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="font-serif text-3xl font-semibold">Community Voices</h1>
-          <p className="mt-1 text-mid">The week on discuss.pixls.us, written from its own posts.</p>
+          <p className="exif">discuss.pixls.us · written from its own posts</p>
+          <h1 className="mt-1.5 font-serif text-3xl font-semibold tracking-tight">
+            Community Voices
+          </h1>
         </div>
         <HealthBadge />
       </header>
-      <nav className="mt-6 flex gap-1 text-sm" aria-label="Views">
+      <nav
+        className="mt-5 flex flex-wrap gap-x-7 border-b border-rule text-sm font-medium"
+        aria-label="Views"
+      >
         {VIEWS.map((v) => (
           <a
             key={v.hash}
             href={v.hash}
             aria-current={view === v.hash ? 'page' : undefined}
-            className={`rounded-md px-3 py-1.5 ${
-              view === v.hash ? 'bg-ink text-paper' : 'text-mid hover:text-ink'
+            className={`-mb-px border-b-2 py-2.5 ${
+              view === v.hash
+                ? 'border-accent text-ink'
+                : 'border-transparent text-mid hover:text-ink'
             }`}
           >
             {v.name}

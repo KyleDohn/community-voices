@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { fetchReport, fetchWeeks, listReports, messageOf, startReport } from './api';
 import { usd } from './format';
 import { ReportDocumentView } from './ReportDocumentView';
-import { RunReceipt } from './RunReceipt';
+import { RunInfo, RunSidebar } from './RunReceipt';
 import { WeekPicker } from './WeekPicker';
 
 const POLL_MS = 2_000;
@@ -135,7 +135,7 @@ export const ReportView = () => {
           type="button"
           onClick={generate}
           disabled={!week || starting || running !== undefined}
-          className="rounded-md bg-ink px-4 py-2 text-sm font-medium text-paper disabled:opacity-40"
+          className="min-h-11 rounded-md border border-rule px-4 py-2 text-sm font-medium hover:border-mid disabled:opacity-40"
         >
           {shownRun?.status === 'succeeded' ? 'Generate a new report' : 'Generate report'}
         </button>
@@ -146,7 +146,7 @@ export const ReportView = () => {
         </p>
       )}
 
-      <div className="mt-10 grid gap-10 lg:grid-cols-[minmax(0,68ch)_20rem] lg:justify-between">
+      <div className="mt-10 grid gap-10 lg:grid-cols-[minmax(0,68ch)_19rem] lg:justify-between lg:gap-14">
         <div>
           {shown.kind === 'loading' && <p className="text-mid">Loading…</p>}
           {shown.kind === 'error' && <p className="text-warn">{shown.message}</p>}
@@ -171,8 +171,9 @@ export const ReportView = () => {
               week={shownRun.weekStart}
             />
           )}
+          {shownRun && shownRun.status !== 'running' && <RunInfo run={shownRun} />}
         </div>
-        {shownRun && shownRun.status !== 'running' && <RunReceipt run={shownRun} />}
+        {shownRun && shownRun.status !== 'running' && <RunSidebar run={shownRun} />}
       </div>
     </div>
   );
