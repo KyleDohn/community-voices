@@ -27,6 +27,6 @@ export const mapRoutes = (map: MapSource) =>
     const highlightPostIds = reportId.data ? await map.reportPostIds(reportId.data) : [];
     if (!highlightPostIds) return c.json(unknownReport, 404);
     const status = map.status();
-    const points = status === 'ready' ? await map.points() : [];
+    const points = status === 'computing' ? [] : await map.points();
     return c.json({ status, points, highlightPostIds } satisfies MapResponse);
   });

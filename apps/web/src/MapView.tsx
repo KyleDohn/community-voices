@@ -90,8 +90,8 @@ const Scatter = ({ points, highlight }: { points: MapPoint[]; highlight: Set<num
     const ctx = canvas?.getContext('2d');
     if (!canvas || !ctx || width === 0) return;
     const dpr = window.devicePixelRatio || 1;
-    canvas.width = width * dpr;
-    canvas.height = height * dpr;
+    canvas.width = Math.round(width * dpr);
+    canvas.height = Math.round(height * dpr);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, width, height);
     const colors = Array.from({ length: WEEK_STEPS }, (_, i) =>
@@ -165,10 +165,13 @@ const Scatter = ({ points, highlight }: { points: MapPoint[]; highlight: Set<num
       />
       {shown && at && (
         <div
-          className="absolute z-10 w-64 max-w-[80%] rounded-md border border-rule bg-panel p-3 text-sm shadow-md"
+          className={`absolute z-10 w-64 max-w-[80%] rounded-md border border-rule bg-panel p-3 text-sm shadow-md ${
+            pinned === undefined ? 'pointer-events-none' : ''
+          }`}
           style={{
             left: Math.min(Math.max(at.x - 128, 0), Math.max(width - 256, 0)),
-            top: at.y + 14 + 120 > height ? Math.max(at.y - 134, 0) : at.y + 14,
+            // Open away from the nearer edge, so a tall title never pushes it off the canvas.
+            ...(at.y > height / 2 ? { bottom: height - at.y + 14 } : { top: at.y + 14 }),
           }}
           role="status"
         >
@@ -340,7 +343,7 @@ export const MapView = () => {
             Laying out the map from the embedded posts. This takes a few seconds once the posts are
             indexed (a few minutes on first boot).
           </p>
-        ) : state.map.status === 'failed' ? (
+        ) : state.map.status === 'failed' && state.map.points.length === 0 ? (
           <p className="p-4 text-sm text-warn" role="alert">
             The map could not be computed. The server log has the details.
           </p>
@@ -348,6 +351,11 @@ export const MapView = () => {
           <p className="p-4 text-sm text-mid">No embedded posts yet, so there is nothing to map.</p>
         ) : (
           <>
+            {state.map.status === 'failed' && (
+              <p className="mb-3 text-sm text-warn" role="alert">
+                Updating the map failed, so this is the previous layout. Newer posts may be missing.
+              </p>
+            )}
             <Legend points={state.map.points} highlighting={highlight.size > 0} />
             <div className="mt-3">
               <Scatter points={state.map.points} highlight={highlight} />

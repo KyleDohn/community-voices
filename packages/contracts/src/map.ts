@@ -27,8 +27,9 @@ export const MapResponse = z
     points: z.array(MapPoint),
     highlightPostIds: z.array(PostId),
   })
-  .refine((map) => map.status === 'ready' || map.points.length === 0, {
-    message: 'points are only sent once the map is ready',
+  // A failed refresh leaves the previous projection intact, so `failed` still carries it.
+  .refine((map) => map.status !== 'computing' || map.points.length === 0, {
+    message: 'no points are sent while the map is computing',
     path: ['points'],
   });
 export type MapResponse = z.infer<typeof MapResponse>;

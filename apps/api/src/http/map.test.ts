@@ -47,10 +47,19 @@ describe('GET /embeddings/map', () => {
     expect(MapResponse.parse(body).highlightPostIds).toEqual([463229, 470001]);
   });
 
-  it.each<MapStatus>(['computing', 'failed'])('sends no points while %s', async (status) => {
-    const { res, body } = await get('', status);
+  it('sends no points while computing', async () => {
+    const { res, body } = await get('', 'computing');
     expect(res.status).toBe(200);
-    expect(MapResponse.parse(body)).toEqual({ status, points: [], highlightPostIds: [] });
+    expect(MapResponse.parse(body)).toEqual({
+      status: 'computing',
+      points: [],
+      highlightPostIds: [],
+    });
+  });
+
+  it('still sends the stored points after a failed refresh', async () => {
+    const { body } = await get('', 'failed');
+    expect(MapResponse.parse(body).points).toEqual([point]);
   });
 
   it('gzips a large response for a client that accepts it', async () => {

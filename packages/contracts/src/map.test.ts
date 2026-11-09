@@ -24,7 +24,12 @@ describe('MapResponse', () => {
     expect(MapResponse.parse(body)).toEqual(body);
   });
 
-  it('rejects points unless the map is ready', () => {
+  it('parses a failed refresh that still serves the previous points', () => {
+    const body = { status: 'failed', points: [point], highlightPostIds: [] };
+    expect(MapResponse.parse(body)).toEqual(body);
+  });
+
+  it('rejects points while the map is computing', () => {
     const body = { status: 'computing', points: [point], highlightPostIds: [] };
     expect(MapResponse.safeParse(body).success).toBe(false);
   });
