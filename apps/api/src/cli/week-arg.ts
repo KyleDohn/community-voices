@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { targetWeek, weekOf } from '../ingest/week';
+import { ingestionWindow, targetWeek, weekOf } from '../ingest/week';
 
 export const isoDay = (d: Date) => d.toISOString().slice(0, 10);
 
@@ -15,3 +15,8 @@ export const WeekArg = z.iso
     return !Number.isNaN(date.getTime()) && isoDay(weekOf(date)) === day;
   }, 'must be a Monday')
   .default(isoDay(targetWeek(new Date()).start));
+
+/** The corpus window whose latest complete week starts on `week`, a Monday. */
+export const windowEndingWith = (week: string, historyWeeks: number) =>
+  // The instant the week ends, so it is the latest complete one.
+  ingestionWindow(new Date(Date.parse(`${week}T00:00:00Z`) + 7 * 86_400_000), historyWeeks);

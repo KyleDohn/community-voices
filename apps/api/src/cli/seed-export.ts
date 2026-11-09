@@ -1,15 +1,20 @@
-/** `pnpm seed:export` writes the stored corpus to seed/<host>-<from>-<to>.json for committing. */
+/**
+ * `pnpm seed:export` writes the stored corpus to seed/<host>-<from>-<to>.json for committing.
+ * `--week <Monday>` names the corpus's latest week, when it isn't the latest complete one.
+ */
+import { parseArgs } from 'node:util';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { loadConfig } from '../config';
 import { connect } from '../db/client';
 import { createPgIngestionRepository } from '../ingest/pg-ingestion-repository';
-import { ingestionWindow } from '../ingest/week';
 import { exportSeed, SEED_DIR, seedFileName } from '../seed/seed';
+import { WeekArg, windowEndingWith } from './week-arg';
 
 const config = loadConfig(process.env);
 const { pool, db } = connect(config.databaseUrl);
-const window = ingestionWindow(new Date(), config.ingest.historyWeeks);
+const { values } = parseArgs({ options: { week: { type: 'string' } } });
+const window = windowEndingWith(WeekArg.parse(values.week), config.ingest.historyWeeks);
 
 const seed = await exportSeed(createPgIngestionRepository(db), {
   baseUrl: config.ingest.discourseBaseUrl,

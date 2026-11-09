@@ -205,15 +205,16 @@ retrieval runs** (within-run counts are almost all 1). Weeks are colored **seque
 
 ## Extras, ranked by demo value per hour
 
-| Rank | Phase                                                                                                                                 | Est.   | Status |
-| ---- | ------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------ |
-| 1    | **Retrieval stats.** `GET /stats/retrievals`, Stats view with most-retrieved posts and cost per run.                                  | 0.5 h  | ✅     |
-| 2    | **Embeddings map.** UMAP on the server, cached `map_points`, `GET /embeddings/map`, canvas scatter with retrieved chunks highlighted. | 1.5 h  | ✅     |
-| —    | **✂️ Cut line.** Everything below is built only if time allows.                                                                       |        |        |
-| 3    | Variant C: the whole week in context, as a third A/B column.                                                                          | 0.75 h | ⬜     |
-| 4    | Markdown export of a document.                                                                                                        | 0.3 h  | ⬜     |
-| 5    | Weekly in-process ingestion schedule.                                                                                                 | 0.3 h  | ⬜     |
-| 6    | Second Discourse forum, as a config-only demo.                                                                                        | 0.3 h  | ⬜     |
+| Rank | Phase                                                                                                                                                                        | Est.   | Status |
+| ---- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------ |
+| 1    | **Retrieval stats.** `GET /stats/retrievals`, Stats view with most-retrieved posts and cost per run.                                                                         | 0.5 h  | ✅     |
+| 2    | **Embeddings map.** UMAP on the server, cached `map_points`, `GET /embeddings/map`, canvas scatter with retrieved chunks highlighted.                                        | 1.5 h  | ✅     |
+| 2b   | **Restyle and photos.** Darkroom palette, footnote citations, EXIF metadata, A/B before/after; uploaded images from `cooked`, `GET /posts/media`, a contact sheet per theme. | 2.5 h  | ✅     |
+| —    | **✂️ Cut line.** Everything below is built only if time allows.                                                                                                              |        |        |
+| 3    | Variant C: the whole week in context, as a third A/B column.                                                                                                                 | 0.75 h | ⬜     |
+| 4    | Markdown export of a document.                                                                                                                                               | 0.3 h  | ⬜     |
+| 5    | Weekly in-process ingestion schedule.                                                                                                                                        | 0.3 h  | ⬜     |
+| 6    | Second Discourse forum, as a config-only demo.                                                                                                                               | 0.3 h  | ⬜     |
 
 ## Finish (always built)
 

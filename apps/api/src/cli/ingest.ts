@@ -10,9 +10,8 @@ import { loadBgeEmbedder } from '../embed/bge-embedder';
 import { embedPendingChunks } from '../embed/embed-pending';
 import { createPgChunkRepository } from '../embed/pg-chunk-repository';
 import type { ForumSource } from '../ingest/forum-source';
-import { ingestionWindow } from '../ingest/week';
 import { createIngestion } from '../ingest/wiring';
-import { WeekArg } from './week-arg';
+import { WeekArg, windowEndingWith } from './week-arg';
 
 const { values } = parseArgs({ options: { resume: { type: 'string' }, week: { type: 'string' } } });
 const week = WeekArg.parse(values.week);
@@ -43,11 +42,7 @@ const runId =
   values.resume ??
   (
     await service.start({
-      // The instant the target week ends, so that week is the latest complete one.
-      window: ingestionWindow(
-        new Date(Date.parse(`${week}T00:00:00Z`) + 7 * 86_400_000),
-        config.ingest.historyWeeks,
-      ),
+      window: windowEndingWith(week, config.ingest.historyWeeks),
       ...caps,
     })
   ).id;

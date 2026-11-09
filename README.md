@@ -37,8 +37,8 @@ again.
 
 | Tab        | What it shows                                                                                                                                                                                                                                                                                    |
 | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Report** | The RAG report for the selected week: themes, notable threads, mood and predictions. Every claim cites forum posts, and each citation links to the post.                                                                                                                                         |
-| **A/B**    | The RAG and no-RAG documents side by side, with citation checks, rubric scores, the judge's pairwise verdicts and the cost of each call.                                                                                                                                                         |
+| **Report** | The RAG report for the selected week: themes, notable threads, mood and predictions. Each paragraph ends in a footnote that opens its cited posts, and each theme shows a strip of photos from those posts, linked to the forum with their authors.                                              |
+| **A/B**    | The RAG and no-RAG documents side by side (or one at a time, like a before/after), with citation checks, rubric scores, the judge's pairwise verdicts and the cost of each call.                                                                                                                 |
 | **Map**    | One dot per chunk, laid out with UMAP and colored by week. The selected report's source posts are ringed, sized by how many retrieval runs picked them. Nearby dots are similar posts. The distance between groups and the axes mean nothing. Hover for the post, click to open it on the forum. |
 | **Stats**  | The most-retrieved posts across retrieval runs, and the recorded cost of every run with a total.                                                                                                                                                                                                 |
 
@@ -149,9 +149,10 @@ error (`ECONNREFUSED`) until the API is listening.
 | `pnpm test:model`                          | Real-model tests: the local embedder, plus one tiny Haiku call (under $0.001) that runs only with a key |
 | `pnpm typecheck`, `pnpm lint`              | Type check and lint                                                                                     |
 | `pnpm ingest`                              | Fetch four weeks from pixls into the dev DB (about 8 minutes, polite pace)                              |
+| `pnpm ingest --week <Monday>`              | Refresh the four weeks ending with that week, e.g. to backfill a new field                              |
 | `pnpm run search "<query>"`                | Vector search in one week (`pnpm search` is a pnpm built-in, hence `run`)                               |
 | `pnpm retrieve --week 2026-10-26`          | Print the facet retrieval for a week, and log it                                                        |
-| `pnpm seed:export`                         | Write the DB's posts to `seed/`                                                                         |
+| `pnpm seed:export [--week <Monday>]`       | Write the DB's posts to `seed/`                                                                         |
 | `pnpm ab:export-sample <id>`               | Write an A/B run to `seed/ab-run-sample.json`                                                           |
 
 CI (`.github/workflows/ci.yml`) runs format check, lint, typecheck, unit and integration tests, the web
@@ -165,6 +166,8 @@ build and the Docker build.
   ([#8](docs/ASSUMPTIONS.md)).
 - There is no auth. It's a local single-user demo ([#9](docs/ASSUMPTIONS.md)).
 - The embedder is English only, so the app is too ([#10](docs/ASSUMPTIONS.md)).
+- Photos are hotlinked from the forum's CDN, and theme strips crop to 3:2, so UI screenshots in
+  bug-report themes read poorly ([#39](docs/ASSUMPTIONS.md)).
 
 ## How it was built
 
@@ -184,4 +187,4 @@ Code: [MIT](LICENSE).
 
 `seed/` has its own license. The forum posts, and the sample run that quotes them, are by the pixls.us
 community under [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/). Each post keeps
-its author and a link back. See [`seed/README.md`](seed/README.md).
+its author and a link back, and so does each photo the app shows. See [`seed/README.md`](seed/README.md).
