@@ -64,14 +64,14 @@ const MostRetrieved = ({ data: { totalRuns, posts } }: { data: RetrievalStatsRes
             ) : (
               <span>Post {p.postId} (no longer in the database)</span>
             )}
-            <div className="mt-0.5 text-xs text-mid">
+            <div className="exif mt-1">
               {p.postNumber !== null && <>Post {p.postNumber} in the thread</>}
               {p.weekStart && <>, written {weekRange(p.weekStart)}</>}
             </div>
           </div>
           <div className="shrink-0 text-right tabular-nums">
             {p.runs} of {totalRuns} runs
-            <div className="text-xs text-mid">
+            <div className="exif mt-1">
               {p.facetHits} by topic, {p.trendHits} by trend
             </div>
           </div>
@@ -88,7 +88,7 @@ const Costs = ({ data: { runs, totalUsd } }: { data: CostStatsResponse }) =>
   ) : (
     <table className="mt-4 w-full text-left text-sm tabular-nums">
       <caption className="sr-only">Cost of each run</caption>
-      <thead className="text-xs text-mid">
+      <thead className="exif">
         <tr>
           <th className="pb-1 font-normal">Run</th>
           <th className="pb-1 font-normal">Week</th>
@@ -128,7 +128,7 @@ export const StatsView = () => {
   return (
     <div className="grid gap-12 lg:grid-cols-[3fr_2fr]">
       <section className="min-w-0">
-        <h2 className="text-sm font-semibold text-mid">Most retrieved posts</h2>
+        <h2 className="exif font-medium">Most retrieved posts</h2>
         <p className="mt-1 max-w-prose text-sm text-mid">
           Ranked by how many retrieval runs found each post. A run counts once per post, however
           many queries matched it.
@@ -136,7 +136,7 @@ export const StatsView = () => {
         <Status state={retrieved}>{(data) => <MostRetrieved data={data} />}</Status>
       </section>
       <section className="min-w-0">
-        <h2 className="text-sm font-semibold text-mid">What each run cost</h2>
+        <h2 className="exif font-medium">What each run cost</h2>
         <p className="mt-1 max-w-prose text-sm text-mid">
           A report made inside an A/B run is part of that run’s cost, so it isn’t listed twice.
         </p>

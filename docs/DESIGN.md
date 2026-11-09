@@ -286,7 +286,9 @@ Long-running work runs in-process. Status lives in Postgres and the client polls
 The app has a week selector, a "Run new A/B" button and four views:
 
 1. **Report:** the RAG document, with links to the cited posts on the forum.
-2. **A/B:** both documents side by side, with checks, rubric scores and judge reasoning.
+2. **A/B:** both documents side by side, with checks, rubric scores and judge reasoning. A
+   Without · Split · With control, like a photo editor's before/after, shows either document at full
+   width.
 3. **Map:** a UMAP scatter on canvas, one point per chunk. Points are colored by week on a sequential
    ramp (newest strongest). The selected report's source posts are outlined and sized by how many
    retrieval runs picked them, and hovering shows the post's title, number and week. While the

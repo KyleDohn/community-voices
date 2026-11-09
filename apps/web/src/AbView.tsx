@@ -87,10 +87,10 @@ const Verdict = ({ run }: { run: AbRunResponse }) => {
 
 const Rubric = ({ rubric }: { rubric: NonNullable<AbRunResponse['rubric']> }) => (
   <section className="mt-8">
-    <h2 className="text-sm font-semibold text-mid">Rubric scores, each report judged alone</h2>
+    <h2 className="exif font-medium">Rubric scores, each report judged alone</h2>
     <div className="mt-3 max-w-3xl overflow-x-auto">
       <table className="w-full text-left text-sm">
-        <thead className="text-xs text-mid">
+        <thead className="exif">
           <tr>
             <th className="pb-2 font-normal">Criterion</th>
             {VARIANTS.map((v) => (
@@ -130,9 +130,9 @@ const Rubric = ({ rubric }: { rubric: NonNullable<AbRunResponse['rubric']> }) =>
 
 const Checks = ({ checks }: { checks: NonNullable<AbRunResponse['checks']> }) => (
   <section className="mt-8">
-    <h2 className="text-sm font-semibold text-mid">Citation checks, counted by code</h2>
+    <h2 className="exif font-medium">Citation checks, counted by code</h2>
     <table className="mt-3 w-full max-w-xl text-left text-sm tabular-nums">
-      <thead className="text-xs text-mid">
+      <thead className="exif">
         <tr>
           <th className="pb-2 font-normal">Check</th>
           {VARIANTS.map((v) => (
@@ -162,7 +162,7 @@ const Checks = ({ checks }: { checks: NonNullable<AbRunResponse['checks']> }) =>
 
 const Reasoning = ({ pairwise }: { pairwise: PairwiseResult }) => (
   <section className="mt-8 max-w-prose">
-    <h2 className="text-sm font-semibold text-mid">The judge’s comparison, asked twice</h2>
+    <h2 className="exif font-medium">The judge’s comparison, asked twice</h2>
     <ul className="mt-3 space-y-3 text-sm">
       {pairwise.passes.map((p) => {
         const name = (v: Variant) => VARIANTS.find((x) => x.key === v)!.name.toLowerCase();
@@ -218,29 +218,65 @@ const RunStatus = ({ run }: { run: AbRunResponse }) => {
   return null;
 };
 
+type Compare = Variant | 'split';
+
+// Like an editor's before/after: the control, both side by side, or the variant under test.
+const COMPARE: { key: Compare; name: string }[] = [
+  { key: 'no_rag', name: 'Without' },
+  { key: 'split', name: 'Split' },
+  { key: 'rag', name: 'With' },
+];
+
 const Documents = ({ run }: { run: AbRunResponse }) => {
+  const [compare, setCompare] = useState<Compare>('split');
   const documents = { rag: run.ragReport?.document, no_rag: run.noRagDocument };
   if (!documents.rag && !documents.no_rag) return null;
+  const shown = VARIANTS.filter((v) => compare === 'split' || compare === v.key);
+
   return (
-    <section className="mt-12 grid gap-12 border-t border-rule pt-8 lg:grid-cols-2">
-      {VARIANTS.map((v) => {
-        const document = documents[v.key];
-        return (
-          <div key={v.key} className="min-w-0">
-            <h2 className="mb-4 text-sm font-semibold text-mid">{v.name}</h2>
-            {document ? (
-              <ReportDocumentView
-                document={document}
-                // Without retrieval the writer saw no posts, so none of its citations can link.
-                sources={v.key === 'rag' ? (run.ragReport?.sources ?? []) : []}
-                week={run.weekStart}
-              />
-            ) : (
-              <p className="text-mid">Not written yet.</p>
-            )}
-          </div>
-        );
-      })}
+    <section className="mt-12 border-t border-rule pt-8">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <h2 className="exif font-medium">Both reports</h2>
+        <div
+          role="group"
+          aria-label="Compare the reports"
+          className="inline-flex rounded-md border border-rule bg-panel p-0.5"
+        >
+          {COMPARE.map((c) => (
+            <button
+              key={c.key}
+              type="button"
+              aria-pressed={compare === c.key}
+              onClick={() => setCompare(c.key)}
+              className="exif min-h-10 rounded px-4 aria-pressed:bg-accent-soft aria-pressed:text-accent"
+            >
+              {c.name}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div
+        className={`mt-8 grid gap-12 ${compare === 'split' ? 'lg:grid-cols-2' : 'max-w-[68ch]'}`}
+      >
+        {shown.map((v) => {
+          const document = documents[v.key];
+          return (
+            <div key={v.key} className="min-w-0">
+              <h3 className="exif mb-4 font-medium text-ink">{v.name}</h3>
+              {document ? (
+                <ReportDocumentView
+                  document={document}
+                  // Without retrieval the writer saw no posts, so none of its citations can link.
+                  sources={v.key === 'rag' ? (run.ragReport?.sources ?? []) : []}
+                  week={run.weekStart}
+                />
+              ) : (
+                <p className="text-mid">Not written yet.</p>
+              )}
+            </div>
+          );
+        })}
+      </div>
     </section>
   );
 };
@@ -332,7 +368,7 @@ export const AbView = () => {
           type="button"
           onClick={start}
           disabled={!week || starting || running !== undefined}
-          className="rounded-md bg-ink px-4 py-2 text-sm font-medium text-paper disabled:opacity-40"
+          className="min-h-11 rounded-md border border-rule px-4 py-2 text-sm font-medium hover:border-mid disabled:opacity-40"
         >
           Run new A/B
         </button>
@@ -367,7 +403,7 @@ export const AbView = () => {
             <Documents run={run} />
             {run.calls.length > 0 && run.status !== 'running' && (
               <section className="mt-12 max-w-xl border-t border-rule pt-8 text-sm">
-                <h2 className="text-sm font-semibold text-mid">Calls and cost</h2>
+                <h2 className="exif font-medium">Calls and cost</h2>
                 <CallTable calls={run.calls} totalUsd={run.costUsd} />
               </section>
             )}
