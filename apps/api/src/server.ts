@@ -22,6 +22,7 @@ import { ingestionWindow } from './ingest/week';
 import { FACETS } from './retrieve/facets';
 import { latestSeedFile, seedIfEmpty } from './seed/seed';
 import { createPgStatsRepository } from './stats/pg-stats-repository';
+import { createPgPostMedia } from './posts/pg-post-media';
 import { createIngestion } from './ingest/wiring';
 import { createMapProjector } from './map/map-projector';
 import { createPgMapStore } from './map/pg-map-store';
@@ -134,6 +135,7 @@ const root = new Hono().route(
       points: mapProjector.points,
       reportPostIds: async (id) => (await reportRepo.getRun(id))?.sources.map((s) => s.postId),
     },
+    media: createPgPostMedia(db),
   }),
 );
 

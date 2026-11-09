@@ -16,5 +16,6 @@ export const testDependencies = (overrides: Partial<AppDependencies> = {}): AppD
     costs: async () => ({ runs: [], totalUsd: 0 }),
   },
   map: { status: () => 'ready', points: async () => [], reportPostIds: async () => undefined },
+  media: async () => [],
   ...overrides,
 });

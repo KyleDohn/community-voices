@@ -100,6 +100,10 @@ Model IDs and limits live in config, not in code.
   it, `*` wildcards included. A disallowed path fails the run instead of being fetched.
 - **Triggers:** the CLI (`pnpm ingest`), `POST /api/v1/ingestions`, and a weekly in-process schedule
   (stretch). The API runs one ingestion at a time per process and answers `409` while one is in flight.
+- **Images:** each post keeps up to 8 uploaded images, read from Discourse's rendered HTML (`cooked`).
+  Only uploads carry `data-base62-sha1`, so emoji, onebox previews and avatars are skipped. We store the
+  forum's downsized copy (`src`, about 690 px wide), its alt text, size and dominant colour, never the
+  original. Images aren't embedded; the web app shows them through `/posts/media`.
 - **Seed:** `seed/<host>-<from>-<to>.json` (written by `pnpm seed:export`) holds the raw topics and posts
   for the four weeks. On boot, if `posts` is empty, the app loads the newest seed, chunks it and embeds it. Other files in `seed/`, such as the sample A/B run, are never loaded as a
   corpus.
@@ -275,6 +279,7 @@ chunks already picked)`. Measured on 2026-10-26, distinct topics among the ~39 m
 | GET    | `/stats/retrievals?limit=`  | Most-retrieved posts, by distinct retrieval runs    |
 | GET    | `/stats/costs`              | Cost of every A/B run and stand-alone report, total |
 | GET    | `/embeddings/map?reportId=` | 2D points, `status`, and the report's source posts  |
+| GET    | `/posts/media?ids=`         | Author and uploaded images per post (≤100 ids)      |
 
 Long-running work runs in-process. Status lives in Postgres and the client polls it.
 
