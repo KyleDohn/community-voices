@@ -169,6 +169,40 @@ and the cost list shows **A/B runs plus the reports no A/B run points to**, so e
    forum, then the cost list with its total and the sample marked. Empty state for a fresh install,
    where retrieval runs aren't seeded. Manual check in Chrome at desktop and phone widths.
 
+### Extra 2: agreed test interfaces
+
+Settled 2026-11-08 after measuring on the 3,402 × 384 dev vectors: **umap-js 1.4.0** (4.5 s, ~500 MB
+RSS, identical output for a fixed seed; druidjs took 7.4 s and ~1.1 GB). Points are **chunks**,
+highlighted by **post id**. The highlight comes from a **report's sources** (equal to its run's retrieved
+posts on every dev report, and present on the seeded sample), and size is the post's **all-time distinct
+retrieval runs** (within-run counts are almost all 1). Weeks are colored **sequentially by age**.
+
+1. **Contracts** (`packages/contracts/src/map.ts`). `MapResponse`: `status` (`computing`, `ready`,
+   `failed`), `points` (chunk id, post id, x, y, week, topic title, post number, url, runs) and
+   `highlightPostIds` (the selected report's sources, else empty). `points` is empty unless `ready`.
+   Schema tests.
+2. **`corpusVersion(model, chunkIds)`** (unit): the same for any id order, different when an id or the
+   model changes.
+3. **`projectVectors(vectors, { seed })`** (unit, real umap-js): one finite `{x, y}` per vector,
+   identical for the same seed, two well-separated clusters stay apart, and 0, 1 or 2 vectors work
+   (`nNeighbors` is clamped below n). It yields to the event loop between epochs.
+4. **`createMapProjector({ store, project, model })`** (unit, fake store): `status()` starts
+   `computing`; `refresh()` projects and replaces points when the stored version differs, skips when it
+   matches, ends `ready`, and ends `failed` on an error. Overlapping refreshes run one after another.
+5. **`createPgMapStore(db)`** (integration): `embeddedVectors(model)` returns ids and vectors for that
+   model only, ordered by id; `replace(version, points)` swaps every row in one transaction;
+   `storedVersion()`; `points()` joins chunk, post and topic and counts distinct runs per post (0 if
+   never retrieved).
+6. **Route.** `GET /embeddings/map?reportId=`: a non-uuid gives 400 `invalid_request`, an unknown report
+   404 `report_not_found`. Route tests with a fake source; every response parses with `MapResponse`.
+7. **Wiring.** Boot and each ingestion call `refresh()` after `embedPending`. Migration 0007 adds
+   `map_points`.
+8. **Map view** (web, `#map`). A canvas scatter colored by week with a legend, outlines sized by runs
+   for the selected report, a hover tooltip (title, post #, week) with a hit radius bigger than the dot,
+   and a click that opens the post. The view polls while `computing`, includes a plain note on reading
+   UMAP, and has a list fallback of the highlighted posts. Manual check in Chrome at desktop and phone
+   widths.
+
 ## Extras, ranked by demo value per hour
 
 | Rank | Phase                                                                                                                                 | Est.   | Status |

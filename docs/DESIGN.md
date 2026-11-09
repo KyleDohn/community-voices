@@ -79,7 +79,10 @@ Model IDs and limits live in config, not in code.
   `ab_runs` points to one.
 - `retrievals`: retrieval_run id, chunk id (null once re-ingestion drops the chunk), post id, facet or
   query, rank, score. These rows feed the retrieval stats.
-- `map_points`: chunk id, x, y, corpus version. This is the cached UMAP projection.
+- `map_points`: chunk id, x, y, corpus version. This is the cached UMAP projection (umap-js, fixed
+  seed). The corpus version is a hash of the embedding model and the embedded chunk ids. Boot and each
+  ingestion recompute it in the background after embedding, only when the version changed, and replace
+  every row in one transaction.
 
 ## Ingestion
 
@@ -256,21 +259,21 @@ chunks already picked)`. Measured on 2026-10-26, distinct topics among the ~39 m
 
 ## REST API (`/api/v1`, DTOs in `packages/contracts`)
 
-| Method | Path                       | Purpose                                              |
-| ------ | -------------------------- | ---------------------------------------------------- |
-| GET    | `/health`                  | Liveness, DB reachable, embedder loaded              |
-| GET    | `/weeks`                   | Weeks with posts, chunks and embedded counts         |
-| POST   | `/ingestions`              | Start ingestion → `202 { id }`                       |
-| GET    | `/ingestions/:id`          | Ingestion status and counts                          |
-| POST   | `/reports`                 | Generate the RAG report for a week → `202 { id }`    |
-| GET    | `/reports?week=`           | List report runs, newest first                       |
-| GET    | `/reports/:id`             | Status, document, sources, cost per call             |
-| POST   | `/ab-runs`                 | Start an A/B run for a week → `202 { id }`           |
-| GET    | `/ab-runs`                 | List runs                                            |
-| GET    | `/ab-runs/:id`             | Status, both documents, checks, judge results, cost  |
-| GET    | `/stats/retrievals?limit=` | Most-retrieved posts, by distinct retrieval runs     |
-| GET    | `/stats/costs`             | Cost of every A/B run and stand-alone report, total  |
-| GET    | `/embeddings/map?runId=`   | 2D points, optionally marked with a run's retrievals |
+| Method | Path                        | Purpose                                             |
+| ------ | --------------------------- | --------------------------------------------------- |
+| GET    | `/health`                   | Liveness, DB reachable, embedder loaded             |
+| GET    | `/weeks`                    | Weeks with posts, chunks and embedded counts        |
+| POST   | `/ingestions`               | Start ingestion → `202 { id }`                      |
+| GET    | `/ingestions/:id`           | Ingestion status and counts                         |
+| POST   | `/reports`                  | Generate the RAG report for a week → `202 { id }`   |
+| GET    | `/reports?week=`            | List report runs, newest first                      |
+| GET    | `/reports/:id`              | Status, document, sources, cost per call            |
+| POST   | `/ab-runs`                  | Start an A/B run for a week → `202 { id }`          |
+| GET    | `/ab-runs`                  | List runs                                           |
+| GET    | `/ab-runs/:id`              | Status, both documents, checks, judge results, cost |
+| GET    | `/stats/retrievals?limit=`  | Most-retrieved posts, by distinct retrieval runs    |
+| GET    | `/stats/costs`              | Cost of every A/B run and stand-alone report, total |
+| GET    | `/embeddings/map?reportId=` | 2D points, `status`, and the report's source posts  |
 
 Long-running work runs in-process. Status lives in Postgres and the client polls it.
 
@@ -283,8 +286,12 @@ The app has a week selector, a "Run new A/B" button and four views:
 
 1. **Report:** the RAG document, with links to the cited posts on the forum.
 2. **A/B:** both documents side by side, with checks, rubric scores and judge reasoning.
-3. **Map:** a UMAP scatter on canvas. Points are colored by week. A selected run's retrieved chunks are
-   outlined and sized by how often they've been retrieved, and hovering shows the post.
+3. **Map:** a UMAP scatter on canvas, one point per chunk. Points are colored by week on a sequential
+   ramp (newest strongest). The selected report's source posts are outlined and sized by how many
+   retrieval runs picked them, and hovering shows the post's title, number and week. While the
+   projection computes, the API answers 200 with `status: 'computing'` and the view polls. UMAP keeps
+   neighbourhoods (nearby points are similar posts) but not global distances, and the axes mean
+   nothing; the view says so.
 4. **Stats:** the most-retrieved posts, and the cost of each run. A post's count is the number of
    retrieval runs it appeared in, split into facet picks and trend examples: one run logs 40 facet rows
    but 60–70 trend rows, so raw row counts would mostly measure trend lookups. The cost list shows A/B
