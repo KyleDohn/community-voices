@@ -1,5 +1,5 @@
-import { serve } from '@hono/node-server';
 import { serveStatic } from '@hono/node-server/serve-static';
+import { startServer } from './http/start-server';
 import { Hono } from 'hono';
 import { loadConfig } from './config';
 import { connect, probe, runMigrations } from './db/client';
@@ -144,6 +144,5 @@ if (config.webDistDir) {
   root.get('*', serveStatic({ root: webRoot, path: 'index.html' }));
 }
 
-serve({ fetch: root.fetch, port: config.port }, ({ port }) => {
-  console.log(`community-voices api listening on http://localhost:${port}`);
-});
+const { port } = await startServer(root.fetch, config.port);
+console.log(`community-voices api listening on http://localhost:${port}`);
