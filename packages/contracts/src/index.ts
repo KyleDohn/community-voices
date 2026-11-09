@@ -6,3 +6,4 @@ export * from './report';
 export * from './ab';
 export * from './stats';
 export * from './map';
+export * from './posts';
